@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "phoenix_fission:block/machine/frost_reinforced_stained_steel_crate"
+    }
+  }
+}

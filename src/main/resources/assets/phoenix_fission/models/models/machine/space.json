@@ -1,0 +1,9 @@
+{
+  "loader": "forge:obj",
+  "flip_v": true,
+  "model": "phoenix_fission:models/machine/space.obj",
+  "textures": {
+    "texture0": "phoenix_fission:block/obj/star_layer",
+    "particle":"phoenix_fission:block/obj/star_layer"
+  }
+}

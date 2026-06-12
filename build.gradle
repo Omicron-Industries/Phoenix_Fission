@@ -215,8 +215,9 @@ dependencies {
     modImplementation("dev.latvian.mods:rhino-forge:${rhino_version}")
     modImplementation("dev.toma.configuration:configuration-forge-${minecraft_version}:${configuration_version}")
     modRuntimeOnly("dev.architectury:architectury-forge:${architectury_version}")
-    modImplementation("dev.ftb.mods:ftb-library-forge:${ftblibrary_version}")
-    modImplementation("dev.ftb.mods:ftb-teams-forge:${ftbteams_version}")
+
+
+    modRuntimeOnly("curse.maven:kubejs-aisle-tool-1236291:7543948")
 
 
 // lombok

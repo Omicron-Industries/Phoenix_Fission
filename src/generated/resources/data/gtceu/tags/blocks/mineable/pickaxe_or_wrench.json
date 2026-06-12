@@ -1,8 +1,26 @@
 {
   "values": [
-    "phoenix_fission:basic_cooler",
+    "phoenix_fission:msr_liner_liner_graphite",
+    "phoenix_fission:msr_liner_liner_hastelloy",
+    "phoenix_fission:msr_liner_liner_titanium",
+    "phoenix_fission:msr_liner_liner_netherite",
+    "phoenix_fission:cooler_basic",
+    "phoenix_fission:cooler_ev",
+    "phoenix_fission:cooler_iv",
+    "phoenix_fission:cooler_luv",
     "phoenix_fission:graphite_moderator",
-    "phoenix_fission:uranium_fuel_rod",
-    "phoenix_fission:thorium_breeder"
+    "phoenix_fission:beryllium_moderator",
+    "phoenix_fission:heavy_water_moderator",
+    "phoenix_fission:niobium_sic_moderator",
+    "phoenix_fission:t1_fuel_rod",
+    "phoenix_fission:t2_fuel_rod",
+    "phoenix_fission:t3_fuel_rod",
+    "phoenix_fission:t4_fuel_rod",
+    "phoenix_fission:t5_fuel_rod",
+    "phoenix_fission:thorium_blanket",
+    "phoenix_fission:uranium_blanket",
+    "phoenix_fission:neptunium_blanket",
+    "phoenix_fission:plutonium_blanket",
+    "phoenix_fission:americium_blanket"
   ]
 }
