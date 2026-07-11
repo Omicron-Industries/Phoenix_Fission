@@ -58,17 +58,19 @@ public class MSRCoreLinerBlockBuilder extends BlockBuilder {
 
         @Override
         public @NotNull String getInputFluidId() {
-            return inputFluidId;
+            return inputFluidId.isEmpty() ? "minecraft:empty" : inputFluidId;
         }
 
         @Override
         public @NotNull String getOutputFluidId() {
-            return outputFluidId;
+            return outputFluidId.isEmpty() ? "minecraft:empty" : outputFluidId;
         }
 
         @Override
         public @NotNull ResourceLocation getTexture() {
-            return ResourceLocation.tryParse(texture);
+            ResourceLocation rl = ResourceLocation.tryParse(texture);
+            return rl != null ? rl :
+                    ResourceLocation.fromNamespaceAndPath("phoenix_fission", "block/fission/liner_base");
         }
 
         @Override

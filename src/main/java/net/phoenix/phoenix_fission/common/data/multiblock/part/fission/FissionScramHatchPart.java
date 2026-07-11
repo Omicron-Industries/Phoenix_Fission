@@ -55,8 +55,6 @@ public class FissionScramHatchPart extends TieredPartMachine {
         updateScramStatus();
     }
 
-
-
     // ── Redstone ──────────────────────────────────────────────────────────────
 
     @Override
@@ -103,7 +101,7 @@ public class FissionScramHatchPart extends TieredPartMachine {
         group.addWidget(new LabelWidget(10, 8, "§cFission SCRAM Hatch"));
 
         group.addWidget(new LabelWidget(10, 24,
-                () -> isScrammed ? "§c● SCRAMMED — Reactor HALTED" : "§a● Standby — Reactor Permitted"));
+                () -> isScrammed ? "§c[SCRAM] Reactor HALTED" : "§a[OK] Standby - Reactor Permitted"));
 
         // Native divider line instead of text dashes
         group.addWidget(new Widget(10, 43, 180, 1).setBackground(GuiTextures.BLANK));

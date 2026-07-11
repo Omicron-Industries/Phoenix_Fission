@@ -13,11 +13,11 @@ import net.phoenix.phoenix_fission.PhoenixFission;
 import net.phoenix.phoenix_fission.api.block.IMSRCoreLinerType;
 
 import lombok.Getter;
-import net.phoenix.phoenix_fission.configs.PhoenixFissionConfigs;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -50,11 +50,11 @@ public class MSRCoreLinerBlock extends ActiveBlock {
         tooltip.add(Component.translatable("phoenix_fission.msr_liner.flow_rate", linerType.getFluidFlowRate())
                 .withStyle(ChatFormatting.YELLOW));
 
-        tooltip.add(Component.translatable("phoenix_fission.msr_liner.thermal_dissipation", String.format("%.1f", linerType.getHeatPerMb()))
+        tooltip.add(Component
+                .translatable("phoenix_fission.msr_liner.thermal_dissipation",
+                        String.format("%.1f", linerType.getHeatPerMb()))
                 .withStyle(ChatFormatting.RED));
 
-        // --- NEW: Fluid Loop Definitions ---
-        // Cleans up the string (e.g., converts "phoenix_fission:u235_molten_salt" into a display name readable format)
         String inputFluidName = cleanFluidName(linerType.getInputFluidId());
         String outputFluidName = cleanFluidName(linerType.getOutputFluidId());
 
@@ -64,9 +64,6 @@ public class MSRCoreLinerBlock extends ActiveBlock {
                 .withStyle(ChatFormatting.DARK_AQUA));
     }
 
-    /**
-     * Helper to clean up raw resource paths for clean text viewing if a language key doesn't catch them.
-     */
     private String cleanFluidName(String fluidId) {
         if (fluidId == null || fluidId.isEmpty()) return "None";
         String path = fluidId.contains(":") ? fluidId.split(":")[1] : fluidId;
@@ -75,113 +72,67 @@ public class MSRCoreLinerBlock extends ActiveBlock {
                 .collect(java.util.stream.Collectors.joining(" "));
     }
 
-    public enum MSRLinerTypes implements IMSRCoreLinerType {
-
-        LINER_GRAPHITE("liner_graphite", 1, 10, 10.0,
-                "phoenix_fission:u235_molten_salt", "phoenix_fission:depleted_u235_molten_salt"),
-
-        LINER_HASTELLOY("liner_hastelloy", 2, 25, 15.0,
-                "phoenix_fission:thorium_u233_molten_salt", "phoenix_fission:depleted_thorium_molten_salt"),
-
-        LINER_TITANIUM("liner_titanium", 3, 50, 25.0,
-                "phoenix_fission:plutonium_molten_salt", "phoenix_fission:irradiated_actinide_waste"),
-
-        LINER_NETHERITE("liner_netherite", 4, 100, 40.0,
-                "phoenix_fission:californium_molten_salt", "phoenix_fission:transuranic_sludge_waste");
+    /**
+     * Completely modular container class for custom runtime MSR Liners.
+     */
+    public static class BindableLinerType implements IMSRCoreLinerType {
 
         @Getter
         @NotNull
         private final String name;
+        @Getter
+        private final int tier;
 
-        // Remove @Getter from these so we can write custom ones
-        private final int defaultTier;
-        private final int defaultFluidFlowRate;
-        private final double defaultHeatPerMb;
-        private final String defaultInputFluidId;
-        private final String defaultOutputFluidId;
+        private final Supplier<Integer> flowRateSupplier;
+        private final Supplier<Double> heatSupplier;
+        private final Supplier<String> inputFluidSupplier;
+        private final Supplier<String> outputFluidSupplier;
+        private final Supplier<ResourceLocation> textureSupplier;
 
-        MSRLinerTypes(String name, int tier, int flow, double heat, String inputFluid, String outputFluid) {
+        public BindableLinerType(String name, int tier,
+                                 Supplier<Integer> flowRateSupplier,
+                                 Supplier<Double> heatSupplier,
+                                 Supplier<String> inputFluidSupplier,
+                                 Supplier<String> outputFluidSupplier,
+                                 Supplier<ResourceLocation> textureSupplier) {
             this.name = name;
-            this.defaultTier = tier;
-            this.defaultFluidFlowRate = flow;
-            this.defaultHeatPerMb = heat;
-            this.defaultInputFluidId = inputFluid;
-            this.defaultOutputFluidId = outputFluid;
-        }
-
-        // --- Dynamic Getters ---
-
-        // Assuming your MSRConfigs is accessible via PhoenixFissionConfigs.INSTANCE.fissionStats.msr
-        // Adjust the config path below to match wherever you instanced MSRConfigs!
-
-        @Override
-        public int getTier() {
-            if (PhoenixFissionConfigs.INSTANCE == null) return defaultTier;
-            var config = PhoenixFissionConfigs.INSTANCE.fissionStats.msrLiners;
-            return switch (this) {
-                case LINER_GRAPHITE -> config.tierGraphiteLiner;
-                case LINER_HASTELLOY -> config.tierHastelloyLiner;
-                case LINER_TITANIUM -> config.tierTitaniumLiner;
-                case LINER_NETHERITE -> config.tierNetheriteLiner;
-            };
+            this.tier = tier;
+            this.flowRateSupplier = flowRateSupplier != null ? flowRateSupplier : () -> 0;
+            this.heatSupplier = heatSupplier != null ? heatSupplier : () -> 0.0;
+            this.inputFluidSupplier = inputFluidSupplier != null ? inputFluidSupplier : () -> "minecraft:empty";
+            this.outputFluidSupplier = outputFluidSupplier != null ? outputFluidSupplier : () -> "minecraft:empty";
+            this.textureSupplier = textureSupplier != null ? textureSupplier :
+                    () -> PhoenixFission.id("block/fission/msr/liners/" + name);
         }
 
         @Override
         public int getFluidFlowRate() {
-            if (PhoenixFissionConfigs.INSTANCE == null) return defaultFluidFlowRate;
-            var config = PhoenixFissionConfigs.INSTANCE.fissionStats.msrLiners;
-            return switch (this) {
-                case LINER_GRAPHITE -> config.flowRateGraphiteLiner;
-                case LINER_HASTELLOY -> config.flowRateHastelloyLiner;
-                case LINER_TITANIUM -> config.flowRateTitaniumLiner;
-                case LINER_NETHERITE -> config.flowRateNetheriteLiner;
-            };
+            return flowRateSupplier.get();
         }
 
         @Override
         public double getHeatPerMb() {
-            if (PhoenixFissionConfigs.INSTANCE == null) return defaultHeatPerMb;
-            var config = PhoenixFissionConfigs.INSTANCE.fissionStats.msrLiners;
-            return switch (this) {
-                case LINER_GRAPHITE -> config.heatGraphiteLiner;
-                case LINER_HASTELLOY -> config.heatHastelloyLiner;
-                case LINER_TITANIUM -> config.heatTitaniumLiner;
-                case LINER_NETHERITE -> config.heatNetheriteLiner;
-            };
+            return heatSupplier.get();
         }
 
         @Override
         public String getInputFluidId() {
-            if (PhoenixFissionConfigs.INSTANCE == null) return defaultInputFluidId;
-            var config = PhoenixFissionConfigs.INSTANCE.fissionStats.msrLiners;
-            return switch (this) {
-                case LINER_GRAPHITE -> config.inputFluidGraphiteLiner;
-                case LINER_HASTELLOY -> config.inputFluidHastelloyLiner;
-                case LINER_TITANIUM -> config.inputFluidTitaniumLiner;
-                case LINER_NETHERITE -> config.inputFluidNetheriteLiner;
-            };
+            return inputFluidSupplier.get();
         }
 
         @Override
         public String getOutputFluidId() {
-            if (PhoenixFissionConfigs.INSTANCE == null) return defaultOutputFluidId;
-            var config = PhoenixFissionConfigs.INSTANCE.fissionStats.msrLiners;
-            return switch (this) {
-                case LINER_GRAPHITE -> config.outputFluidGraphiteLiner;
-                case LINER_HASTELLOY -> config.outputFluidHastelloyLiner;
-                case LINER_TITANIUM -> config.outputFluidTitaniumLiner;
-                case LINER_NETHERITE -> config.outputFluidNetheriteLiner;
-            };
+            return outputFluidSupplier.get();
+        }
+
+        @Override
+        public ResourceLocation getTexture() {
+            return textureSupplier.get();
         }
 
         @Override
         public @NotNull String getSerializedName() {
             return name;
-        }
-
-        @Override
-        public ResourceLocation getTexture() {
-            return PhoenixFission.id("block/fission/msr/liners/" + name);
         }
     }
 }

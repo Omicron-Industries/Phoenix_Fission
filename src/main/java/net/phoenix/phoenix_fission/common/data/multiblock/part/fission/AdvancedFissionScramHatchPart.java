@@ -49,8 +49,6 @@ public class AdvancedFissionScramHatchPart extends TieredPartMachine {
     public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
             AdvancedFissionScramHatchPart.class, TieredPartMachine.MANAGED_FIELD_HOLDER);
 
-
-
     /** Minimum redstone signal strength required to begin the sustain countdown. */
     @Persisted
     private int signalThreshold = 8;
@@ -167,7 +165,7 @@ public class AdvancedFissionScramHatchPart extends TieredPartMachine {
 
         // Live status
         group.addWidget(new LabelWidget(10, 24,
-                () -> isScrammed ? "§c● SCRAMMED — Reactor HALTED" : "§a● Standby — Reactor Permitted"));
+                () -> isScrammed ? "§c[SCRAM] Reactor HALTED" : "§a[OK] Standby - Reactor Permitted"));
 
         // Sustain progress
         group.addWidget(new LabelWidget(10, 36, () -> {
@@ -183,13 +181,13 @@ public class AdvancedFissionScramHatchPart extends TieredPartMachine {
         group.addWidget(new Widget(10, 53, 180, 1).setBackground(GuiTextures.BLANK));
 
         // Threshold input
-        group.addWidget(new LabelWidget(10, 64, "§fMin Signal Strength §7(1–15):"));
+        group.addWidget(new LabelWidget(10, 64, "§fMin Signal Strength §7(1-15):"));
         group.addWidget(new IntInputWidget(10, 76, 80, 20,
                 () -> signalThreshold,
                 val -> signalThreshold = Mth.clamp(val, 1, 15)));
 
         // Sustain timer input
-        group.addWidget(new LabelWidget(10, 104, "§fSustain Ticks §7(1–100):"));
+        group.addWidget(new LabelWidget(10, 104, "§fSustain Ticks §7(1-100):"));
         group.addWidget(new IntInputWidget(10, 116, 80, 20,
                 () -> sustainTicks,
                 val -> sustainTicks = Mth.clamp(val, 1, 100)));

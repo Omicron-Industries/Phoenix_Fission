@@ -3,6 +3,7 @@ package net.phoenix.phoenix_fission.api.block;
 import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.StringRepresentable;
 import net.minecraftforge.common.util.Lazy;
 import net.phoenix.phoenix_fission.PhoenixAPI;
 
@@ -12,7 +13,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 import java.util.Comparator;
 
-public interface IFissionModeratorType {
+// Extending StringRepresentable completes the interface contract for dynamic loading
+public interface IFissionModeratorType extends StringRepresentable {
 
     @NotNull
     String getName();
@@ -38,6 +40,12 @@ public interface IFissionModeratorType {
     int getTier();
 
     ResourceLocation getTexture();
+
+    // Satisfies StringRepresentable contract cleanly using your existing getName() method
+    @Override
+    default @NotNull String getSerializedName() {
+        return getName();
+    }
 
     Lazy<IFissionModeratorType[]> ALL_FISSION_MODERATORS_SORTED = Lazy
             .of(() -> PhoenixAPI.FISSION_MODERATORS.keySet().stream()

@@ -5,10 +5,11 @@ import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
-import com.gregtechceu.gtceu.api.recipe.content.ContentModifier;
 import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
 
+import com.lowdragmc.lowdraglib.gui.widget.Widget;
+import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
@@ -23,6 +24,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.phoenix.phoenix_fission.PhoenixAPI;
 import net.phoenix.phoenix_fission.api.block.IFissionBlanketType;
 import net.phoenix.phoenix_fission.api.block.IFissionFuelRodType;
+import net.phoenix.phoenix_fission.common.data.multiblock.fission.managers.FissionFuelManager;
 import net.phoenix.phoenix_fission.configs.PhoenixFissionConfigs;
 
 import lombok.Getter;
@@ -67,6 +69,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void onStructureFormed() {
         super.onStructureFormed();
 
@@ -87,43 +90,28 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         this.primaryBlanket = null;
     }
 
-    @Override
-    protected @Nullable IFissionFuelRodType getFuelRodForConsumption() {
-        if (activeFuelRods == null || activeFuelRods.isEmpty()) return null;
-        return activeFuelRods.stream()
-                .max(Comparator.comparingInt(IFissionFuelRodType::getTier))
-                .orElse(null);
-    }
-
     /**
-     * Updated Breeder gate to ensure blankets and fuel are both checked.
+     * Updated Breeder gating rule utilizing modern Fuel Manager engine capabilities.
      */
     @Override
     protected boolean shouldRunReactor() {
-        if (!isFormed()) return false;
-        if (activeFuelRods == null || activeFuelRods.isEmpty()) return false;
-        if (isScramActive()) return false;
+        if (!isFormed() || getComponentManager().getActiveFuelRods().isEmpty() || isScramActive()) return false;
 
-        // The reactor runs as long as it has driver fuel available!
-        return hasFuelAvailableForNextTick();
+        return getFuelManager().hasFuelAvailableForNextTick();
     }
 
     /**
-     * The logic in handleReactorLogic already respects the 'running' boolean.
-     * If shouldRunReactor() is false, this won't produce heat or consume items.
+     * Intercepts the working tick to process random-chance breeding alongside active recipe ticks.
      */
     @Override
-    protected void handleReactorLogic(boolean running) {
-        if (running) {
-            lastParallels = Math.max(1, computeParallels());
+    public boolean onWorking() {
+        boolean isWorking = super.onWorking();
+
+        if (isWorking && isFormed() && primaryBlanket != null) {
+            processBreeding(PhoenixFissionConfigs.INSTANCE.fission, Math.max(1, lastParallels));
         }
 
-        // Only calls super (heat/fuel) and processBreeding if running is true
-        super.handleReactorLogic(running);
-
-        if (running && isFormed() && primaryBlanket != null) {
-            processBreeding(PhoenixFissionConfigs.INSTANCE.fission, lastParallels);
-        }
+        return isWorking;
     }
 
     private void selectPrimaryBlanket() {
@@ -149,22 +137,14 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         if (activeBlankets == null || activeBlankets.isEmpty()) return;
 
         IFissionBlanketType primary = primaryBlanket != null ? primaryBlanket : activeBlankets.get(0);
-        IFissionFuelRodType activeFuel = getFuelRodForConsumption();
-
-        // TIER CHECK: If there's no fuel, or the fuel tier is lower than the primary blanket tier, skip breeding
-        int fuelTier = activeFuel != null ? activeFuel.getTier() : 0;
-        if (fuelTier < primary.getTier()) {
-            return; // Breeding is inert, but reactor keeps running
-        }
-
         int duration = Math.max(1, primary.getDurationTicks());
+
+        // FALLBACK: Default to 1.0 if getBurnMultiplier() is deprecated or a flat config rate
+        double burnMul = 1.0;
 
         // GATING CHECK FOR NON-ADDITIVE USAGE: Verify item is present before progressing the cycle
         if (!cfg.blanketUsageAdditive) {
-            double burnMul = getBurnMultiplier();
-            int p = Math.max(1, parallels);
-            int basePerCycle = Math.max(0, primary.getAmountPerCycle());
-            int amount = (int) Math.ceil(basePerCycle * p * burnMul);
+            int amount = (int) Math.ceil(Math.max(0, primary.getAmountPerCycle()) * parallels * burnMul);
 
             if (amount > 0 && !canConsumeResource(primary.getInputKey(), amount)) {
                 return; // Missing breeding inputs, pause progression
@@ -172,21 +152,16 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         }
 
         blanketCycleTicks++;
-
         if (blanketCycleTicks < duration) return;
 
         blanketCycleTicks = 0;
         blanketCycleCount++;
 
-        double burnMul = getBurnMultiplier();
-        int p = Math.max(1, parallels);
-
         int spectrumBias = getReactorSpectrumBias();
         Random rng = makeBlanketRng();
 
         if (!cfg.blanketUsageAdditive) {
-            int basePerCycle = Math.max(0, primary.getAmountPerCycle());
-            int amount = (int) Math.ceil(basePerCycle * p * burnMul);
+            int amount = (int) Math.ceil(Math.max(0, primary.getAmountPerCycle()) * parallels * burnMul);
             if (amount <= 0) return;
 
             if (!tryConsumeResource(primary.getInputKey(), amount)) return;
@@ -198,11 +173,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         }
 
         for (var blanket : activeBlankets) {
-            // TIER CHECK FOR ADDITIVE INDIVIDUAL BLANKETS:
-            if (fuelTier < blanket.getTier()) continue;
-
-            int basePerCycle = Math.max(0, blanket.getAmountPerCycle());
-            int amount = (int) Math.ceil(basePerCycle * p * burnMul);
+            int amount = (int) Math.ceil(Math.max(0, blanket.getAmountPerCycle()) * parallels * burnMul);
             if (amount <= 0) continue;
 
             if (!tryConsumeResource(blanket.getInputKey(), amount)) continue;
@@ -254,36 +225,11 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
     }
 
     public static ModifierFunction recipeModifier(MetaMachine machine, GTRecipe recipe) {
-        if (!(machine instanceof BreederWorkableElectricMultiblockMachine m)) {
-            return com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier
-                    .nullWrongType(BreederWorkableElectricMultiblockMachine.class, machine);
+        if (!(machine instanceof BreederWorkableElectricMultiblockMachine m) || !m.isFormed()) {
+            return ModifierFunction.IDENTITY;
         }
-
-        if (!m.isFormed()) return ModifierFunction.IDENTITY;
-
-        int parallels = Math.max(1, m.computeParallels());
-
-        int euBoost = m.getModeratorEUBoostClamped();
-        int fuelDiscount = m.getModeratorFuelDiscountClamped();
-
-        double eutMultiplier = 1.0 + (euBoost / 100.0);
-        double durationMultiplier = Math.max(0.01, 1.0 - (fuelDiscount / 100.0));
-
-        var b = ModifierFunction.builder()
-                .eutMultiplier(eutMultiplier)
-                .durationMultiplier(durationMultiplier);
-
-        if (parallels > 1) {
-            var mult = ContentModifier.multiplier(parallels);
-            b.inputModifier(mult)
-                    .outputModifier(mult)
-                    .parallels(parallels);
-        }
-
-        return b.build();
+        return FissionFuelManager.buildRecipeModifier(m);
     }
-
-    // 1. Use the Parent's helper (ensure it's not returning AIR)
 
     @Nullable
     protected ItemStack resolveKeyToItem(String key, int amount) {
@@ -292,10 +238,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         ResourceLocation rl = ResourceLocation.tryParse(key);
         if (rl == null) return ItemStack.EMPTY;
 
-        // Strictly Forge Registry - bypasses GregTech Material logic
         Item item = ForgeRegistries.ITEMS.getValue(rl);
-
-        // Forge returns AIR if not found.
         if (item == null || item == net.minecraft.world.item.Items.AIR) {
             return ItemStack.EMPTY;
         }
@@ -312,11 +255,9 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
                     .outputItems(is)
                     .buildRawRecipe();
 
-            // Push to GT Output Buses
             var result = RecipeHelper.handleRecipeIO(this, dummy, IO.OUT, getRecipeLogic().getChanceCaches());
 
-            // If buses are full or IO fails, eject at controller pos
-            if (!result.isSuccess()) {
+            if (!result.isSuccess() && getLevel() != null) {
                 net.minecraft.world.Containers.dropItemStack(
                         getLevel(),
                         getPos().getX(), getPos().getY(), getPos().getZ(),
@@ -325,8 +266,6 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         }
     }
 
-    // 3. Fix the "roulettePick" and "sampleOutputs"
-    // Ensure these call the local tryOutputResource so they benefit from the fix
     private void outputBatch(Map<String, Integer> outputs) {
         for (var e : outputs.entrySet()) {
             tryOutputResource(e.getKey(), e.getValue());
@@ -351,11 +290,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
 
         if (!RecipeHelper.matchRecipe(this, dummy).isSuccess()) return false;
 
-        return RecipeHelper.handleRecipeIO(
-                this,
-                dummy,
-                IO.IN,
-                getRecipeLogic().getChanceCaches()).isSuccess();
+        return RecipeHelper.handleRecipeIO(this, dummy, IO.IN, getRecipeLogic().getChanceCaches()).isSuccess();
     }
 
     private boolean tryConsumeItem(ItemStack stack) {
@@ -367,11 +302,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
 
         if (!RecipeHelper.matchRecipe(this, dummy).isSuccess()) return false;
 
-        return RecipeHelper.handleRecipeIO(
-                this,
-                dummy,
-                IO.IN,
-                getRecipeLogic().getChanceCaches()).isSuccess();
+        return RecipeHelper.handleRecipeIO(this, dummy, IO.IN, getRecipeLogic().getChanceCaches()).isSuccess();
     }
 
     private record WeightedKey(String key, double weight, int instability) {}
@@ -379,16 +310,13 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
     private int getReactorSpectrumBias() {
         int bias = 0;
 
-        IFissionFuelRodType rod = getFuelRodForConsumption();
-        if (rod != null) {
-            try {
+        List<IFissionFuelRodType> activeRods = getComponentManager().getActiveFuelRods();
+        if (!activeRods.isEmpty()) {
+            IFissionFuelRodType rod = activeRods.stream()
+                    .max(Comparator.comparingInt(IFissionFuelRodType::getTier))
+                    .orElse(null);
+            if (rod != null) {
                 bias += rod.getNeutronBias();
-            } catch (Throwable ignored) {}
-        }
-
-        if (activeModerators != null && !activeModerators.isEmpty()) {
-            for (var m : activeModerators) {
-                try {} catch (Throwable ignored) {}
             }
         }
 
@@ -396,19 +324,16 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
     }
 
     private List<WeightedKey> buildAdjustedDistribution(IFissionBlanketType blanket, int spectrumBias) {
-        // Normalize bias to a -1.0 to 1.0 range
         double normalizedBias = spectrumBias / 100.0;
-
         List<WeightedKey> out = new ArrayList<>();
+
         for (var bo : blanket.getOutputs()) {
             if (bo == null) continue;
             int baseWeight = Math.max(0, bo.weight());
             if (baseWeight <= 0) continue;
 
-            // Linear scaling: Bias shifts weight based on instability.
-            // If bias is positive and instability is high, weight increases.
             double factor = 1.0 + (normalizedBias * bo.instability() * 0.5);
-            double adjustedWeight = baseWeight * Math.max(0.1, factor); // Clamp to 10% minimum weight
+            double adjustedWeight = baseWeight * Math.max(0.1, factor);
 
             out.add(new WeightedKey(bo.key(), adjustedWeight, bo.instability()));
         }
@@ -433,7 +358,6 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         double totalWeight = dist.stream().mapToDouble(WeightedKey::weight).sum();
         if (totalWeight <= 0.0) return result;
 
-        // Use a frequency-based approach for large batches (Parallels)
         for (int i = 0; i < amount; i++) {
             double selector = rng.nextDouble() * totalWeight;
             double runningSum = 0.0;
@@ -448,7 +372,6 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
                 }
             }
 
-            // Fallback to avoid "lost" items due to precision errors
             if (!picked) {
                 result.merge(dist.get(rng.nextInt(dist.size())).key(), 1, Integer::sum);
             }
@@ -456,33 +379,22 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         return result;
     }
 
-    private String roulettePick(List<WeightedKey> dist, double total, Random rng) {
-        double r = rng.nextDouble() * total;
-        double cum = 0.0;
-        for (var w : dist) {
-            cum += w.weight();
-            if (r <= cum) return w.key();
-        }
-        return dist.get(dist.size() - 1).key();
+    @Override
+    public Widget createUIWidget() {
+        return new WidgetGroup(0, 0, 224, 216);
     }
 
     @Override
     public void addDisplayText(@NotNull List<Component> textList) {
         super.addDisplayText(textList);
+        if (!isFormed()) return;
 
-        if (isFormed() && primaryBlanket != null) {
-            IFissionFuelRodType activeFuel = getFuelRodForConsumption();
-            int fuelTier = activeFuel != null ? activeFuel.getTier() : 0;
-
-            if (fuelTier < primaryBlanket.getRequiredFuelTier()) {
-                textList.add(Component
-                        .literal("WARNING: Breeding Offline - Requires Tier " + primaryBlanket.getRequiredFuelTier() +
-                                "+ Driver Fuel")
-                        .withStyle(net.minecraft.ChatFormatting.GOLD));
-            } else {
-                textList.add(Component.literal("Breeding Active (Using Tier " + fuelTier + " Fuel)")
-                        .withStyle(net.minecraft.ChatFormatting.GREEN));
-            }
+        if (activeBlankets.isEmpty()) {
+            textList.add(Component.literal("Breeding Offline - No Blankets Present")
+                    .withStyle(net.minecraft.ChatFormatting.RED));
+        } else {
+            textList.add(Component.literal("Breeding Active")
+                    .withStyle(net.minecraft.ChatFormatting.GREEN));
         }
     }
 }

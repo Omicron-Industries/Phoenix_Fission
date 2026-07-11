@@ -32,7 +32,7 @@ public class PhoenixMachineLangHandler {
                 "§dConsumption Rate: §5%d mB/t");
 
         provider.add("block.phoenix_fission.msr_liner.info_header",
-                "─── Molten Salt Core Liner Specifications ───");
+                "--- Molten Salt Core Liner Specifications ---");
 
         provider.add("phoenix_fission.blanket.generation_features",
                 "Transmutation Loop Parameters:");
@@ -154,18 +154,18 @@ public class PhoenixMachineLangHandler {
         provider.add("gui.phoenix_fission.advanced_stability_sensor.title", "Advanced Thermal Stability Configuration");
         provider.add("gui.phoenix_fission.advanced_stability_sensor.min", "Min Heat Threshold %");
         provider.add("gui.phoenix_fission.advanced_stability_sensor.max", "Max Heat Threshold %");
-        provider.add("gui.phoenix_fission.advanced_stability_sensor.strength", "Emit Strength (1–15)");
+        provider.add("gui.phoenix_fission.advanced_stability_sensor.strength", "Emit Strength (1-15)");
         provider.add("gui.phoenix_fission.advanced_stability_sensor.invert", "Invert Signal");
         provider.add("gui.phoenix_fission.advanced_stability_sensor.hint1", "Emits fixed strength on back face only.");
         provider.add("gui.phoenix_fission.advanced_stability_sensor.hint2", "Pair with an Advanced SCRAM Hatch.");
 
         // UI Elements for the Advanced SCRAM Hatch
         provider.add("gui.phoenix_fission.advanced_scram.title", "Advanced SCRAM Configuration");
-        provider.add("gui.phoenix_fission.advanced_scram.threshold", "Min Signal Strength (1–15)");
+        provider.add("gui.phoenix_fission.advanced_scram.threshold", "Min Signal Strength (1-15)");
         provider.add("gui.phoenix_fission.advanced_scram.sustain", "Sustain Duration (ticks)");
-        provider.add("gui.phoenix_fission.advanced_scram.status_armed", "§c● SCRAMMED — Reactor HALTED");
+        provider.add("gui.phoenix_fission.advanced_scram.status_armed", "§c[SCRAM] Reactor HALTED");
         provider.add("gui.phoenix_fission.advanced_scram.status_arming", "§eArming: %d / %d ticks");
-        provider.add("gui.phoenix_fission.advanced_scram.status_standby", "§a● Standby — Reactor Permitted");
+        provider.add("gui.phoenix_fission.advanced_scram.status_standby", "§a[OK] Standby - Reactor Permitted");
         provider.add("gui.phoenix_fission.advanced_scram.status_triggered", "§cArmed and triggered.");
         provider.add("gui.phoenix_fission.advanced_scram.status_waiting", "§7Waiting for signal...");
         provider.add("gui.phoenix_fission.advanced_scram.hint1", "Signal must meet strength threshold");
@@ -218,9 +218,7 @@ public class PhoenixMachineLangHandler {
         provider.add("config.jade.plugin_phoenix_fission.tesla_network_info", "Tesla Network Information");
         provider.add("config.jade.plugin_phoenix_fission.fission_machine_info", "Fission Machine Info");
 
-
-
-// Advanced Fission Stability Sensor Tooltips
+        // Advanced Fission Stability Sensor Tooltips
         provider.add("phoenix_fission.machine.fission_advanced_stability_sensor.tooltip",
                 "§bAdvanced Thermal Monitor§r: Emits a highly customizable redstone payload.");
         provider.add("phoenix_fission.machine.fission_advanced_stability_sensor.tooltip2",
@@ -256,42 +254,42 @@ public class PhoenixMachineLangHandler {
 
         // Multiblock Tooltip Builder
         provider.add("multiblock.tooltip.machinetype", "Machine Type: %s");
-        provider.add("multiblock.yellowline", "§e━━━━━━━━━━━━━━━━━━━━");
+        provider.add("multiblock.yellowline", "§e--------------------");
         provider.add("multiblock.underyellowline", "Hold §e§lSHIFT§r to display structure details!");
         provider.add("multiblock.structureadvtooltip", "Structure:");
 
         // Feature Flags (Checks)
-        provider.add("multiblock.pchaccess1", "\u00A0\u00A0\u00A0§9Parallel Control Hatch: ✓");
+        provider.add("multiblock.pchaccess1", "\u00A0\u00A0\u00A0§9Parallel Control Hatch: [OK]");
         provider.add("multiblock.pchaccess2",
                 "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock can use PCHs to increase it's efficiency.");
-        provider.add("multiblock.subtickaccess1", "\u00A0\u00A0\u00A0§3SubTick: ✓");
+        provider.add("multiblock.subtickaccess1", "\u00A0\u00A0\u00A0§3SubTick: [OK]");
         provider.add("multiblock.subtickaccess2",
                 "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock performs subtick recipes!");
-        provider.add("multiblock.perfocaccess1", "\u00A0\u00A0\u00A0§dPerfect OCs: ✓");
+        provider.add("multiblock.perfocaccess1", "\u00A0\u00A0\u00A0§dPerfect OCs: [OK]");
         provider.add("multiblock.perfocaccess2",
                 "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock supports perfect overclocks (4/4).");
         provider.add("multiblock.nooc1", "\u00A0\u00A0\u00A0§cOverclocks: X");
         provider.add("multiblock.nooc2", "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock can not overclock.");
 
         // Laser & Power
-        provider.add("multiblock.laseraccess1", "\u00A0\u00A0\u00A0§6Laser Target Access: ✓");
+        provider.add("multiblock.laseraccess1", "\u00A0\u00A0\u00A0§6Laser Target Access: [OK]");
         provider.add("multiblock.laseraccess2",
                 "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock can be powered with Laser Target Hatches.");
-        provider.add("multiblock.needlaseraccess1", "\u00A0\u00A0\u00A0§6Laser Target Access: ✓");
+        provider.add("multiblock.needlaseraccess1", "\u00A0\u00A0\u00A0§6Laser Target Access: [OK]");
         provider.add("multiblock.needlaseraccess2",
                 "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock MUST be powered with Laser Target Hatches.");
         provider.add("multiblock.nopower1", "\u00A0\u00A0\u00A0§cEnergy Output: X");
         provider.add("multiblock.nopower2",
                 "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock does NOT produce/use §3Energy§7.");
-        provider.add("multiblock.energyoutputaccess1", "\u00A0\u00A0\u00A0§3Energy Output: ✓");
+        provider.add("multiblock.energyoutputaccess1", "\u00A0\u00A0\u00A0§3Energy Output: [OK]");
         provider.add("multiblock.energyoutputaccess2",
                 "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock provides §3Energy§7 output!");
 
         // Source
-        provider.add("multiblock.sourceoutputaccess1", "\u00A0\u00A0\u00A0§zSource Output: §3✓");
+        provider.add("multiblock.sourceoutputaccess1", "\u00A0\u00A0\u00A0§zSource Output: §3[OK]");
         provider.add("multiblock.sourceoutputaccess2",
                 "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock provides §zSource§7 output!");
-        provider.add("multiblock.sourceinputaccess1", "\u00A0\u00A0\u00A0§zSource Input: §3✓");
+        provider.add("multiblock.sourceinputaccess1", "\u00A0\u00A0\u00A0§zSource Input: §3[OK]");
         provider.add("multiblock.sourceinputaccess2",
                 "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock requires §zSource §7input!");
 
@@ -348,10 +346,10 @@ public class PhoenixMachineLangHandler {
         provider.add("phoenix_fission.msr_liner.tier", "Structural Tier: MK%d");
         provider.add("phoenix_fission.msr_liner.flow_rate", "Flow Efficiency: %d mb/t per block");
         provider.add("phoenix_fission.msr_liner.thermal_dissipation", "Thermal Dissipation: %s Heat/mb");
-        provider.add("phoenix_fission.msr_liner.input_salt", "▶ Accepts Fuel: §f%s");
-        provider.add("phoenix_fission.msr_liner.output_salt", "◀ Yields Waste: §7%s");
+        provider.add("phoenix_fission.msr_liner.input_salt", "> Accepts Fuel: §f%s");
+        provider.add("phoenix_fission.msr_liner.output_salt", "< Yields Waste: §7%s");
 
-        provider.add("phoenix_fission.msr_liner.info_header", "─── Molten Salt Core Liner Specifications ───");
+        provider.add("phoenix_fission.msr_liner.info_header", "--- Molten Salt Core Liner Specifications ---");
 
         // Source Tank Tooltips
         provider.add("phoenix_fission.machine.multiblock.source_tank.tooltip",

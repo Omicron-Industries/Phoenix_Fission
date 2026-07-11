@@ -1,6 +1,7 @@
 package net.phoenix.phoenix_fission.api.block;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.StringRepresentable;
 import net.minecraftforge.common.util.Lazy;
 import net.phoenix.phoenix_fission.PhoenixAPI;
 
@@ -9,7 +10,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Comparator;
 import java.util.List;
 
-public interface IFissionBlanketType {
+// Extending StringRepresentable connects it flawlessly with the modern FissionBlanketBlock
+public interface IFissionBlanketType extends StringRepresentable {
 
     @NotNull
     String getName();
@@ -37,6 +39,12 @@ public interface IFissionBlanketType {
 
     @NotNull
     ResourceLocation getTexture();
+
+    // Satisfies StringRepresentable contract using your existing getName() method
+    @Override
+    default @NotNull String getSerializedName() {
+        return getName();
+    }
 
     Lazy<IFissionBlanketType[]> ALL_BLANKETS_BY_TIER = Lazy.of(() -> PhoenixAPI.FISSION_BLANKETS.keySet().stream()
             .sorted(Comparator.comparingInt(IFissionBlanketType::getTier))

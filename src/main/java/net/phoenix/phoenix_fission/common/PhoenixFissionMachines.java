@@ -170,11 +170,9 @@ public class PhoenixFissionMachines {
     public static MultiblockMachineDefinition MOLTEN_SALT_REACTOR = null;
     public static MultiblockMachineDefinition PRESSURIZED_FISSION_REACTOR = null;
 
-
-
     static {
-        if ((PhoenixFissionConfigs.INSTANCE != null && PhoenixFissionConfigs.INSTANCE.fission.breederReactorEnabled)
-                || GTCEu.isDataGen()) {
+        if ((PhoenixFissionConfigs.INSTANCE != null && PhoenixFissionConfigs.INSTANCE.fission.breederReactorEnabled) ||
+                GTCEu.isDataGen()) {
             HIGH_PERFORMANCE_BREEDER_REACTOR = PHOENIX_REGISTRATE
                     .multiblock("high_performance_breeder_reactor", BreederWorkableElectricMultiblockMachine::new)
                     .langValue("§bHigh Performance Breeder Reactor")
@@ -185,29 +183,40 @@ public class PhoenixFissionMachines {
                             GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK_SUBTICK))
                     .appearanceBlock(PhoenixFissionBlocks.FISSILE_REACTION_SAFE_CASING)
                     .pattern(definition -> FactoryBlockPattern.start()
-                            .aisle("BBCCCCCBB", "BBDEEEDBB", "BBDEEEDBB", "BBDEEEDBB", "BBDFFFDBB", "BBDFFFDBB", "BBCFFFCBB",
+                            .aisle("BBCCCCCBB", "BBDEEEDBB", "BBDEEEDBB", "BBDEEEDBB", "BBDFFFDBB", "BBDFFFDBB",
+                                    "BBCFFFCBB",
                                     "BBCFFFCBB", "BBBBBBBBB")
-                            .aisle("BCCCCCCCB", "BGAAAAHGB", "BGAAAAHGB", "BGAAAAHGB", "BGAAAAHGB", "BGAAAAHGB", "BCAAAAHCB",
+                            .aisle("BCCCCCCCB", "BGAAAAHGB", "BGAAAAHGB", "BGAAAAHGB", "BGAAAAHGB", "BGAAAAHGB",
+                                    "BCAAAAHCB",
                                     "BCAAAAHCB", "BBCCCCCBB")
-                            .aisle("CCCCCCCCC", "DHIAAAIHD", "DHIAAAIHD", "DHIAAAIHD", "DHIAAAIHD", "DHIJJJIHD", "CHIKKKIHC",
+                            .aisle("CCCCCCCCC", "DHIAAAIHD", "DHIAAAIHD", "DHIAAAIHD", "DHIAAAIHD", "DHIJJJIHD",
+                                    "CHIKKKIHC",
                                     "CHIAAAIHC", "BCCCCCCCB")
-                            .aisle("CCCCCCCCC", "EAALILAAE", "EAALILAAE", "EAALILAAE", "FAALILAAF", "FAJJIJJAF", "FAKKIKKAF",
+                            .aisle("CCCCCCCCC", "EAALILAAE", "EAALILAAE", "EAALILAAE", "FAALILAAF", "FAJJIJJAF",
+                                    "FAKKIKKAF",
                                     "FAAAIAAAF", "BCCGGGCCB")
-                            .aisle("CCCCCCCCC", "EAAIJIAAE", "EAAIJIAAE", "EAAIJIAAE", "FAAIJIAAF", "FAJIJIJAF", "FAKIDIKAF",
+                            .aisle("CCCCCCCCC", "EAAIJIAAE", "EAAIJIAAE", "EAAIJIAAE", "FAAIJIAAF", "FAJIJIJAF",
+                                    "FAKIDIKAF",
                                     "FAAIDIAAF", "BCCGJGCCB")
-                            .aisle("CCCCCCCCC", "EAALILAAE", "EAALILAAE", "EAALILAAE", "FAALILAAF", "FAJJIJJAF", "FAKKIKKAF",
+                            .aisle("CCCCCCCCC", "EAALILAAE", "EAALILAAE", "EAALILAAE", "FAALILAAF", "FAJJIJJAF",
+                                    "FAKKIKKAF",
                                     "FAAAIAAAF", "BCCGGGCCB")
-                            .aisle("CCCCCCCCC", "DHIAAAIHD", "DHIAAAIHD", "DHIAAAIHD", "DHIAAAIHD", "DHIJJJIHD", "CHIKKKIHC",
+                            .aisle("CCCCCCCCC", "DHIAAAIHD", "DHIAAAIHD", "DHIAAAIHD", "DHIAAAIHD", "DHIJJJIHD",
+                                    "CHIKKKIHC",
                                     "CHIAAAIHC", "BCCCCCCCB")
-                            .aisle("BCCCCCCCB", "BGHAAAHGB", "BGHAAAHGB", "BGHAAAHGB", "BGHAAAHGB", "BGHAAAHGB", "BCHAAAHCB",
+                            .aisle("BCCCCCCCB", "BGHAAAHGB", "BGHAAAHGB", "BGHAAAHGB", "BGHAAAHGB", "BGHAAAHGB",
+                                    "BCHAAAHCB",
                                     "BCHAAAHCB", "BBCCCCCBB")
-                            .aisle("BBCCMCCBB", "BBDEEEDBB", "BBDEEEDBB", "BBDEEEDBB", "BBDFFFDBB", "BBDFFFDBB", "BBCFFFCBB",
+                            .aisle("BBCCMCCBB", "BBDEEEDBB", "BBDEEEDBB", "BBDEEEDBB", "BBDFFFDBB", "BBDFFFDBB",
+                                    "BBCFFFCBB",
                                     "BBCFFFCBB", "BBBBBBBBB")
                             .where('A', Predicates.air())
                             .where('B', Predicates.any())
-                            .where("C", blocks(PhoenixFissionBlocks.FISSILE_REACTION_SAFE_CASING.get()).setMinGlobalLimited(10)
+                            .where("C", blocks(PhoenixFissionBlocks.FISSILE_REACTION_SAFE_CASING.get())
+                                    .setMinGlobalLimited(10)
                                     .or(Predicates.abilities(PartAbility.MAINTENANCE).setExactLimit(1))
-                                    .or(Predicates.abilities(PartAbility.SUBSTATION_OUTPUT_ENERGY).setMaxGlobalLimited(2))
+                                    .or(Predicates.abilities(PartAbility.SUBSTATION_OUTPUT_ENERGY)
+                                            .setMaxGlobalLimited(2))
                                     .or(Predicates.autoAbilities(definition.getRecipeTypes()))
                                     // Add new hatches here:
                                     .or(Predicates.abilities(PhoenixPartAbility.FISSION_SCRAM).setMaxGlobalLimited(1))
@@ -217,9 +226,13 @@ public class PhoenixFissionMachines {
                             .where('F', Predicates.blocks(GCYMBlocks.CASING_HIGH_TEMPERATURE_SMELTING.get()))
                             .where("G", Predicates.blocks(GCYMBlocks.HEAT_VENT.get()))
                             .where("H", Predicates.blocks(GTBlocks.CASING_POLYTETRAFLUOROETHYLENE_PIPE.get()))
-                            .where('I', PhoenixFissionPredicates.fissionModerators().or(PhoenixFissionPredicates.fissionBlankets()))
+                            .where('I',
+                                    PhoenixFissionPredicates.fissionModerators()
+                                            .or(PhoenixFissionPredicates.fissionBlankets()))
                             .where("J", Predicates.blocks(COIL_HSSG.get()))
-                            .where("K", PhoenixFissionPredicates.fissionCoolers().or(PhoenixFissionPredicates.fissionFuelRods()))
+                            .where("K",
+                                    PhoenixFissionPredicates.fissionCoolers()
+                                            .or(PhoenixFissionPredicates.fissionFuelRods()))
                             .where("L", Predicates.blocks(CASING_TUNGSTENSTEEL_PIPE.get()))
                             .where("M", Predicates.controller(Predicates.blocks(definition.get())))
                             .build())
@@ -230,99 +243,112 @@ public class PhoenixFissionMachines {
                     .register();
         }
 
-            if ((PhoenixFissionConfigs.INSTANCE != null && PhoenixFissionConfigs.INSTANCE.fission.fissionReactorEnabled)
-                    || GTCEu.isDataGen()) {
-                PRESSURIZED_FISSION_REACTOR = PHOENIX_REGISTRATE
-                        .multiblock("pressurized_fission_reactor", DynamicFissionReactorMachine::new)
-                        .langValue("§bPressurized Fission Reactor")
-                        .recipeType(PhoenixRecipeTypes.PRESSURIZED_FISSION_REACTOR_RECIPES)
-                        .generator(true)
-                        .regressWhenWaiting(false)
-                        .recipeModifiers(DynamicFissionReactorMachine::recipeModifier,
-                                GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK_SUBTICK))
-                        .appearanceBlock(PhoenixFissionBlocks.FISSILE_REACTION_SAFE_CASING)
-                        .pattern(definition -> FactoryBlockPattern.start()
-                                .aisle("BCCCB", "CDDDC", "CDDDC", "CDDDC", "BCCCB")
-                                .aisle("CEFEC", "DGGGD", "DGGGD", "DGGGD", "CDHDC")
-                                .aisle("CFEFC", "DGFGD", "DGFGD", "DGFGD", "CHEHC")
-                                .aisle("CEFEC", "DGGGD", "DGGGD", "DGGGD", "CDHDC")
-                                .aisle("BCICB", "CDDDC", "CDDDC", "CDDDC", "BCCCB")
-                                .where("A", air())
-                                .where("B", any())
-                                .where("C", blocks(PhoenixFissionBlocks.FISSILE_REACTION_SAFE_CASING.get()).setMinGlobalLimited(12)
-                                        .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1))
-                                        .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setPreviewCount(1))
-                                        .or(Predicates.abilities(PartAbility.MAINTENANCE).setExactLimit(1))
-                                        .or(Predicates.abilities(PhoenixPartAbility.FISSION_SCRAM).setMaxGlobalLimited(1))
-                                        .or(Predicates.abilities(PhoenixPartAbility.FISSION_SENSOR).setMaxGlobalLimited(2))
-                                        .or(Predicates.autoAbilities(definition.getRecipeTypes())))
-                                .where("D", blocks(Blocks.TINTED_GLASS))
-                                .where("E", blocks(COIL_KANTHAL.get()))
-                                .where('F', PhoenixFissionPredicates.fissionModerators().or(PhoenixFissionPredicates.fissionBlankets()))
-                                .where("G", PhoenixFissionPredicates.fissionCoolers().or(PhoenixFissionPredicates.fissionFuelRods()))
-                                .where("H", blocks(PhoenixFissionBlocks.FISSILE_HEAT_SAFE_CASING.get()))
-                                .where("I", Predicates.controller(Predicates.blocks(definition.get())))
-                                .build())
-                        .model(
-                                createWorkableCasingMachineModel(
-                                        PhoenixFission.id("block/fission/fissile_reaction_safe_casing"),
-                                        GTCEu.id("block/multiblock/fusion_reactor")))
-                        .register();
-            }
-            if ((PhoenixFissionConfigs.INSTANCE != null && PhoenixFissionConfigs.INSTANCE.fission.msrEnabled)
-                    || GTCEu.isDataGen()) {
+        if ((PhoenixFissionConfigs.INSTANCE != null && PhoenixFissionConfigs.INSTANCE.fission.fissionReactorEnabled) ||
+                GTCEu.isDataGen()) {
+            PRESSURIZED_FISSION_REACTOR = PHOENIX_REGISTRATE
+                    .multiblock("pressurized_fission_reactor", DynamicFissionReactorMachine::new)
+                    .langValue("§bPressurized Fission Reactor")
+                    .recipeType(PhoenixRecipeTypes.PRESSURIZED_FISSION_REACTOR_RECIPES)
+                    .generator(true)
+                    .regressWhenWaiting(false)
+                    .recipeModifiers(DynamicFissionReactorMachine::recipeModifier,
+                            GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK_SUBTICK))
+                    .appearanceBlock(PhoenixFissionBlocks.FISSILE_REACTION_SAFE_CASING)
+                    .pattern(definition -> FactoryBlockPattern.start()
+                            .aisle("BCCCB", "CDDDC", "CDDDC", "CDDDC", "BCCCB")
+                            .aisle("CEFEC", "DGGGD", "DGGGD", "DGGGD", "CDHDC")
+                            .aisle("CFEFC", "DGFGD", "DGFGD", "DGFGD", "CHEHC")
+                            .aisle("CEFEC", "DGGGD", "DGGGD", "DGGGD", "CDHDC")
+                            .aisle("BCICB", "CDDDC", "CDDDC", "CDDDC", "BCCCB")
+                            .where("A", air())
+                            .where("B", any())
+                            .where("C", blocks(PhoenixFissionBlocks.FISSILE_REACTION_SAFE_CASING.get())
+                                    .setMinGlobalLimited(12)
+                                    .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1))
+                                    .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setPreviewCount(1))
+                                    .or(Predicates.abilities(PartAbility.MAINTENANCE).setExactLimit(1))
+                                    .or(Predicates.abilities(PhoenixPartAbility.FISSION_SCRAM).setMaxGlobalLimited(1))
+                                    .or(Predicates.abilities(PhoenixPartAbility.FISSION_SENSOR).setMaxGlobalLimited(2))
+                                    .or(Predicates.autoAbilities(definition.getRecipeTypes())))
+                            .where("D", blocks(Blocks.TINTED_GLASS))
+                            .where("E", blocks(COIL_KANTHAL.get()))
+                            .where('F',
+                                    PhoenixFissionPredicates.fissionModerators()
+                                            .or(PhoenixFissionPredicates.fissionBlankets()))
+                            .where("G",
+                                    PhoenixFissionPredicates.fissionCoolers()
+                                            .or(PhoenixFissionPredicates.fissionFuelRods()))
+                            .where("H", blocks(PhoenixFissionBlocks.FISSILE_HEAT_SAFE_CASING.get()))
+                            .where("I", Predicates.controller(Predicates.blocks(definition.get())))
+                            .build())
+                    .model(
+                            createWorkableCasingMachineModel(
+                                    PhoenixFission.id("block/fission/fissile_reaction_safe_casing"),
+                                    GTCEu.id("block/multiblock/fusion_reactor")))
+                    .register();
+        }
+        if ((PhoenixFissionConfigs.INSTANCE != null && PhoenixFissionConfigs.INSTANCE.fission.msrEnabled) ||
+                GTCEu.isDataGen()) {
 
-                MultiblockMachineDefinition MOLTEN_SALT_REACTOR = PHOENIX_REGISTRATE
-                        .multiblock("molten_salt_reactor", MoltenSaltReactorMultiblockMachine::new)
-                        .langValue("Molten Salt Reactor")
-                        .recipeType(PhoenixRecipeTypes.PRESSURIZED_FISSION_REACTOR_RECIPES)
-                        .generator(true)
-                        .regressWhenWaiting(false)
-                        .recipeModifiers(MoltenSaltReactorMultiblockMachine::recipeModifier,
-                                GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK_SUBTICK))
-                        .appearanceBlock(GCYMBlocks.CASING_HIGH_TEMPERATURE_SMELTING)
-                        .pattern(definition -> FactoryBlockPattern.start()
-                                .aisle("ABACCCABA", "ADACCCADA", "ADACCCADA", "ADACCCADA", "ADACCCADA", "ADACCCADA", "ABACCCABA")
-                                .aisle("BEEBEBEEB", "DGHHDHHGD", "DGHHDHHGD", "DGHHDHHGD", "DGHHDHHGD", "DGHHDHHGD", "BHHBHBHHB")
-                                .aisle("AEAEEEAEA", "AHIJCJIHA", "AHIJCJIHA", "AHIJCJIHA", "AHIJCJIHA", "AHIJCJIHA", "AHHHHHHHA")
-                                .aisle("CBEEEEEBC", "CHJJKJJHC", "CHJJKJJHC", "CHJJKJJHC", "CHJJKJJHC", "CHJJKJJHC", "CBHHLHHBC")
-                                .aisle("CEEEEEEEC", "CDCKJKCDC", "CDCKMKCDC", "CDCKMKCDC", "CDCKMKCDC", "CDCKMKCDC", "CHHLLLHHC")
-                                .aisle("CBEEEEEBC", "CHJJKJJHC", "CHJJKJJHC", "CHJJKJJHC", "CHJJKJJHC", "CHJJKJJHC", "CBHHLHHBC")
-                                .aisle("AEAEEEAEA", "AHIJCJIHA", "AHIJCJIHA", "AHIJCJIHA", "AHIJCJIHA", "AHIJCJIHA", "AHHHHHHHA")
-                                .aisle("BEEBFBEEB", "DGHHDHHGD", "DGHHDHHGD", "DGHHDHHGD", "DGHHDHHGD", "DGHHDHHGD", "BHHBHBHHB")
-                                .aisle("ABACCCABA", "ADACCCADA", "ADACCCADA", "ADACCCADA", "ADACCCADA", "ADACCCADA", "ABACCCABA")
-                                .where("A", blocks(PhoenixFissionBlocks.FISSILE_REACTION_SAFE_CASING.get()))
-                                .where("B", Predicates.blocks(GCYMBlocks.HEAT_VENT.get()))
-                                .where("C", Predicates.any())
-                                .where("D", Predicates.blocks(CASING_LAMINATED_GLASS.get()))
-                                .where("E", Predicates.blocks(GCYMBlocks.CASING_HIGH_TEMPERATURE_SMELTING.get()))
-                                .where("F", Predicates.controller(Predicates.blocks(definition.get())))
-                                .where("G", Predicates.blocks(HIGH_POWER_CASING.get()))
-                                .where("H", Predicates.blocks(GCYMBlocks.CASING_HIGH_TEMPERATURE_SMELTING.get())
-                                        .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1))
-                                        .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setPreviewCount(1))
-                                        .or(Predicates.abilities(PartAbility.OUTPUT_ENERGY).setPreviewCount(1))
-                                        .or(Predicates.abilities(PartAbility.SUBSTATION_OUTPUT_ENERGY).setPreviewCount(1))
-                                        .or(Predicates.abilities(PartAbility.MAINTENANCE).setExactLimit(1))
-                                        .or(Predicates.abilities(PhoenixPartAbility.FISSION_SCRAM).setMaxGlobalLimited(1))
-                                        .or(Predicates.abilities(PhoenixPartAbility.FISSION_SENSOR).setMaxGlobalLimited(2)))
-                                .where("J", Predicates.blocks(CASING_TUNGSTENSTEEL_ROBUST.get()))
-                                .where("I", Predicates.blocks(CASING_TUNGSTENSTEEL_PIPE.get()))
-                                .where("K", PhoenixFissionPredicates.fissionCoolers())
-                                .where("M", PhoenixFissionPredicates.msrCoreLiner())
-                                .where("L", Predicates.blocks(PhoenixFissionBlocks.FISSILE_HEAT_SAFE_CASING.get()))
-                                .build())
-                        .model(
-                                createWorkableCasingMachineModel(
-                                        GTCEu.id("block/casings/gcym/high_temperature_smelting_casing"),
-                                        GTCEu.id("block/multiblock/fusion_reactor")))
-                        .register();
-            }
+            MultiblockMachineDefinition MOLTEN_SALT_REACTOR = PHOENIX_REGISTRATE
+                    .multiblock("molten_salt_reactor", MoltenSaltReactorMultiblockMachine::new)
+                    .langValue("Molten Salt Reactor")
+                    .recipeType(PhoenixRecipeTypes.PRESSURIZED_FISSION_REACTOR_RECIPES)
+                    .generator(true)
+                    .regressWhenWaiting(false)
+                    .recipeModifiers(MoltenSaltReactorMultiblockMachine::recipeModifier,
+                            GTRecipeModifiers.ELECTRIC_OVERCLOCK.apply(OverclockingLogic.NON_PERFECT_OVERCLOCK_SUBTICK))
+                    .appearanceBlock(GCYMBlocks.CASING_HIGH_TEMPERATURE_SMELTING)
+                    .pattern(definition -> FactoryBlockPattern.start()
+                            .aisle("ABACCCABA", "ADACCCADA", "ADACCCADA", "ADACCCADA", "ADACCCADA", "ADACCCADA",
+                                    "ABACCCABA")
+                            .aisle("BEEBEBEEB", "DGHHDHHGD", "DGHHDHHGD", "DGHHDHHGD", "DGHHDHHGD", "DGHHDHHGD",
+                                    "BHHBHBHHB")
+                            .aisle("AEAEEEAEA", "AHIJCJIHA", "AHIJCJIHA", "AHIJCJIHA", "AHIJCJIHA", "AHIJCJIHA",
+                                    "AHHHHHHHA")
+                            .aisle("CBEEEEEBC", "CHJJKJJHC", "CHJJKJJHC", "CHJJKJJHC", "CHJJKJJHC", "CHJJKJJHC",
+                                    "CBHHLHHBC")
+                            .aisle("CEEEEEEEC", "CDCKJKCDC", "CDCKMKCDC", "CDCKMKCDC", "CDCKMKCDC", "CDCKMKCDC",
+                                    "CHHLLLHHC")
+                            .aisle("CBEEEEEBC", "CHJJKJJHC", "CHJJKJJHC", "CHJJKJJHC", "CHJJKJJHC", "CHJJKJJHC",
+                                    "CBHHLHHBC")
+                            .aisle("AEAEEEAEA", "AHIJCJIHA", "AHIJCJIHA", "AHIJCJIHA", "AHIJCJIHA", "AHIJCJIHA",
+                                    "AHHHHHHHA")
+                            .aisle("BEEBFBEEB", "DGHHDHHGD", "DGHHDHHGD", "DGHHDHHGD", "DGHHDHHGD", "DGHHDHHGD",
+                                    "BHHBHBHHB")
+                            .aisle("ABACCCABA", "ADACCCADA", "ADACCCADA", "ADACCCADA", "ADACCCADA", "ADACCCADA",
+                                    "ABACCCABA")
+                            .where("A", blocks(PhoenixFissionBlocks.FISSILE_REACTION_SAFE_CASING.get()))
+                            .where("B", Predicates.blocks(GCYMBlocks.HEAT_VENT.get()))
+                            .where("C", Predicates.any())
+                            .where("D", Predicates.blocks(CASING_LAMINATED_GLASS.get()))
+                            .where("E", Predicates.blocks(GCYMBlocks.CASING_HIGH_TEMPERATURE_SMELTING.get()))
+                            .where("F", Predicates.controller(Predicates.blocks(definition.get())))
+                            .where("G", Predicates.blocks(HIGH_POWER_CASING.get()))
+                            .where("H", Predicates.blocks(GCYMBlocks.CASING_HIGH_TEMPERATURE_SMELTING.get())
+                                    .or(Predicates.abilities(PartAbility.IMPORT_FLUIDS).setPreviewCount(1))
+                                    .or(Predicates.abilities(PartAbility.EXPORT_FLUIDS).setPreviewCount(1))
+                                    .or(Predicates.abilities(PartAbility.OUTPUT_ENERGY).setPreviewCount(1))
+                                    .or(Predicates.abilities(PartAbility.SUBSTATION_OUTPUT_ENERGY).setPreviewCount(1))
+                                    .or(Predicates.abilities(PartAbility.MAINTENANCE).setExactLimit(1))
+                                    .or(Predicates.abilities(PhoenixPartAbility.FISSION_SCRAM).setMaxGlobalLimited(1))
+                                    .or(Predicates.abilities(PhoenixPartAbility.FISSION_SENSOR).setMaxGlobalLimited(2)))
+                            .where("J", Predicates.blocks(CASING_TUNGSTENSTEEL_ROBUST.get()))
+                            .where("I", Predicates.blocks(CASING_TUNGSTENSTEEL_PIPE.get()))
+                            .where("K", PhoenixFissionPredicates.fissionCoolers())
+                            .where("M", PhoenixFissionPredicates.msrCoreLiner())
+                            .where("L", Predicates.blocks(PhoenixFissionBlocks.FISSILE_HEAT_SAFE_CASING.get()))
+                            .build())
+                    .model(
+                            createWorkableCasingMachineModel(
+                                    GTCEu.id("block/casings/gcym/high_temperature_smelting_casing"),
+                                    GTCEu.id("block/multiblock/fusion_reactor")))
+                    .register();
+        }
 
-        
     }
 
- public static final   MultiblockMachineDefinition HEAT_EXCHANGER = PHOENIX_REGISTRATE
+    public static final MultiblockMachineDefinition HEAT_EXCHANGER = PHOENIX_REGISTRATE
             .multiblock("heat_exchanger", HeatExchangerMachine::new)
             .langValue("§bHeat Exchanger")
             .rotationState(RotationState.ALL)

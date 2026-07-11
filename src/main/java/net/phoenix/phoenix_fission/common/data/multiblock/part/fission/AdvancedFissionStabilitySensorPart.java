@@ -61,8 +61,6 @@ public class AdvancedFissionStabilitySensorPart extends SensorHatchPartMachine {
         return true;
     }
 
-
-
     @Override
     public Widget createUIWidget() {
         WidgetGroup group = new WidgetGroup(0, 0, 200, 185);
@@ -72,8 +70,9 @@ public class AdvancedFissionStabilitySensorPart extends SensorHatchPartMachine {
         group.addWidget(new LabelWidget(10, 24, () -> {
             var controller = getController();
             if (controller instanceof FissionWorkableElectricMultiblockMachine fission) {
-                double pct = (fission.getHeat() / FissionWorkableElectricMultiblockMachine.cfg().maxSafeHeat) * 100.0;
-                // Updated layout readout to fetch signal globally without face restrictions
+                double maxSafe = fission.getMaxSafeHeatHU();
+                double pct = maxSafe > 0 ? (fission.getHeat() / maxSafe) * 100.0 : 0.0;
+
                 int sig = getOutputSignal(null);
                 String sigColor = sig > 0 ? "§a" : "§c";
                 return String.format("§7Heat: §f%.1f%%  §7Signal: %s%d", pct, sigColor, sig);
@@ -108,7 +107,6 @@ public class AdvancedFissionStabilitySensorPart extends SensorHatchPartMachine {
 
         group.addWidget(new Widget(10, 151, 180, 1).setBackground(GuiTextures.BLANK));
 
-        // Updated flavor text info
         group.addWidget(new LabelWidget(10, 162, "Emits fixed strength on all block faces."));
         group.addWidget(new LabelWidget(10, 172, "Pair with an Advanced SCRAM Hatch."));
 
@@ -119,11 +117,10 @@ public class AdvancedFissionStabilitySensorPart extends SensorHatchPartMachine {
 
     @Override
     public int getOutputSignal(@Nullable Direction direction) {
-        // REMOVED: Face direction check to allow global output on any side
         var controller = getController();
         if (!(controller instanceof FissionWorkableElectricMultiblockMachine fission)) return 0;
 
-        double maxSafe = FissionWorkableElectricMultiblockMachine.cfg().maxSafeHeat;
+        double maxSafe = fission.getMaxSafeHeatHU();
         if (maxSafe <= 0) return 0;
 
         double heatPct = (fission.getHeat() / maxSafe) * 100.0;

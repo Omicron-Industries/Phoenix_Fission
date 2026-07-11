@@ -44,14 +44,10 @@ public class FissionStabilitySensorPart extends SensorHatchPartMachine {
         super(holder, tier);
     }
 
-
-
     @Override
     public ManagedFieldHolder getFieldHolder() {
         return MANAGED_FIELD_HOLDER;
     }
-
-    // ── UI ────────────────────────────────────────────────────────────────────
 
     @Override
     public boolean shouldOpenUI(Player player, InteractionHand hand, BlockHitResult hit) {
@@ -65,24 +61,25 @@ public class FissionStabilitySensorPart extends SensorHatchPartMachine {
         group.addWidget(new LabelWidget(10, 8, "§6Fission Stability Sensor"));
 
         group.addWidget(new LabelWidget(10, 24, "§7Heat: --   §7Signal: --") {
+
             @Override
             public void updateScreen() {
                 super.updateScreen();
                 var controller = getController();
                 String text;
                 if (controller instanceof FissionWorkableElectricMultiblockMachine fission) {
-                    double pct = (fission.getHeat() / FissionWorkableElectricMultiblockMachine.cfg().maxSafeHeat) * 100.0;
+                    double maxSafe = fission.getMaxSafeHeatHU();
+                    double pct = maxSafe > 0 ? (fission.getHeat() / maxSafe) * 100.0 : 0.0;
+
                     int sig = getOutputSignal(null);
                     String sigColor = sig > 0 ? "§a" : "§c";
 
-                    // Format cleanly inside standard java sandbox
                     String formattedPct = String.format(java.util.Locale.ROOT, "%.1f", pct);
                     text = "§7Heat: §f" + formattedPct + "%   §7Signal: " + sigColor + sig;
                 } else {
                     text = "§7Heat: §8N/A   §7Signal: §80";
                 }
 
-                // This completely bypasses LocalizationUtils.format() on the client render layer!
                 this.setComponent(net.minecraft.network.chat.Component.literal(text));
             }
         });
@@ -114,15 +111,12 @@ public class FissionStabilitySensorPart extends SensorHatchPartMachine {
         return group;
     }
 
-    // ── Signal logic ──────────────────────────────────────────────────────────
-
     @Override
     public int getOutputSignal(@Nullable Direction direction) {
-        // REMOVED: Face direction check to allow global output on any side
         var controller = getController();
         if (!(controller instanceof FissionWorkableElectricMultiblockMachine fission)) return 0;
 
-        double maxSafe = FissionWorkableElectricMultiblockMachine.cfg().maxSafeHeat;
+        double maxSafe = fission.getMaxSafeHeatHU();
         if (maxSafe <= 0) return 0;
 
         double heatPct = (fission.getHeat() / maxSafe) * 100.0;

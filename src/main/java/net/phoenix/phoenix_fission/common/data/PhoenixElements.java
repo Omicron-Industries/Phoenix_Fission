@@ -59,7 +59,7 @@ public class PhoenixElements {
         AMERICIUM_241 = create("americium_241", 95L, 146L, -1L, null, "Americium-241", "Am-241", true);
 
         PHOENIX_ENRICHED_TRITANIUM = create("phoenix_enriched_tritanium", 1, 32, "PET");
-        EMBER = create("ember", 1, 2, "🔥");
+        EMBER = create("ember", 1, 2, "Emb");
         PHOENIX_ENRICHED_NAQUADAH = create("phoenix_enriched_naquadah", 25, 32, "PENaq");
         AKASHIC_ZERONIUM = create("akashic_zeronium", 24, 12, "ASHK");
         AETHERIUM_STEEL = create("aetherium_steel", 26, 30, "AES");
@@ -92,7 +92,7 @@ public class PhoenixElements {
         SUPERPOSITION_TUNGSTEN_MATRIX = create("superposition_tungsten_matrix", -1, -1, "SWM");
         EXO_TEMPORAL_ORICHALCUM = create("exo_temporal_orichalcum", -1, -1, "ETO");
 
-        INFINITY = create("infinity", -1, -1, "∞");
+        INFINITY = create("infinity", -1, -1, "Inf");
         GALAXIUM_CORE_ALLOY = create("galaxium_core_alloy", -1, -1, "GCA");
         DARK_NEBULA_INFUSED_IRIDIUM = create("dark_nebula_infused_iridium", -1, -1, "DNIIr");
         ELDRITCH_VOIDSTEEL = create("eldritch_voidsteel", -1, -1, "EVSt");
@@ -106,8 +106,8 @@ public class PhoenixElements {
 
         // Special
         ZIRCALLOY = create("zircalloy", 77, 125, "Zr⁷BiHf³");
-        SOURCE_IMBUED_TITANIUM = create("source_imbued_titanium", 10, 118, "✨C✨Ti");
-        ICY_STEEL_MATRIX = create("icy_steel_matrix", 8, 118, "❆Is<>");
+        SOURCE_IMBUED_TITANIUM = create("source_imbued_titanium", 10, 118, "SiTi");
+        ICY_STEEL_MATRIX = create("icy_steel_matrix", 8, 118, "IcSt");
     }
 
     private static Element create(String name, long protons, long neutrons, String symbol) {

@@ -22,518 +22,269 @@ public class PhoenixFissionConfigs {
     @Configurable
     public FissionConfigs fission = new FissionConfigs();
 
-    @Configurable
-    public FissionBlockStatsConfigs fissionStats = new FissionBlockStatsConfigs();
-
+    // ========================================================================
+    // Top-level reactor config
+    // ========================================================================
     public static class FissionConfigs {
 
-        @Configurable
-        @Configurable.Comment("Enable the nuke block.")
-        public boolean nukeEnabled = true;
+        // ── FEATURE ENABLE/DISABLE ──────────────────────────────────────────
+        // Check here first to toggle whole systems on/off.
 
         @Configurable
-        @Configurable.Comment("Enable the base fission reactor.")
+        @Configurable.Comment("Enable the base Fission Reactor multiblock.")
         public boolean fissionReactorEnabled = true;
 
         @Configurable
-        @Configurable.Comment("Enable the High Performance Breeder Reactor.")
+        @Configurable.Comment("Enable the High-Performance Breeder Reactor multiblock.")
         public boolean breederReactorEnabled = true;
 
         @Configurable
-        @Configurable.Comment("Enable the Molten Salt Reactor.")
+        @Configurable.Comment("Enable the Molten Salt Reactor multiblock.")
         public boolean msrEnabled = true;
+
+        @Configurable
+        @Configurable.Comment("Enable the Nuke block.")
+        public boolean nukeEnabled = true;
+
+        @Configurable
+        @Configurable.Comment({
+                "If false, the reactor produces no EU/t at all.",
+                "Heat, fuel consumption, and cooling still function normally.",
+                "Use this for heat-only or steam-only pack configs."
+        })
+        public boolean enableDirectEUOutput = true;
+
+        @Configurable
+        @Configurable.Comment("If false, coolant fluid is never consumed or required (cooling still reduces heat via temperature differential).")
+        public boolean coolingRequiresCoolant = true;
+
+        @Configurable
+        @Configurable.Comment("If true, every installed cooler type contributes its cooling each tick. If false, only one coolant loop is processed.")
+        public boolean coolantUsageAdditive = true;
+
+        @Configurable
+        @Configurable.Comment("If true, all installed blanket types are processed each breeding cycle. If false, only the highest-tier blanket is used.")
+        public boolean blanketUsageAdditive = true;
+
+        // ── HEAT MODEL ──────────────────────────────────────────────────────
+        // Controls the thermal physics simulation.
+        // See heatModel sub-section for conductivity constants.
+
+        @Configurable
+        public HeatModelConfigs heatModel = new HeatModelConfigs();
+
+        // ── PARALLEL SCALING ────────────────────────────────────────────────
+
+        @Configurable
+        @Configurable.Comment("Base GT recipe parallels contributed by each installed fuel rod.")
+        public int parallelsPerFuelRod = 1;
+
+        @Configurable
+        @Configurable.Comment("Hard ceiling on total GT recipe parallels.")
+        public int maxParallels = 256;
+
+        // ── EU GENERATION ───────────────────────────────────────────────────
+        // Only relevant when enableDirectEUOutput is true.
+
+        @Configurable
+        public EUOutputConfigs euOutput = new EUOutputConfigs();
+
+        // ── CONTINUOUS BURN BONUS ───────────────────────────────────────────
+
+        @Configurable
+        @Configurable.Comment("Maximum bonus percent applied to heat production and EU output after long continuous run. Example: 30 = up to +30%.")
+        public double burnBonusMaxPercent = 30.0;
+
+        @Configurable
+        @Configurable.Comment("Seconds of continuous running required to reach the full burn bonus.")
+        public double burnBonusRampSeconds = 1200.0;
+
+        // ── MODERATOR LIMITS ────────────────────────────────────────────────
+
+        @Configurable
+        @Configurable.Comment("Maximum total fuel discount percent that moderators can contribute.")
+        public int maxFuelDiscountPercent = 90;
+
+        @Configurable
+        @Configurable.Comment("Maximum total EU/heat boost percent that moderators can contribute.")
+        public int maxEUBoostPercent = 100;
+
+        // ── MELTDOWN ────────────────────────────────────────────────────────
+
+        @Configurable
+        public MeltdownConfigs meltdown = new MeltdownConfigs();
+
+        // ── EXPLOSION ───────────────────────────────────────────────────────
+
+        @Configurable
+        public ExplosionConfigs explosion = new ExplosionConfigs();
+
+        // ── NUKE BLOCK ──────────────────────────────────────────────────────
 
         @Configurable
         @Configurable.Comment("Cube radius in blocks. Total affected volume is (2r+1)^3.")
         public int nukeCubeRadius = 16;
 
         @Configurable
-        @Configurable.Comment("Hard cap to prevent insane values.")
+        @Configurable.Comment("Hard cap on nuke cube radius to prevent insane values.")
         public int nukeCubeRadiusCap = 48;
 
         @Configurable
-        @Configurable.Comment("Fuse time in ticks (20 ticks = 1 second). TNT is 80.")
+        @Configurable.Comment("Fuse time in ticks before the nuke detonates (20 ticks = 1 second).")
         public int nukeFuseTicks = 120;
 
         @Configurable
-        @Configurable.Comment("How many blocks to process per tick during cube wipe.")
+        @Configurable.Comment("Blocks processed per tick during the nuke wipe pass.")
         public int nukeBatchPerTick = 4000;
 
         @Configurable
-        @Configurable.Comment("Skip blocks that have a BlockEntity (machines/chests).")
+        @Configurable.Comment("Skip blocks containing a BlockEntity (machines, chests, etc.) during the nuke wipe.")
         public boolean nukeSkipBlockEntities = true;
 
         @Configurable
-        @Configurable.Comment("Skip blocks in unloaded chunks (prevents chunk-forcing).")
+        @Configurable.Comment("Skip blocks in unloaded chunks (prevents forced chunk loading).")
         public boolean nukeSkipUnloadedChunks = true;
 
         @Configurable
-        @Configurable.Comment("If true, replace removed blocks with fire instead of air.")
+        @Configurable.Comment("Replace destroyed blocks with fire instead of air.")
         public boolean nukeReplaceWithFire = false;
+    }
+
+    // ========================================================================
+    // Heat model — Xefyr's thermal physics formulas
+    // ========================================================================
+    public static class HeatModelConfigs {
 
         @Configurable
-        @Configurable.Comment("Flat heat added per tick while running (before rods/moderators/parallels).")
-        public double baseHeatPerTick = 0.0;
+        @Configurable.Comment({
+                "Safe operating temperature threshold in Kelvin.",
+                "Meltdown sequence begins when the reactor temperature exceeds this value.",
+                "Actual HU threshold = maxSafeTempK * heatCapacity (scales with multi size).",
+                "Default 1000 K matches old 100 000 HU behaviour for a 100-block reactor."
+        })
+        public double maxSafeTempK = 1000.0;
 
         @Configurable
-        @Configurable.Comment("Max bonus percent from continuous running (power + breeder output). Example: 60 = up to +60%.")
-        public double burnBonusMaxPercent = 30.0;
-
-        @Configurable
-        @Configurable.Comment("Seconds of continuous running required to reach the max burn bonus. Example: 1200 = 20 minutes.")
-        public double burnBonusRampSeconds = 1200.0;
-
-        @Configurable
-        @Configurable.Comment("The maximum heat a reactor can hold before starting the meltdown timer.")
-        public double maxSafeHeat = 100000.0;
-
-        @Configurable
-        @Configurable.Comment("Minimum heat clamp.")
+        @Configurable.Comment("Heat floor - reactor cannot cool below ambient temperature.")
         public double minHeat = 0.0;
 
         @Configurable
-        @Configurable.Comment("Maximum heat clamp to prevent runaway numeric overflow (meltdown still happens).")
-        public double maxHeatClamp = 250000.0;
+        @Configurable.Comment({
+                "Absolute temperature ceiling in Kelvin to prevent numeric overflow.",
+                "Actual HU ceiling = maxHeatClampTempK * heatCapacity (scales with multi size).",
+                "Default 2500 K matches old 250 000 HU behaviour for a 100-block reactor."
+        })
+        public double maxHeatClampTempK = 2500.0;
 
         @Configurable
-        @Configurable.Comment("Does the reactor naturally lose heat when not running?")
-        public boolean passiveCooling = true;
+        @Configurable.Comment({
+                "Heat capacity per structural block (HU per Kelvin per block).",
+                "Temperature (K) = storedHeat (HU) / heatCapacity.",
+                "heatCapacity = blockCount * heatCapacityPerBlock.",
+                "Larger reactors therefore have a higher HU buffer at the same K threshold,",
+                "giving bigger structures a greater safety margin without changing the K thresholds."
+        })
+        public double heatCapacityPerBlock = 1.0;
 
         @Configurable
-        @Configurable.Comment("Heat lost per tick when idling.")
-        public double idleHeatLoss = 1.0;
+        @Configurable.Comment({
+                "Ambient temperature in Kelvin.",
+                "Initialized as room temperature (293K). Passive cooling pulls toward this value."
+        })
+        public double ambientTemperatureHU = 293.0;
 
         @Configurable
-        @Configurable.Comment("Base parallels added per fuel rod (before heat-based parallels).")
-        public int parallelsPerFuelRod = 1;
+        @Configurable.Comment({
+                "Fuel heat conductivity constant (C_fuel).",
+                "Scales how effectively your fuel rods emit thermal energy.",
+                "Formula: baseHeatRate * ((totalRods+1)/2) * (1 + temp/maxSafeTemp)^2 * parallels * moderatorBonus * reactivity * C_fuel"
+        })
+        public double fuelConductivity = 1.0;
+
+        // ── EXPONENTIAL BALANCING CURVES ────────────────────────────────────
+        @Configurable
+        @Configurable.Comment("Exponent scaling for the fuel consumption rate curve. Xefyr recommends: 4.0")
+        public double fuelConsumptionExponent = 4.0;
 
         @Configurable
-        @Configurable.Comment("How much heat is required to add +1 to the recipe parallel multiplier.")
-        public double heatPerParallel = 10000.0;
+        @Configurable.Comment("Exponent scaling for the fuel heat generation curve. Xefyr recommends: 2.0")
+        public double heatGenerationExponent = 2.0;
 
         @Configurable
-        @Configurable.Comment("Hard cap for parallels.")
-        public int maxParallels = 256;
+        @Configurable.Comment({
+                "Active cooling conductivity constant (C_active).",
+                "Scales how effectively coolant cells transfer heat away.",
+                "Formula: (coolantTemp - reactorTemp) * parallels * C_active"
+        })
+        public double activeCoolingConductivity = 0.25;
 
         @Configurable
-        @Configurable.Comment("How much EU/t is generated per unit of CURRENT heat (power scales with current heat).")
+        @Configurable.Comment({
+                "Passive cooling conductivity constant (C_passive).",
+                "Scales the thermal leak rate to ambient air.",
+                "Formula: (ambientTemp - reactorTemp) * C_passive"
+        })
+        public double passiveCoolingConductivity = 0.005;
+
+        @Configurable
+        @Configurable.Comment({
+                "How quickly the reactor ramps reactivity up or down when control state changes, as a fraction per tick.",
+                "1.0 = instant transition, 0.02 = ~1-second ramp, 0.005 = ~4-second ramp."
+        })
+        public double reactivityRampRatePerTick = 1.0;
+    }
+
+    // ========================================================================
+    // EU output — only active when enableDirectEUOutput = true
+    // ========================================================================
+    public static class EUOutputConfigs {
+
+        @Configurable
+        @Configurable.Comment("EU generated per unit of heat activity per tick.")
         public double euPerHeatUnit = 1.0;
 
         @Configurable
-        @Configurable.Comment("Optional cap on generated EU/t. Set <= 0 for no cap.")
+        @Configurable.Comment("Optional EU/t ceiling. Set <= 0 for no cap.")
         public long maxGeneratedEUt = 0;
 
         @Configurable
-        @Configurable.Comment("If true, fuel usage scales with parallels (recommended).")
-        public boolean fuelUsageScalesWithParallels = true;
-
-        @Configurable
-        @Configurable.Comment("If true, fuel usage scales with rod count (usually true).")
-        public boolean fuelUsageScalesWithRodCount = true;
-
-        @Configurable
-        @Configurable.Comment("If true, blanket usage/output is additive across ALL blankets. If false, only the primary blanket is processed.")
-        public boolean blanketUsageAdditive = true;
-
-        @Configurable
-        @Configurable.Comment("Clamp for total fuel discount percent from moderators.")
-        public int maxFuelDiscountPercent = 90;
-
-        @Configurable
-        @Configurable.Comment("Clamp for total EU boost percent from moderators.")
-        public int maxEUBoostPercent = 100;
-
-        @Configurable
-        @Configurable.Comment("If true, cooling only applies when coolant is present.")
-        public boolean coolingRequiresCoolant = true;
-
-        @Configurable
-        @Configurable.Comment("If true, coolant usage is additive across all coolers. If false, uses primary cooler only.")
-        public boolean coolantUsageAdditive = false;
-
-        @Configurable
-        @Configurable.Comment("Minimum EU/t produced while running (prevents 0). Set 0 to allow 0.")
+        @Configurable.Comment("Minimum EU/t while the reactor is active. Set 0 to allow zero output.")
         public long minGeneratedEUt = 1024;
 
         @Configurable
-        @Configurable.Comment("Exponent for heat->power curve. 1 = linear, >1 rewards high heat.")
+        @Configurable.Comment("Exponent for the heat-to-power curve. 1 = linear, >1 rewards high heat.")
         public double powerCurveExponent = 2.0;
 
         @Configurable
-        @Configurable.Comment("Heat fraction of maxSafeHeat where generation begins. 0.0 = always, 0.1 = starts at 10% of maxSafeHeat.")
+        @Configurable.Comment("Heat fraction of maxSafeHeat at which EU generation begins. 0.0 = always generating.")
         public double powerStartFraction = 0.0;
-
-        @Configurable
-        public MeltdownConfigs meltdown = new MeltdownConfigs();
-
-        @Configurable
-        public ExplosionConfigs explosion = new ExplosionConfigs();
-
-        @Configurable
-        @Configurable.Comment("If true, all fuel rods in the multiblock must be the same tier.")
-        public boolean restrictFuelRodTier = true;
-
-        @Configurable
-        @Configurable.Comment("If true, all coolers in the multiblock must be the same tier.")
-        public boolean restrictCoolerTier = true;
-
-        @Configurable
-        @Configurable.Comment("If >= 0, all fuel rods must be exactly this tier. Set to -1 to disable.")
-        public int requiredFuelRodTier = -1;
-
-        @Configurable
-        @Configurable.Comment("If >= 0, all coolers must be exactly this tier. Set to -1 to disable.")
-        public int requiredCoolerTier = -1;
     }
 
+    // ========================================================================
+    // Meltdown timer
+    // ========================================================================
     public static class MeltdownConfigs {
 
         @Configurable
-        @Configurable.Comment("Base grace seconds when barely above safe heat.")
+        @Configurable.Comment("Grace period in seconds when heat barely exceeds maxSafeHeat.")
         public double baseGraceSeconds = 60.0;
 
         @Configurable
-        @Configurable.Comment("Minimum grace seconds when extremely above safe heat.")
+        @Configurable.Comment("Minimum grace period in seconds when heat is far above maxSafeHeat.")
         public double minGraceSeconds = 15.0;
 
         @Configurable
-        @Configurable.Comment("Severity multiplier: higher = faster meltdown when over safe heat.")
+        @Configurable.Comment("Severity multiplier - higher values shorten the grace period faster as heat rises.")
         public double excessHeatSeverity = 1.0;
 
         @Configurable
-        @Configurable.Comment("If true, falling back under safe heat clears the timer.")
+        @Configurable.Comment("If true, dropping back below maxSafeHeat cancels the meltdown timer.")
         public boolean clearTimerWhenSafe = true;
     }
 
-    public static class FissionBlockStatsConfigs {
-
-        @Configurable
-        @Configurable.Comment("Configuration for Fission Coolers")
-        public CoolerConfigs coolers = new CoolerConfigs();
-
-        @Configurable
-        @Configurable.Comment("Configuration for Fission Moderators")
-        public ModeratorConfigs moderators = new ModeratorConfigs();
-
-        @Configurable
-        @Configurable.Comment("Configuration for Fission Fuel Rods")
-        public FuelRodConfigs fuelRods = new FuelRodConfigs();
-
-        @Configurable
-        @Configurable.Comment("Configuration for Molten Salt Reactor Liners")
-        public MSRConfigs msrLiners = new MSRConfigs();
-
-        public static class CoolerConfigs {
-            @Configurable
-            @Configurable.Comment("Enable the Basic cooler block registration.")
-            public boolean enableBasicCooler = true;
-            @Configurable
-            @Configurable.Comment("Cooling power (HU/t) for the Basic cooler.")
-            public int tempBasicCooler = 10000;
-            @Configurable
-            @Configurable.Comment("Coolant usage (mb/t) for the Basic cooler.")
-            public int usageBasicCooler = 100;
-            @Configurable
-            @Configurable.Comment("Input coolant fluid ID for the Basic cooler.")
-            public String inputFluidBasicCooler = "minecraft:water";
-            @Configurable
-            @Configurable.Comment("Output coolant fluid ID for the Basic cooler.")
-            public String outputFluidBasicCooler = "phoenix_fission:critical_steam";
-
-            @Configurable
-            @Configurable.Comment("Enable the EV cooler block registration.")
-            public boolean enableEVCooler = true;
-            @Configurable
-            @Configurable.Comment("Cooling power (HU/t) for the EV cooler.")
-            public int tempEVCooler = 20000;
-            @Configurable
-            @Configurable.Comment("Coolant usage (mb/t) for the EV cooler.")
-            public int usageEVCooler = 10;
-            @Configurable
-            @Configurable.Comment("Input coolant fluid ID for the EV cooler.")
-            public String inputFluidEVCooler = "gtceu:sodium_potassium";
-            @Configurable
-            @Configurable.Comment("Output coolant fluid ID for the EV cooler.")
-            public String outputFluidEVCooler = "phoenix_fission:hot_sodium_potassium";
-
-            @Configurable
-            @Configurable.Comment("Enable the IV cooler block registration.")
-            public boolean enableIVCooler = true;
-            @Configurable
-            @Configurable.Comment("Cooling power (HU/t) for the IV cooler.")
-            public int tempIVCooler = 30000;
-            @Configurable
-            @Configurable.Comment("Coolant usage (mb/t) for the IV cooler.")
-            public int usageIVCooler = 30;
-            @Configurable
-            @Configurable.Comment("Input coolant fluid ID for the IV cooler.")
-            public String inputFluidIVCooler = "gtceu:sodium_potassium";
-            @Configurable
-            @Configurable.Comment("Output coolant fluid ID for the IV cooler.")
-            public String outputFluidIVCooler = "phoenix_fission:hot_sodium_potassium";
-
-            @Configurable
-            @Configurable.Comment("Enable the LuV cooler block registration.")
-            public boolean enableLuVCooler = true;
-            @Configurable
-            @Configurable.Comment("Cooling power (HU/t) for the LuV cooler.")
-            public int tempLuVCooler = 40000;
-            @Configurable
-            @Configurable.Comment("Coolant usage (mb/t) for the LuV cooler.")
-            public int usageLuVCooler = 35;
-            @Configurable
-            @Configurable.Comment("Input coolant fluid ID for the LuV cooler.")
-            public String inputFluidLuVCooler = "gtceu:liquid_helium";
-            @Configurable
-            @Configurable.Comment("Output coolant fluid ID for the LuV cooler.")
-            public String outputFluidLuVCooler = "gtceu:helium";
-        }
-
-        public static class MSRConfigs {
-            @Configurable
-            @Configurable.Comment("Enable Graphite liner registration.")
-            public boolean enableGraphiteLiner = true;
-            @Configurable
-            @Configurable.Comment("Tier for the Graphite liner.")
-            public int tierGraphiteLiner = 1;
-            @Configurable
-            @Configurable.Comment("Flow Efficiency (mb/t) for the Graphite liner.")
-            public int flowRateGraphiteLiner = 10;
-            @Configurable
-            @Configurable.Comment("Thermal Dissipation (Heat/mb) for the Graphite liner.")
-            public double heatGraphiteLiner = 10.0;
-            @Configurable
-            @Configurable.Comment("Input fluid ID for the Graphite liner.")
-            public String inputFluidGraphiteLiner = "phoenix_fission:u235_molten_salt";
-            @Configurable
-            @Configurable.Comment("Output fluid ID for the Graphite liner.")
-            public String outputFluidGraphiteLiner = "phoenix_fission:depleted_u235_molten_salt";
-
-            @Configurable
-            @Configurable.Comment("Enable Hastelloy liner registration.")
-            public boolean enableHastelloyLiner = true;
-            @Configurable
-            @Configurable.Comment("Tier for the Hastelloy liner.")
-            public int tierHastelloyLiner = 2;
-            @Configurable
-            @Configurable.Comment("Flow Efficiency (mb/t) for the Hastelloy liner.")
-            public int flowRateHastelloyLiner = 25;
-            @Configurable
-            @Configurable.Comment("Thermal Dissipation (Heat/mb) for the Hastelloy liner.")
-            public double heatHastelloyLiner = 15.0;
-            @Configurable
-            @Configurable.Comment("Input fluid ID for the Hastelloy liner.")
-            public String inputFluidHastelloyLiner = "phoenix_fission:thorium_u233_molten_salt";
-            @Configurable
-            @Configurable.Comment("Output fluid ID for the Hastelloy liner.")
-            public String outputFluidHastelloyLiner = "phoenix_fission:depleted_thorium_molten_salt";
-
-            @Configurable
-            @Configurable.Comment("Enable Titanium liner registration.")
-            public boolean enableTitaniumLiner = true;
-            @Configurable
-            @Configurable.Comment("Tier for the Titanium liner.")
-            public int tierTitaniumLiner = 3;
-            @Configurable
-            @Configurable.Comment("Flow Efficiency (mb/t) for the Titanium liner.")
-            public int flowRateTitaniumLiner = 50;
-            @Configurable
-            @Configurable.Comment("Thermal Dissipation (Heat/mb) for the Titanium liner.")
-            public double heatTitaniumLiner = 25.0;
-            @Configurable
-            @Configurable.Comment("Input fluid ID for the Titanium liner.")
-            public String inputFluidTitaniumLiner = "phoenix_fission:plutonium_molten_salt";
-            @Configurable
-            @Configurable.Comment("Output fluid ID for the Titanium liner.")
-            public String outputFluidTitaniumLiner = "phoenix_fission:irradiated_actinide_waste";
-
-            @Configurable
-            @Configurable.Comment("Enable Netherite liner registration.")
-            public boolean enableNetheriteLiner = true;
-            @Configurable
-            @Configurable.Comment("Tier for the Netherite liner.")
-            public int tierNetheriteLiner = 4;
-            @Configurable
-            @Configurable.Comment("Flow Efficiency (mb/t) for the Netherite liner.")
-            public int flowRateNetheriteLiner = 100;
-            @Configurable
-            @Configurable.Comment("Thermal Dissipation (Heat/mb) for the Netherite liner.")
-            public double heatNetheriteLiner = 40.0;
-            @Configurable
-            @Configurable.Comment("Input fluid ID for the Netherite liner.")
-            public String inputFluidNetheriteLiner = "phoenix_fission:californium_molten_salt";
-            @Configurable
-            @Configurable.Comment("Output fluid ID for the Netherite liner.")
-            public String outputFluidNetheriteLiner = "phoenix_fission:transuranic_sludge_waste";
-        }
-
-        public static class ModeratorConfigs {
-            @Configurable
-            @Configurable.Comment("Enable Graphite moderator registration.")
-            public boolean enableGraphiteModerator = true;
-            @Configurable
-            @Configurable.Comment("EU/t boost multiplier for the graphite moderator.")
-            public int euBoostGraphiteModerator = 2;
-            @Configurable
-            @Configurable.Comment("Fuel Discount for the graphite moderator.")
-            public int fuelDiscountGraphiteModerator = 1;
-            @Configurable
-            @Configurable.Comment("Tier for the graphite moderator.")
-            public int tierGraphiteModerator = 1;
-
-            @Configurable
-            @Configurable.Comment("Enable Beryllium moderator registration.")
-            public boolean enableBerylliumModerator = true;
-            @Configurable
-            @Configurable.Comment("EU/t boost multiplier for the beryllium moderator.")
-            public int euBoostBerylliumModerator = 5;
-            @Configurable
-            @Configurable.Comment("Fuel Discount for the beryllium moderator.")
-            public int fuelDiscountBerylliumModerator = 2;
-            @Configurable
-            @Configurable.Comment("Tier for the beryllium moderator.")
-            public int tierBerylliumModerator = 2;
-
-            @Configurable
-            @Configurable.Comment("Enable Heavy Water moderator registration.")
-            public boolean enableHeavyWaterModerator = true;
-            @Configurable
-            @Configurable.Comment("EU/t boost multiplier for the heavy water moderator.")
-            public int euBoostHeavyWaterModerator = 12;
-            @Configurable
-            @Configurable.Comment("Fuel Discount for the heavy water moderator.")
-            public int fuelDiscountHeavyWaterModerator = 5;
-            @Configurable
-            @Configurable.Comment("Tier for the heay water moderator.")
-            public int tierHeavyWaterModerator = 3;
-
-            @Configurable
-            @Configurable.Comment("Enable Niobium SiC moderator registration.")
-            public boolean enableNiobiumSicModerator = true;
-            @Configurable
-            @Configurable.Comment("EU/t boost multiplier for the niobium sic moderator.")
-            public int euBoostNiobiumSicModerator = 30;
-            @Configurable
-            @Configurable.Comment("Fuel Discount for the niobium sic moderator.")
-            public int fuelDiscountNiobiumSicModerator = 10;
-            @Configurable
-            @Configurable.Comment("Tier for the niobium sic moderator.")
-            public int tierNiobiumSicModerator = 4;
-        }
-
-        public static class FuelRodConfigs {
-            @Configurable
-            @Configurable.Comment("Enable T1 fuel rod registration.")
-            public boolean enableFuelRodT1 = true;
-            @Configurable
-            @Configurable.Comment("Base heat production for the T1 fuel rod.")
-            public int heatProductionT1 = 50;
-            @Configurable
-            @Configurable.Comment("NeutronBias for the T1 fuel rod.")
-            public int neutronBiasT1 = 0;
-            @Configurable
-            @Configurable.Comment("Fuel cycle duration in ticks for the T1 fuel rod.")
-            public int cycleDurationT1 = 2500;
-            @Configurable
-            @Configurable.Comment("Fuel amount used per cycle for the T1 fuel rod.")
-            public int cycleAmountT1 = 1;
-            @Configurable
-            @Configurable.Comment("Fuel used for the T1 fuel rod. (Registry name string)")
-            public String fuelUsedT1 = "phoenix_fission:basic_fuel_rod";
-            @Configurable
-            @Configurable.Comment("Depleted Fuel produced for the T1 fuel rod. (Registry name string)")
-            public String depletedGivenT1 = "phoenix_fission:low_level_radioactive_waste";
-
-            @Configurable
-            @Configurable.Comment("Enable T2 fuel rod registration.")
-            public boolean enableFuelRodT2 = true;
-            @Configurable
-            @Configurable.Comment("Base heat production for the T2 fuel rod.")
-            public int heatProductionT2 = 150;
-            @Configurable
-            @Configurable.Comment("NeutronBias for the T2 fuel rod.")
-            public int neutronBiasT2 = 1;
-            @Configurable
-            @Configurable.Comment("Fuel cycle duration in ticks for the T2 fuel rod.")
-            public int cycleDurationT2 = 3000;
-            @Configurable
-            @Configurable.Comment("Fuel amount used per cycle for the T2 fuel rod.")
-            public int cycleAmountT2 = 1;
-            @Configurable
-            @Configurable.Comment("Fuel used for the T2 fuel rod. (Registry name string)")
-            public String fuelUsedT2 = "phoenix_fission:basic_fuel_rod";
-            @Configurable
-            @Configurable.Comment("Depleted Fuel produced for the T2 fuel rod. (Registry name string)")
-            public String depletedGivenT2 = "phoenix_fission:low_level_radioactive_waste";
-
-            @Configurable
-            @Configurable.Comment("Enable T3 fuel rod registration.")
-            public boolean enableFuelRodT3 = true;
-            @Configurable
-            @Configurable.Comment("Base heat production for the T3 fuel rod.")
-            public int heatProductionT3 = 500;
-            @Configurable
-            @Configurable.Comment("NeutronBias for the T3 fuel rod.")
-            public int neutronBiasT3 = 5;
-            @Configurable
-            @Configurable.Comment("Fuel cycle duration in ticks for the T3 fuel rod.")
-            public int cycleDurationT3 = 3500;
-            @Configurable
-            @Configurable.Comment("Fuel amount used per cycle for the T3 fuel rod.")
-            public int cycleAmountT3 = 1;
-            @Configurable
-            @Configurable.Comment("Fuel used for the T3 fuel rod. (Registry name string)")
-            public String fuelUsedT3 = "phoenix_fission:u235_fuel_pellet";
-            @Configurable
-            @Configurable.Comment("Depleted Fuel produced for the T3 fuel rod. (Registry name string)")
-            public String depletedGivenT3 = "phoenix_fission:spent_uranium_235_nugget";
-
-            @Configurable
-            @Configurable.Comment("Enable T4 fuel rod registration.")
-            public boolean enableFuelRodT4 = true;
-            @Configurable
-            @Configurable.Comment("Base heat production for the T4 fuel rod.")
-            public int heatProductionT4 = 1200;
-            @Configurable
-            @Configurable.Comment("NeutronBias for the T4 fuel rod.")
-            public int neutronBiasT4 = 12;
-            @Configurable
-            @Configurable.Comment("Fuel cycle duration in ticks for the T4 fuel rod.")
-            public int cycleDurationT4 = 4000;
-            @Configurable
-            @Configurable.Comment("Fuel amount used per cycle for the T4 fuel rod.")
-            public int cycleAmountT4 = 1;
-            @Configurable
-            @Configurable.Comment("Fuel used for the T4 fuel rod. (Registry name string)")
-            public String fuelUsedT4 = "phoenix_fission:plutonium_241_fuel_pellet";
-            @Configurable
-            @Configurable.Comment("Depleted Fuel produced for the T4 fuel rod. (Registry name string)")
-            public String depletedGivenT4 = "phoenix_fission:depleted_plutonium_241_nugget";
-
-            @Configurable
-            @Configurable.Comment("Enable T5 fuel rod registration.")
-            public boolean enableFuelRodT5 = true;
-            @Configurable
-            @Configurable.Comment("Base heat production for the T5 fuel rod.")
-            public int heatProductionT5 = 3000;
-            @Configurable
-            @Configurable.Comment("NeutronBias for the T5 fuel rod.")
-            public int neutronBiasT5 = 30;
-            @Configurable
-            @Configurable.Comment("Fuel cycle duration in ticks for the T5 fuel rod.")
-            public int cycleDurationT5 = 8000;
-            @Configurable
-            @Configurable.Comment("Fuel amount used per cycle for the T5 fuel rod.")
-            public int cycleAmountT5 = 1;
-            @Configurable
-            @Configurable.Comment("Fuel used for the T5 fuel rod. (Registry name string)")
-            public String fuelUsedT5 = "phoenix_fission:u242_fuel_pellet";
-            @Configurable
-            @Configurable.Comment("Depleted Fuel produced for the T5 fuel rod. (Registry name string)")
-            public String depletedGivenT5 = "phoenix_fission:spent_uranium_242_nugget";
-        }
-    }
-
+    // ========================================================================
+    // Explosion
+    // ========================================================================
     public static class ExplosionConfigs {
 
         @Configurable
@@ -541,15 +292,22 @@ public class PhoenixFissionConfigs {
         public boolean destructiveExplosion = false;
 
         @Configurable
-        @Configurable.Comment("Explosion power scales with fuel rod count: power = base + rods * multiplier.")
-        public double explosionPowerPerFuelRod = 1.5;
-
-        @Configurable
-        @Configurable.Comment("The base power of the meltdown explosion.")
+        @Configurable.Comment("Base explosion power added before fuel scaling.")
         public float baseExplosionPower = 2.0f;
 
         @Configurable
-        @Configurable.Comment("Max radius used for destructive bypass block wiping.")
+        @Configurable.Comment({
+                "Additional explosion power per installed fuel rod.",
+                "Power = baseExplosionPower + (rodCount * perRod) + (avgFuelHeat * perHeatUnit)."
+        })
+        public double explosionPowerPerFuelRod = 1.5;
+
+        @Configurable
+        @Configurable.Comment("Additional explosion power per unit of average fuel rod base heat production.")
+        public double explosionPowerPerHeatUnit = 0.001;
+
+        @Configurable
+        @Configurable.Comment("Max radius used when destructiveExplosion = true.")
         public int maxDestructiveRadius = 6;
     }
 }

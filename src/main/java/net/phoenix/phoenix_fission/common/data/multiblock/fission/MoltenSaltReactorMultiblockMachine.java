@@ -4,19 +4,20 @@ import com.gregtechceu.gtceu.api.GTValues;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.trait.RecipeLogic;
-import com.gregtechceu.gtceu.api.recipe.GTRecipe;
-import com.gregtechceu.gtceu.api.recipe.RecipeHelper;
-import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
 
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.fluids.FluidStack;
-import net.phoenix.phoenix_fission.api.block.IFissionCoolerType;
 import net.phoenix.phoenix_fission.api.block.IMSRCoreLinerType;
+import net.phoenix.phoenix_fission.configs.PhoenixFissionConfigs;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,29 +34,39 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
 
     /**
      * Per-tier EU/mb lookup for the MSR power formula.
-     * Calibrated so that at max safe heat + clean core bonus (no catalyst), the output
-     * lands near the corresponding GT voltage tier ceiling:
-     *   Tier 1 (Graphite)   → ~8 kEU/t (IV)
-     *   Tier 2 (Hastelloy)  → ~33 kEU/t (LuV)
-     *   Tier 3 (Titanium)   → ~131 kEU/t (ZPM)
-     *   Tier 4 (Netherite)  → ~524 kEU/t (UV)
-     * Fluorine catalyst triples the output from any of these figures.
      */
     private static final long[] EU_PER_MB_BY_TIER = { 219L, 349L, 699L, 1398L };
 
     @Persisted
-    protected double xenonPoisonLevel = 0.0;
+    @DescSynced
+    public double xenonPoisonLevel = 0.0;
 
-    protected int structuralLinerCount = 0;
+    @Persisted
+    @DescSynced
+    public int structuralLinerCount = 0;
 
     protected @Nullable IMSRCoreLinerType coreLinerSpec = null;
 
-    // ── Cached per-tick state for display (avoids re-checking hatches in addDisplayText
-    //    after the tick has already consumed/produced fluids) ──────────────────────────
+    // Synced snapshots of coreLinerSpec so the client HUD and graphs can read liner info.
     @Persisted
-    protected boolean lastCatalystActive = false;
+    @DescSynced
+    public String linerName = "";
     @Persisted
-    protected boolean lastXenonPurgeSucceeded = false;
+    @DescSynced
+    public int linerTier = 0;
+    @Persisted
+    @DescSynced
+    public int linerFlowRate = 0;
+    @Persisted
+    @DescSynced
+    public double linerHeatPerMb = 0.0;
+
+    @Persisted
+    @DescSynced
+    public boolean lastCatalystActive = false;
+    @Persisted
+    @DescSynced
+    public boolean lastXenonPurgeSucceeded = false;
 
     public MoltenSaltReactorMultiblockMachine(IMachineBlockEntity holder) {
         super(holder);
@@ -71,7 +82,6 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
     @Override
     public void onStructureFormed() {
         super.onStructureFormed();
-        this.isFormed = true;
 
         var context = getMultiblockState().getMatchContext();
         if (context != null) {
@@ -88,33 +98,37 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
                     .orElse(null);
         }
 
-        // MSR has no solid fuel rods, moderators, or blankets
-        this.activeFuelRods   = new ArrayList<>();
-        this.activeModerators = new ArrayList<>();
-        this.activeBlankets   = new ArrayList<>();
-        this.primaryFuelRodType    = null;
-        this.primaryModeratorType  = null;
+        // Snapshot liner info for client sync.
+        if (this.coreLinerSpec != null) {
+            this.linerName = this.coreLinerSpec.getName();
+            this.linerTier = this.coreLinerSpec.getTier();
+            this.linerFlowRate = this.coreLinerSpec.getFluidFlowRate();
+            this.linerHeatPerMb = this.coreLinerSpec.getHeatPerMb();
+        } else {
+            this.linerName = "";
+            this.linerTier = 0;
+            this.linerFlowRate = 0;
+            this.linerHeatPerMb = 0.0;
+        }
 
-        this.activeCoolers = getListFromContext("CoolerTypes");
-        this.persistedCoolerIDs = new ArrayList<>(
-                this.activeCoolers.stream().map(IFissionCoolerType::getName).toList());
-        this.primaryCoolerType = getPrimaryCooler(this.activeCoolers);
-
+        // Sync modern tracking variables
         this.lastHasCoolant = true;
-        this.lastParallels  = Math.max(1, this.structuralLinerCount);
-        applyParallelsToRecipeLogic(this.lastParallels);
+        this.lastParallels = Math.max(1, this.structuralLinerCount);
 
         this.getRecipeLogic().setStatus(RecipeLogic.Status.IDLE);
-        this.reactorTickHandler.updateSubscription();
         markDirty();
     }
 
     @Override
     public void onStructureInvalid() {
         super.onStructureInvalid();
-        this.structuralLinerCount  = 0;
-        this.coreLinerSpec         = null;
-        this.lastCatalystActive    = false;
+        this.structuralLinerCount = 0;
+        this.coreLinerSpec = null;
+        this.linerName = "";
+        this.linerTier = 0;
+        this.linerFlowRate = 0;
+        this.linerHeatPerMb = 0.0;
+        this.lastCatalystActive = false;
         this.lastXenonPurgeSucceeded = false;
     }
 
@@ -125,125 +139,98 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
         if (!isFormed() || coreLinerSpec == null) return false;
         if (isScramActive()) return false;
 
-        int parallels        = Math.max(1, this.structuralLinerCount);
-        int totalRequiredMb  = parallels * coreLinerSpec.getFluidFlowRate();
-        return canConsumeFluidId(coreLinerSpec.getInputFluidId(), totalRequiredMb);
+        int totalRequiredMb = Math.max(1, this.structuralLinerCount) * coreLinerSpec.getFluidFlowRate();
+
+        // Emulates GregTech fluid consumption capability simulation directly
+        FluidStack targetSalt = resolveFluidStack(coreLinerSpec.getInputFluidId(), totalRequiredMb);
+        return executeFluidIO(targetSalt, IO.IN, true);
     }
 
-    // ── Core tick ────────────────────────────────────────────────────────────────────
-
+    // ── Core tick hook ───────────────────────────────────────────────────────────────
     @Override
-    protected void handleReactorLogic(boolean running) {
+    public boolean onWorking() {
+        // Run standard background tasks
+        boolean wasWorking = super.onWorking();
+
+        // Enforce guard check before running reactor processing
+        boolean running = shouldRunReactor();
+
         lastHeatGainedPerTick = 0.0;
         lastHeatRemovedPerTick = 0.0;
         lastGeneratedEUt = 0;
 
-        // Reset per-tick display caches
-        lastCatalystActive      = false;
+        lastCatalystActive = false;
         lastXenonPurgeSucceeded = false;
 
-        if (coreLinerSpec == null) return;
+        if (coreLinerSpec == null) return wasWorking;
 
-        int  parallels     = Math.max(1, this.structuralLinerCount);
-        int  saltToProcess = parallels * coreLinerSpec.getFluidFlowRate();
-        String inputSalt   = coreLinerSpec.getInputFluidId();
-        String outputSalt  = coreLinerSpec.getOutputFluidId();
+        int parallels = Math.max(1, this.structuralLinerCount);
+        int saltToProcess = parallels * coreLinerSpec.getFluidFlowRate();
+        String inputSalt = coreLinerSpec.getInputFluidId();
+        String outputSalt = coreLinerSpec.getOutputFluidId();
 
-        // Xenon natural drift
+        // Xenon accumulation curve
         if (running) {
             continuousBurnTicks++;
             xenonPoisonLevel = Math.min(0.50, xenonPoisonLevel + 0.00004);
         } else {
             continuousBurnTicks = 0;
-            xenonPoisonLevel    = Math.max(0.0, xenonPoisonLevel - 0.0002);
+            xenonPoisonLevel = Math.max(0.0, xenonPoisonLevel - 0.0002);
         }
 
-        applyParallelsToRecipeLogic(parallels);
-
+        this.lastParallels = parallels;
         double cleanCoreBonus = 1.0;
 
         // ── Salt fission loop ────────────────────────────────────────────────────────
         if (running) {
             if (tryConvertFuelSalt(inputSalt, outputSalt, saltToProcess)) {
-                double heatProduced = (saltToProcess * coreLinerSpec.getHeatPerMb())
-                        * (1.0 - xenonPoisonLevel);
-                this.heat += heatProduced;
+                double heatProduced = (saltToProcess * coreLinerSpec.getHeatPerMb()) * (1.0 - xenonPoisonLevel);
+                this.setHeat(this.getHeat() + heatProduced);
                 this.lastHeatGainedPerTick = heatProduced;
 
-                // ── Off-gassing: xenon gas emitted continuously in small amounts ────
-                // Spreading over every tick (at 1/20 the burst volume) avoids the
-                // "burst-fill and fail" problem where a 20-tick lump overflows a hatch.
+                // Off-gassing extraction
                 int xenonPerTick = Math.max(1, (int) Math.ceil(saltToProcess * 0.1 / 20.0));
-                lastXenonPurgeSucceeded = tryOutputFluidIdBoolean(
-                        "phoenix_fission:radioactive_xenon_gas", xenonPerTick);
+                lastXenonPurgeSucceeded = tryOutputFluidIdBoolean("phoenix_fission:radioactive_xenon_gas",
+                        xenonPerTick);
                 if (lastXenonPurgeSucceeded) {
-                    // Continuous stripping
                     xenonPoisonLevel = Math.max(0.0, xenonPoisonLevel - 0.002);
                     if (xenonPoisonLevel < 0.05) cleanCoreBonus = 1.5;
                 }
-
             } else {
                 running = false;
             }
         } else {
-            if (cfg().passiveCooling) {
-                double coolingFactor  = 0.010 / coreLinerSpec.getTier();
-                double variableCooling = this.heat * coolingFactor;
-                heat -= Math.max(cfg().idleHeatLoss, variableCooling);
-            }
+            // Passive heat bleeding
+            var hm = PhoenixFissionConfigs.INSTANCE.fission.heatModel;
+            double tierFactor = 1.0 / coreLinerSpec.getTier();
+            double passiveDelta = (hm.ambientTemperatureHU - this.getHeat()) * hm.passiveCoolingConductivity * 2.0 *
+                    tierFactor;
+            if (passiveDelta < 0) this.setHeat(this.getHeat() + passiveDelta);
         }
-
-        // ── Cooling ──────────────────────────────────────────────────────────────────
-        int totalCoolingCapacity = activeCoolers.stream()
-                .mapToInt(IFissionCoolerType::getCoolerTemperature).sum();
-        lastProvidedCooling = totalCoolingCapacity;
-        lastHasCoolant      = true;
-
-        if (cfg().coolingRequiresCoolant && !activeCoolers.isEmpty()) {
-            lastHasCoolant = canConsumeCoolantForThisTickMachineDriven()
-                    && consumeCoolantForThisTickMachineDriven();
-        }
-
-        double removedHeat = 0.0;
-        if (!cfg().coolingRequiresCoolant || lastHasCoolant) {
-            double aboveMin         = Math.max(0.0, heat - cfg().minHeat);
-            double functionalCooling = running ? totalCoolingCapacity : (totalCoolingCapacity * 0.50);
-            removedHeat             = Math.min(aboveMin, functionalCooling);
-            heat                   -= removedHeat;
-        }
-        lastHeatRemovedPerTick = removedHeat;
-        clampHeat();
 
         // ── MSR Power Generation ─────────────────────────────────────────────────────
-        // Bypasses the solid-fuel tickPowerGeneration() and calls tryAddEnergy directly.
         if (running) {
-            double maxSafeHeat      = Math.max(1.0, cfg().maxSafeHeat);
-            double heatRatio        = this.heat / maxSafeHeat;
-            // Exponential curve: 0.5x at cold start → 2.5x at max safe heat
+            double maxSafeHeat = Math.max(1.0, this.getMaxSafeHeatHU());
+            double heatRatio = this.getHeat() / maxSafeHeat;
             double thermalEfficiency = 0.5 + (Math.pow(heatRatio, 2) * 2.0);
 
-            // Volatile Chemical Catalysis ─────────────────────────────────────────────
-            // Check availability first (positive mb), then consume atomically.
+            // Volatile Chemical Catalysis
             double catalystMultiplier = 1.0;
-            if (canConsumeFluidId("gtceu:liquid_fluorine", 10)
-                    && tryConsumeFluidId("gtceu:liquid_fluorine", 10)) {
+            FluidStack catalystIn = resolveFluidStack("gtceu:liquid_fluorine", 10);
+            if (executeFluidIO(catalystIn, IO.IN, true) && executeFluidIO(catalystIn, IO.IN, false)) {
                 catalystMultiplier = 3.0;
                 lastCatalystActive = true;
-                xenonPoisonLevel   = Math.min(0.50, xenonPoisonLevel + 0.0004);
+                xenonPoisonLevel = Math.min(0.50, xenonPoisonLevel + 0.0004);
             }
 
-            // Tier-scaled base EU using the calibrated lookup table
-            int  tierIdx = Math.max(0, Math.min(EU_PER_MB_BY_TIER.length - 1, coreLinerSpec.getTier() - 1));
+            int tierIdx = Math.max(0, Math.min(EU_PER_MB_BY_TIER.length - 1, coreLinerSpec.getTier() - 1));
             long euPerMb = EU_PER_MB_BY_TIER[tierIdx];
-            long baseEU  = (long) saltToProcess * euPerMb;
+            long baseEU = (long) saltToProcess * euPerMb;
 
             double structuralDamping = 1.0 - xenonPoisonLevel;
 
-            this.lastGeneratedEUt = (long) (baseEU
-                    * thermalEfficiency
-                    * structuralDamping
-                    * cleanCoreBonus
-                    * catalystMultiplier);
+            this.lastGeneratedEUt = (long) (baseEU * thermalEfficiency * structuralDamping * cleanCoreBonus *
+                    catalystMultiplier);
 
             if (this.lastGeneratedEUt > 0) {
                 tryAddEnergy(this.lastGeneratedEUt);
@@ -252,40 +239,43 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
             this.lastGeneratedEUt = 0;
         }
 
-        tickMeltdown();
+        return running || wasWorking;
     }
-
-    // ── Fuel consumption (MSR has none — salt is handled in handleReactorLogic) ─────
-
-    @Override
-    protected void tickFuelConsumptionMachineDriven(int parallels) { /* no-op */ }
 
     // ── Fluid helpers ────────────────────────────────────────────────────────────────
 
     protected boolean tryConvertFuelSalt(@NotNull String inFluid, @NotNull String outFluid, int mb) {
         if (mb <= 0) return true;
-        if (!canConsumeFluidId(inFluid, mb)) return false;
-        if (!tryConsumeFluidId(inFluid, mb)) return false;
-        tryOutputFluidId(outFluid, mb);
+
+        FluidStack inStack = resolveFluidStack(inFluid, mb);
+        FluidStack outStack = resolveFluidStack(outFluid, mb);
+
+        if (!executeFluidIO(inStack, IO.IN, true)) return false;
+        if (!executeFluidIO(inStack, IO.IN, false)) return false;
+
+        executeFluidIO(outStack, IO.OUT, false);
         return true;
     }
 
-    /**
-     * Attempts to push a fluid into an output hatch via IO.OUT and returns whether
-     * handleRecipeIO actually accepted it. Used instead of the (void) base
-     * tryOutputFluidId so we know whether xenon actually went somewhere.
-     */
     protected boolean tryOutputFluidIdBoolean(@NotNull String fluidId, int mb) {
         if (mb <= 0) return true;
         FluidStack fs = resolveFluidStack(fluidId, mb);
         if (fs.isEmpty()) return false;
 
-        GTRecipe dummy = GTRecipeBuilder.ofRaw()
-                .outputFluids(fs)
-                .buildRawRecipe();
+        return executeFluidIO(fs, IO.OUT, false);
+    }
 
-        return RecipeHelper.handleRecipeIO(this, dummy, IO.OUT,
-                getRecipeLogic().getChanceCaches()).isSuccess();
+    @Nullable
+    private FluidStack resolveFluidStack(String fluidId, int amount) {
+        ResourceLocation rl = ResourceLocation.tryParse(fluidId);
+        if (rl == null) return null;
+        var fluid = net.minecraftforge.registries.ForgeRegistries.FLUIDS.getValue(rl);
+        if (fluid == null || fluid == net.minecraft.world.level.material.Fluids.EMPTY) return null;
+        return new FluidStack(fluid, amount);
+    }
+
+    private void tryAddEnergy(long joules) {
+        getEnergyContainer().addEnergy(joules);
     }
 
     // ── Display ──────────────────────────────────────────────────────────────────────
@@ -298,21 +288,22 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
             return;
         }
 
-        final var cfg         = cfg();
-        final boolean overheat = heat > cfg.maxSafeHeat;
+        final var config = PhoenixFissionConfigs.INSTANCE.fission;
+        double maxSafeHU = this.getMaxSafeHeatHU();
+        final boolean overheat = this.getHeat() > maxSafeHU;
 
         // 1. Heat
         textList.add(Component.translatable("phoenix_fission.current_heat_display",
-                        String.format("%.1f", heat), String.format("%.1f", cfg.maxSafeHeat))
+                String.format("%.1f", this.getHeat()), String.format("%.1f", maxSafeHU))
                 .withStyle(s -> s.withColor(overheat ? 0xFF3333 : 0x33FF33)));
 
         // 2. Thermal efficiency
-        double maxSafeHeat       = Math.max(1.0, cfg.maxSafeHeat);
-        double heatRatio         = this.heat / maxSafeHeat;
+        double maxSafeHeat = Math.max(1.0, maxSafeHU);
+        double heatRatio = this.getHeat() / maxSafeHeat;
         double thermalEfficiency = 0.5 + (Math.pow(heatRatio, 2) * 2.0);
-        int    effColor          = thermalEfficiency > 1.8 ? 0x55FF55 : (thermalEfficiency > 1.0 ? 0xFFAA00 : 0xFF5555);
+        int effColor = thermalEfficiency > 1.8 ? 0x55FF55 : (thermalEfficiency > 1.0 ? 0xFFAA00 : 0xFF5555);
         textList.add(Component.translatable("phoenix_fission.msr.thermal_efficiency",
-                        String.format(java.util.Locale.ROOT, "%.1f", thermalEfficiency * 100.0) + "%")
+                String.format(java.util.Locale.ROOT, "%.1f", thermalEfficiency * 100.0) + "%")
                 .withStyle(s -> s.withColor(effColor)));
 
         // 3. Power
@@ -321,42 +312,38 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
         // 4. Structure
         textList.add(Component.translatable("phoenix_fission.parallels", lastParallels));
         textList.add(Component.translatable("phoenix_fission.msr.structural_tier",
-                        String.format("MK%d (%s)", coreLinerSpec.getTier(), coreLinerSpec.getName().toUpperCase()))
+                String.format("MK%d (%s)", coreLinerSpec.getTier(), coreLinerSpec.getName().toUpperCase()))
                 .withStyle(s -> s.withColor(0x55FF55)));
         textList.add(Component.translatable("phoenix_fission.msr.active_liners", this.structuralLinerCount)
                 .withStyle(s -> s.withColor(0x55AAFF)));
         textList.add(Component.translatable("phoenix_fission.msr.processing_rate",
-                        (Math.max(1, this.structuralLinerCount) * coreLinerSpec.getFluidFlowRate()) + " mb/t")
+                (Math.max(1, this.structuralLinerCount) * coreLinerSpec.getFluidFlowRate()) + " mb/t")
                 .withStyle(s -> s.withColor(0xFFAA00)));
 
-        // 5. Catalyst — uses cached last-tick boolean, not a live hatch query.
-        //    This avoids the "always shows active" false positive caused by querying
-        //    the hatch after the tick has already consumed the fluorine.
+        // 5. Catalyst
         if (lastCatalystActive) {
             textList.add(Component.translatable("phoenix_fission.msr.catalyst_fluorine")
                     .withStyle(s -> s.withColor(0x55FFFF)));
         }
 
         // 6. Xenon poisoning + purge status
-        double xenonPct  = xenonPoisonLevel * 100;
-        int    xenonColor = xenonPoisonLevel < 0.05 ? 0x55FF55
-                : (xenonPoisonLevel > 0.35 ? 0xFF3333 : 0xAA00AA);
+        double xenonPct = xenonPoisonLevel * 100;
+        int xenonColor = xenonPoisonLevel < 0.05 ? 0x55FF55 : (xenonPoisonLevel > 0.35 ? 0xFF3333 : 0xAA00AA);
         if (xenonPoisonLevel < 0.05 && lastGeneratedEUt > 0) {
             textList.add(Component.translatable("phoenix_fission.msr.xenon_clean")
                     .withStyle(s -> s.withColor(0x55FF55)));
         } else {
             textList.add(Component.translatable("phoenix_fission.msr.xenon_poisoning",
-                            String.format(java.util.Locale.ROOT, "%.1f", xenonPct) + "%")
+                    String.format(java.util.Locale.ROOT, "%.1f", xenonPct) + "%")
                     .withStyle(s -> s.withColor(xenonColor)));
         }
-        // Show whether xenon gas is actually reaching an output hatch.
-        // If this says "Purge: Blocked" you need an output hatch for radioactive_xenon_gas.
+
         textList.add(Component.literal("  Xe Purge: ")
                 .withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(lastXenonPurgeSucceeded ? "OK" : "Blocked")
                         .withStyle(s -> s.withColor(lastXenonPurgeSucceeded ? 0x55FF55 : 0xFF5555))));
 
-        // 7. Coolant
+        // 7. Coolant text indicators managed by core Thermal Manager outputs
         textList.add(Component.translatable("phoenix_fission.cooling_power", lastProvidedCooling)
                 .withStyle(s -> s.withColor(0x55FFFF)));
         textList.add(Component.translatable(
@@ -364,18 +351,24 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
 
         if (meltdownTimerTicks > 0) {
             textList.add(Component.translatable("phoenix_fission.status.danger_timer",
-                    getMeltdownSecondsRemaining()));
+                    meltdownTimerTicks / 20));
         }
     }
 
-    /**
-     * Local copy of the private getVoltageFormattedOutput from the base class.
-     * Avoids brittle reflection just to call a private method one class up.
-     */
+    @Override
+    public @NotNull ModularUI createUI(Player player) {
+        if (getLevel() != null && !getLevel().isClientSide) {
+            getLevel().sendBlockUpdated(getPos(), getBlockState(), getBlockState(), 3);
+        }
+        return new ModularUI(264, 256, this, player)
+                .widget(new net.phoenix.phoenix_fission.client.gui.MSRFancyUIWidget(this, 264, 256));
+    }
+
     private Component getVoltageFormattedOutputMSR(long euOut) {
         int tier = 0;
         for (int i = 0; i < GTValues.V.length; i++) {
-            if (euOut >= GTValues.V[i]) tier = i; else break;
+            if (euOut >= GTValues.V[i]) tier = i;
+            else break;
         }
         return Component.translatable("phoenix_fission.eu_generation", euOut)
                 .append(Component.literal(" (").withStyle(ChatFormatting.GRAY))

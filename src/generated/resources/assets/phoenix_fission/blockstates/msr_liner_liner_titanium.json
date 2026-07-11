@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "active=false": {
+      "model": "phoenix_fission:block/msr_liner_liner_titanium"
+    },
+    "active=true": {
+      "model": "phoenix_fission:block/msr_liner_liner_titanium_active"
+    }
+  }
+}

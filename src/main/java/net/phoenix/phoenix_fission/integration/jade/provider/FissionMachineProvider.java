@@ -35,9 +35,9 @@ public class FissionMachineProvider implements IBlockComponentProvider, IServerD
     private static final String NBT_MELTDOWN_SECONDS = "pf_meltdown_seconds";
     private static final String NBT_HAS_COOLANT = "pf_has_coolant";
     private static final String NBT_IS_BREEDER = "pf_is_breeder";
-    private static final String NBT_IS_MSR = "pf_is_msr"; // NEW MSR Flag
-    private static final String NBT_XENON_LEVEL = "pf_xenon_level"; // NEW Xenon Tracker
-    private static final String NBT_CATALYST_ACTIVE = "pf_catalyst_active"; // NEW Catalyst Flag
+    private static final String NBT_IS_MSR = "pf_is_msr";
+    private static final String NBT_XENON_LEVEL = "pf_xenon_level";
+    private static final String NBT_CATALYST_ACTIVE = "pf_catalyst_active";
     private static final String NBT_RUNNING = "pf_running";
     private static final String NBT_PARALLELS = "pf_parallels";
     private static final String NBT_EUT = "pf_eut";
@@ -93,9 +93,10 @@ public class FissionMachineProvider implements IBlockComponentProvider, IServerD
         long eut = data.getLong(NBT_EUT);
 
         tooltip.add(Component.literal("Parallels: " + parallels));
-        tooltip.add(Component.literal("EU/t: " + eut));
+        if (net.phoenix.phoenix_fission.configs.PhoenixFissionConfigs.INSTANCE.fission.enableDirectEUOutput) {
+            tooltip.add(Component.literal("EU/t: " + eut));
+        }
 
-        // Conditionally render MSR status parameters or Standard Grid configurations
         if (isMSR) {
             double xenon = data.getDouble(NBT_XENON_LEVEL);
             String formattedXenon = String.format(java.util.Locale.ROOT, "%.1f", xenon * 100) + "%";
@@ -114,7 +115,6 @@ public class FissionMachineProvider implements IBlockComponentProvider, IServerD
                         .withStyle(s -> s.withColor(0x55FFFF)));
             }
         } else {
-            // Standard Solid-Fuel Metrics
             int rods = data.getInt(NBT_RODS);
             int coolers = data.getInt(NBT_COOLERS);
             int mods = data.getInt(NBT_MODS);
@@ -122,11 +122,12 @@ public class FissionMachineProvider implements IBlockComponentProvider, IServerD
         }
 
         int coolingPower = data.getInt(NBT_COOLING_POWER);
-        tooltip.add(Component.literal("Max Cooling Power: " + coolingPower + " HU/t")
+        tooltip.add(Component.literal("Max Cool @ Cap: " + coolingPower + " HU/t")
                 .withStyle(s -> s.withColor(0x55FFFF)));
 
         // ---- Breeder blanket info ----
-        if (!isMSR && data.getBoolean(NBT_IS_BREEDER) && data.getInt(NBT_BLANKETS) > 0 && data.contains(NBT_BLANKET_INPUT)) {
+        if (!isMSR && data.getBoolean(NBT_IS_BREEDER) && data.getInt(NBT_BLANKETS) > 0 &&
+                data.contains(NBT_BLANKET_INPUT)) {
             String inKey = data.getString(NBT_BLANKET_INPUT);
             Component inName = resolveKeyToDisplayName(inKey);
 
@@ -159,7 +160,7 @@ public class FissionMachineProvider implements IBlockComponentProvider, IServerD
                         String inst = parts.length > 2 ? parts[2] : "?";
 
                         Component outName = resolveKeyToDisplayName(key);
-                        tooltip.add(Component.literal("• ")
+                        tooltip.add(Component.literal("- ")
                                 .append(outName)
                                 .append(Component.literal("  w=" + w + "  inst=" + inst)
                                         .withStyle(s -> s.withColor(0x888888)))
@@ -186,57 +187,66 @@ public class FissionMachineProvider implements IBlockComponentProvider, IServerD
         boolean msr = machine instanceof MoltenSaltReactorMultiblockMachine;
         tag.putBoolean(NBT_IS_MSR, msr);
 
-        tag.putInt(NBT_COOLERS, machine.getActiveCoolers().size());
+        // Ported components tracking variables to getComponentManager() mapping layer
+        tag.putInt(NBT_COOLERS, machine.getComponentManager().getActiveCoolers().size());
         tag.putDouble(NBT_HEAT, machine.getHeat());
-        tag.putDouble(NBT_NET_HEAT, machine.getNetHeatPerTick());
+        tag.putDouble(NBT_NET_HEAT, machine.lastHeatGainedPerTick - machine.lastHeatRemovedPerTick);
         tag.putBoolean(NBT_HAS_COOLANT, machine.lastHasCoolant);
-        tag.putBoolean(NBT_RUNNING, machine.wasRunningLastTick());
+        tag.putBoolean(NBT_RUNNING, machine.getRecipeLogic().isWorking());
         tag.putInt(NBT_PARALLELS, machine.lastParallels);
         tag.putLong(NBT_EUT, machine.lastGeneratedEUt);
         tag.putInt(NBT_COOLING_POWER, machine.lastProvidedCooling);
-        tag.putInt(NBT_MELTDOWN_SECONDS, machine.getMeltdownSecondsRemaining());
+
+        // FIXED: Calculated remaining meltdown seconds safely from raw meltdown field attributes
+        int secondsRemaining = machine.meltdownTimerTicks > 0 ? (int) Math.ceil(machine.meltdownTimerTicks / 20.0) : 0;
+        tag.putInt(NBT_MELTDOWN_SECONDS, secondsRemaining);
 
         if (msr) {
-            // Use reflection or a direct cast to expose hidden private/protected MSR attributes safely
+            MoltenSaltReactorMultiblockMachine msrMachine = (MoltenSaltReactorMultiblockMachine) machine;
             try {
-                java.lang.reflect.Field xenonField = MoltenSaltReactorMultiblockMachine.class.getDeclaredField("xenonPoisonLevel");
+                java.lang.reflect.Field xenonField = MoltenSaltReactorMultiblockMachine.class
+                        .getDeclaredField("xenonPoisonLevel");
                 xenonField.setAccessible(true);
-                double xenonVal = xenonField.getDouble(machine);
+                double xenonVal = xenonField.getDouble(msrMachine);
                 tag.putDouble(NBT_XENON_LEVEL, xenonVal);
+
+                java.lang.reflect.Field catalystField = MoltenSaltReactorMultiblockMachine.class
+                        .getDeclaredField("lastCatalystActive");
+                catalystField.setAccessible(true);
+                tag.putBoolean(NBT_CATALYST_ACTIVE, catalystField.getBoolean(msrMachine));
             } catch (Throwable ignored) {
                 tag.putDouble(NBT_XENON_LEVEL, 0.0);
+                tag.putBoolean(NBT_CATALYST_ACTIVE, false);
             }
 
-            // A quick check if Fluorine catalyst option can be drawn by checking if its input buffer can accept or holds it
-            tag.putBoolean(NBT_CATALYST_ACTIVE, machine.canConsumeFluidId("gtceu:liquid_fluorine", 0));
-
-            // Clean out irrelevant data structures
             tag.putInt(NBT_RODS, 0);
             tag.putInt(NBT_MODS, 0);
             tag.putInt(NBT_BLANKETS, 0);
             return;
         }
 
-        // Standard Reactor Configuration Elements
-        tag.putInt(NBT_RODS, machine.getActiveFuelRods().size());
-        tag.putInt(NBT_MODS, machine.getActiveModerators().size());
-        tag.putInt(NBT_BLANKETS, machine.getActiveBlankets().size());
+        // Clean modern sub-manager component counts queries
+        tag.putInt(NBT_RODS, machine.getComponentManager().getActiveFuelRods().size());
+        tag.putInt(NBT_MODS, machine.getComponentManager().getActiveModerators().size());
+        tag.putInt(NBT_BLANKETS, machine.getComponentManager().getActiveBlankets().size());
 
         boolean breeder = machine instanceof BreederWorkableElectricMultiblockMachine;
         tag.putBoolean(NBT_IS_BREEDER, breeder);
 
         if (breeder) {
             BreederWorkableElectricMultiblockMachine b = (BreederWorkableElectricMultiblockMachine) machine;
-            boolean hasBlankets = b.getActiveBlankets() != null && !b.getActiveBlankets().isEmpty() && b.getPrimaryBlanket() != null;
+            var activeBlankets = b.getComponentManager().getActiveBlankets();
+            boolean hasBlankets = activeBlankets != null && !activeBlankets.isEmpty() && b.getPrimaryBlanket() != null;
 
             if (hasBlankets) {
                 IFissionBlanketType primary = b.getPrimaryBlanket();
-                tag.putInt(NBT_BLANKETS, b.getActiveBlankets().size());
+                tag.putInt(NBT_BLANKETS, activeBlankets.size());
                 tag.putString(NBT_BLANKET_INPUT, primary.getInputKey());
                 tag.putInt(NBT_BLANKET_AMOUNT, Math.max(0, primary.getAmountPerCycle()));
 
                 String primaryOut = "";
-                if (primary.getOutputs() != null && !primary.getOutputs().isEmpty() && primary.getOutputs().get(0) != null) {
+                if (primary.getOutputs() != null && !primary.getOutputs().isEmpty() &&
+                        primary.getOutputs().get(0) != null) {
                     primaryOut = primary.getOutputs().get(0).key();
                 }
                 tag.putString(NBT_BLANKET_OUTPUT, primaryOut);
