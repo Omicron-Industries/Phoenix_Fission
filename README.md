@@ -13,9 +13,10 @@ Rough outline for now.
   C. Reactor Classes.
   D. The Fission Component Blocks.
   E. Kubejs Integration.
-3. Overall roadmpa
+3. Design Principles: Why this mod exists.
+4. Overall roadmap
   A. Current Issues
   B. Planned Features.
   C. Common Pain points with current systems.
   D. Longtearm Goal.
-4. OmInd Stuff.
+5. OmInd Stuff.
