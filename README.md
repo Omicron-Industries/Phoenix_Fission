@@ -8,10 +8,11 @@ Rough outline for now.
   C. Custom UIs.
   D. Kubejs integration.
 2. How to get started in the codebase
-  A. Heat Model Managers.
-  B. Reactor Classes.
-  C. The Fission Component Blocks.
-  D. Kubejs Integration.
+  A. Contributing rules/stylistic choice doc  links.
+  B. Heat Model Managers.
+  C. Reactor Classes.
+  D. The Fission Component Blocks.
+  E. Kubejs Integration.
 3. Overall roadmpa
   A. Current Issues
   B. Planned Features.
