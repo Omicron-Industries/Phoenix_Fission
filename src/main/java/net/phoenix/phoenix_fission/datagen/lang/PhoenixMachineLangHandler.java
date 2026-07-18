@@ -54,8 +54,8 @@ public class PhoenixMachineLangHandler {
         provider.add("gui.phoenix_fission.source_hatch.label.import", "Source Input Hatch");
         provider.add("gui.phoenix_fission.source_hatch.label.export", "Source Output Hatch");
         provider.add("gui.phoenix_fission.source_hatch.source", "Source Stored: %s");
-        provider.add("phoenix.core.recipe.source_in", "Source Consumed: %s.");
-        provider.add("phoenix.core.recipe.source_out", "Source Yield: %s.");
+        provider.add("phoenix_fission.recipe.source_in", "Source Consumed: %s.");
+        provider.add("phoenix_fission.recipe.source_out", "Source Yield: %s.");
         provider.add("tooltip.phoenix_fission.source_hatch.consumption", "§cMax Source Consumption:§d %s");
         provider.add("tooltip.phoenix_fission.source_hatch.capacity", "§cMax Source Capacity:§d %s");
         provider.add("recipe.capability.source.name", "Source");

@@ -1,6 +1,7 @@
 package net.phoenix.phoenix_fission.integration.emi;
 
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.phoenix.phoenix_fission.PhoenixAPI;
 import net.phoenix.phoenix_fission.PhoenixFission;
 import net.phoenix.phoenix_fission.common.PhoenixFissionMachines;
@@ -19,33 +20,29 @@ public class PhoenixFissionEmiPlugin implements EmiPlugin {
     public static final EmiRecipeCategory FUEL_BURN = new EmiRecipeCategory(
             PhoenixFission.id("fission_fuel_burn"),
             (draw, x, y, delta) -> {
-                var b = PhoenixFissionBlocks.FUEL_ROD_T1;
-                if (b != null)
-                    EmiStack.of(new ItemStack(b.get().asItem())).render(draw, x, y, delta, EmiStack.RENDER_AMOUNT);
+                // Using Vanilla Blaze Powder as the icon
+                EmiStack.of(new ItemStack(Items.BLAZE_POWDER)).render(draw, x, y, delta, EmiStack.RENDER_AMOUNT);
             });
 
     public static final EmiRecipeCategory COOLANT_CYCLE = new EmiRecipeCategory(
             PhoenixFission.id("fission_coolant_cycle"),
             (draw, x, y, delta) -> {
-                var b = PhoenixFissionBlocks.COOLER_BASIC;
-                if (b != null)
-                    EmiStack.of(new ItemStack(b.get().asItem())).render(draw, x, y, delta, EmiStack.RENDER_AMOUNT);
+                // Using Vanilla Packed Ice as the icon
+                EmiStack.of(new ItemStack(Items.PACKED_ICE)).render(draw, x, y, delta, EmiStack.RENDER_AMOUNT);
             });
 
     public static final EmiRecipeCategory MODERATOR = new EmiRecipeCategory(
             PhoenixFission.id("fission_moderator"),
             (draw, x, y, delta) -> {
-                var b = PhoenixFissionBlocks.MODERATOR_GRAPHITE;
-                if (b != null)
-                    EmiStack.of(new ItemStack(b.get().asItem())).render(draw, x, y, delta, EmiStack.RENDER_AMOUNT);
+                // Using Vanilla Glowstone Block as the icon
+                EmiStack.of(new ItemStack(Items.GLOWSTONE)).render(draw, x, y, delta, EmiStack.RENDER_AMOUNT);
             });
 
     public static final EmiRecipeCategory BLANKET = new EmiRecipeCategory(
             PhoenixFission.id("fission_blanket"),
             (draw, x, y, delta) -> {
-                var b = PhoenixFissionBlocks.THORIUM_BLANKET;
-                if (b != null)
-                    EmiStack.of(new ItemStack(b.get().asItem())).render(draw, x, y, delta, EmiStack.RENDER_AMOUNT);
+                // Using Vanilla Iron Bars as the icon
+                EmiStack.of(new ItemStack(Items.IRON_BARS)).render(draw, x, y, delta, EmiStack.RENDER_AMOUNT);
             });
 
     @Override

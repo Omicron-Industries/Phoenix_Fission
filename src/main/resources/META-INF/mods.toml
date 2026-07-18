@@ -18,7 +18,7 @@ displayURL = "${mod_url}"
 # credits="Thanks to Mojang for making this great game" #optional
 # Some more fluff displayed in the Mods panel. Plug your stuff here!
 authors="${mod_author}"
-description = '''This is the Core mod for phoenix_core'''
+description = '''A highly configurable GregTech Modern fission addon'''
 
 [[dependencies.phoenix_fission]]
 modId = "forge"

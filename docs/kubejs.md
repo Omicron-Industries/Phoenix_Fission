@@ -15,8 +15,8 @@ StartupEvents.registry("block", event => {
         .tier(3)                                 // Determines explosion scaling and tier-matching logic
         .coolerTemperature(1025)                // Active heat dissipation capacity (HU/t)
         .coolantUsagePerTick(10)                // Millibuckets of coolant fluid consumed per operation tick
-        .requiredCoolantMaterialId('phoenixcore:frost')  // Input fluid registry ID
-        .outputCoolantFluidId('phoenixcore:warm_frost')  // Output heated fluid registry ID
+        .requiredCoolantMaterialId('phoenix_fission:frost')  // Input fluid registry ID
+        .outputCoolantFluidId('phoenix_fission:warm_frost')  // Output heated fluid registry ID
         .tintColor(0xFF7DE7FF)                  // Does nothing but nessecary, leave default
         .texture('kubejs:block/fission/aether_flow_cooler')  // Note: Requires a matching block and active block texture (active is appended to the end)       
         .maskTexture('phoenix_fission:block/fission/cooler_mask'); // Optional mask texture layer

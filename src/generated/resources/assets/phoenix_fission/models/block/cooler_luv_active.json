@@ -1,7 +1,0 @@
-{
-  "parent": "phoenix_fission:block/cube_2_layer_all_tinted",
-  "textures": {
-    "bot_all": "phoenix_fission:block/fission/coolers/cooler_luv",
-    "top_all": "phoenix_fission:block/fission/masks/cooler_mask_active"
-  }
-}

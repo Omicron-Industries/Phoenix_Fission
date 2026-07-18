@@ -1,9 +1,0 @@
-{
-  "flip_v": true,
-  "loader": "forge:obj",
-  "model": "phoenix_fission:models/obj/star.obj",
-  "textures": {
-    "texture0": "phoenix_fission:block/obj/star_layer",
-    "particle":"phoenix_fission:block/obj/star_layer"
-  }
-}

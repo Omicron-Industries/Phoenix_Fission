@@ -44,7 +44,20 @@ public class PhoenixFissionBlocks {
     // --- Global Registrations & Caches ---
     public static final Map<IMSRCoreLinerType, BlockEntry<MSRCoreLinerBlock>> MSR_LINERS = new HashMap<>();
 
-    public static BlockEntry<NukeBlock> NUKE_BLOCK = null;
+    public static final BlockEntry<NukeBlock> NUKE_BLOCK = PHOENIX_REGISTRATE
+            .block("nuke_block", NukeBlock::new)
+            .initialProperties(() -> Blocks.TNT) // TNT-ish
+            .properties(p -> p.isValidSpawn((state, level, pos, ent) -> false))
+            .blockstate((ctx, prov) -> prov.simpleBlock(ctx.getEntry(),
+                    prov.models().cubeBottomTop(
+                            ctx.getName(),
+                            PhoenixFission.id("block/nuke_side"),   // Side texture
+                            PhoenixFission.id("block/nuke_bottom"), // Bottom texture
+                            PhoenixFission.id("block/nuke_top")     // Top texture
+                    )))
+            .item(BlockItem::new)
+            .build()
+            .register();
 
     // --- MSR Core Liners ---
     public static BlockEntry<MSRCoreLinerBlock> LINER_GRAPHITE = null;

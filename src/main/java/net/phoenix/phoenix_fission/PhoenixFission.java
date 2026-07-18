@@ -26,8 +26,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.phoenix.phoenix_fission.api.block.PhoenixFissionEntities;
 import net.phoenix.phoenix_fission.common.PhoenixFissionMachines;
-import net.phoenix.phoenix_fission.common.data.PhoenixFissionItems;
-import net.phoenix.phoenix_fission.common.data.PhoenixFissionMaterials;
 import net.phoenix.phoenix_fission.common.data.PhoenixRecipeTypes;
 import net.phoenix.phoenix_fission.common.data.block.PhoenixFissionBlocks;
 import net.phoenix.phoenix_fission.configs.PhoenixFissionConfigs;
@@ -79,7 +77,6 @@ public class PhoenixFission {
         PHOENIX_REGISTRATE.registerRegistrate();
         PhoenixFissionEntities.init();
         PhoenixFissionBlocks.init();
-        PhoenixFissionItems.init();
         PhoenixDatagen.init();
     }
 
@@ -106,9 +103,7 @@ public class PhoenixFission {
         GTCEuAPI.materialManager.createRegistry(MOD_ID);
     }
 
-    private void addMaterials(MaterialEvent event) {
-        PhoenixFissionMaterials.register();
-    }
+    private void addMaterials(MaterialEvent event) {}
 
     private void modifyMaterials(PostMaterialEvent event) {}
 

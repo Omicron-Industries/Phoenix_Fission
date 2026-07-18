@@ -5,9 +5,6 @@ import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import net.phoenix.phoenix_fission.PhoenixFission;
 import net.phoenix.phoenix_fission.api.pattern.PhoenixFissionPredicates;
 import net.phoenix.phoenix_fission.common.PhoenixFissionMachines;
-import net.phoenix.phoenix_fission.common.data.PhoenixElements;
-import net.phoenix.phoenix_fission.common.data.PhoenixFissionItems;
-import net.phoenix.phoenix_fission.common.data.PhoenixFissionMaterials;
 import net.phoenix.phoenix_fission.common.data.PhoenixRecipeTypes;
 import net.phoenix.phoenix_fission.common.data.block.PhoenixFissionBlocks;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.BreederWorkableElectricMultiblockMachine;
@@ -42,12 +39,9 @@ public class PhoenixKubeJSPlugin extends dev.latvian.mods.kubejs.KubeJSPlugin {
     @Override
     public void registerBindings(BindingsEvent event) {
         super.registerBindings(event);
-        event.add("PhoenixFissionMaterials", PhoenixFissionMaterials.class);
         event.add("PhoenixFissionConfigs", PhoenixFissionConfigs.class);
-        event.add("PhoenixFissionElements", PhoenixElements.class);
         event.add("PhoenixFissionBlocks", PhoenixFissionBlocks.class);
         event.add("PhoenixFissionMachines", PhoenixFissionMachines.class);
-        event.add("PhoenixFissionItems", PhoenixFissionItems.class);
         event.add("PhoenixFissionRecipeTypes", PhoenixRecipeTypes.class);
 
         event.add("FissionWorkableElectricMultiblockMachine", FissionWorkableElectricMultiblockMachine.class);
