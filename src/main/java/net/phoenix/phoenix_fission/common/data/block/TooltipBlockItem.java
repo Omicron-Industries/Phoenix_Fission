@@ -26,7 +26,8 @@ public class TooltipBlockItem extends BlockItem {
     }
 
     @Override
-    public void appendHoverText(@NotNull ItemStack stack, @Nullable Level level, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
+    public void appendHoverText(@NotNull ItemStack stack, @Nullable Level level, @NotNull List<Component> tooltip,
+                                @NotNull TooltipFlag flag) {
         int i = 0;
         while (true) {
             String lineKey = baseTooltipKey + "." + i;

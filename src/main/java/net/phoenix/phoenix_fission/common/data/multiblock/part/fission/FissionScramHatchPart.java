@@ -18,7 +18,6 @@ import net.phoenix.phoenix_fission.common.data.multiblock.fission.FissionWorkabl
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
-
 public class FissionScramHatchPart extends TieredPartMachine {
 
     @Getter
@@ -27,7 +26,6 @@ public class FissionScramHatchPart extends TieredPartMachine {
     public FissionScramHatchPart(IMachineBlockEntity holder, int tier) {
         super(holder, tier);
     }
-
 
     @Override
     public void onLoad() {
@@ -40,7 +38,6 @@ public class FissionScramHatchPart extends TieredPartMachine {
         super.addedToController(controller);
         updateScramStatus();
     }
-
 
     @Override
     public boolean canConnectRedstone(@NotNull Direction side) {
@@ -70,7 +67,6 @@ public class FissionScramHatchPart extends TieredPartMachine {
             }
         }
     }
-
 
     @Override
     public Widget createUIWidget() {

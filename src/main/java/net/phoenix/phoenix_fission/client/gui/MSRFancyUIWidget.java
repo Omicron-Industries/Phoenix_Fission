@@ -69,7 +69,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         DrawerHelper.drawBorder(g, x + 2, y + 2, w - 4, h - 4, 0x22_FFC844, 1);
     }
 
-
     @OnlyIn(Dist.CLIENT)
     private void drawTitleBar(GuiGraphics g, int x, int y, int w) {
         if (pageContainer == null) return;
@@ -86,7 +85,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         g.drawString(font, title, x + 10, titleY, C_SALT, false);
         g.fill(x, contentY - 1, x + w, contentY, 0x44_FFC844);
     }
-
 
     @OnlyIn(Dist.CLIENT)
     private void drawHudIfHome(GuiGraphics g) {
@@ -126,7 +124,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         drawChemistryStatus(g, font, x, y);
     }
 
-
     @OnlyIn(Dist.CLIENT)
     private int drawStatusHeader(GuiGraphics g, Font font, int x, int y, int W,
                                  boolean formed, boolean working, boolean scram) {
@@ -161,7 +158,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         g.fill(x, y + 1, x + W, y + 2, 0x33_FFC844);
         return y + 5;
     }
-
 
     @OnlyIn(Dist.CLIENT)
     private int drawCoreHeat(GuiGraphics g, Font font, int x, int y, int W) {
@@ -207,7 +203,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         rule(g, x, W, y);
         return y + 4;
     }
-
 
     @OnlyIn(Dist.CLIENT)
     private int drawXenonBar(GuiGraphics g, Font font, int x, int y, int W) {
@@ -257,7 +252,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-
     @OnlyIn(Dist.CLIENT)
     private int drawSaltLoop(GuiGraphics g, Font font, int x, int y, int W) {
         g.drawString(font, "SALT LOOP", x, y, C_MID, false);
@@ -284,7 +278,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-
     @OnlyIn(Dist.CLIENT)
     private void drawChemistryStatus(GuiGraphics g, Font font, int x, int y) {
         g.drawString(font, "CHEMISTRY", x, y, C_MID, false);
@@ -303,7 +296,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
             g.drawString(font, "  SCRAM ENGAGED", x, y, C_RED, false);
         }
     }
-
 
     private static int drawPill(GuiGraphics g, Font font, int x, int y, String label, int color) {
         int pw = font.width(label) + 8, ph = 10;

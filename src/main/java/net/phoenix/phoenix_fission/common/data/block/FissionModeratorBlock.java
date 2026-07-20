@@ -53,7 +53,6 @@ public class FissionModeratorBlock extends ActiveBlock {
                 moderatorType.getFuelDiscount()).withStyle(ChatFormatting.YELLOW));
     }
 
-
     public static class BindableModeratorType implements IFissionModeratorType {
 
         @Getter

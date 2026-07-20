@@ -13,7 +13,6 @@ import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
-
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.FissionWorkableElectricMultiblockMachine;
 
 import lombok.Getter;
@@ -52,7 +51,6 @@ public class AdvancedFissionStabilitySensorPart extends SensorHatchPartMachine {
     public @NotNull ManagedFieldHolder getFieldHolder() {
         return MANAGED_FIELD_HOLDER;
     }
-
 
     @Override
     public Widget createUIWidget() {
@@ -105,7 +103,6 @@ public class AdvancedFissionStabilitySensorPart extends SensorHatchPartMachine {
 
         return group;
     }
-
 
     @Override
     public int getOutputSignal(@Nullable Direction direction) {

@@ -92,14 +92,12 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         this.primaryBlanket = null;
     }
 
-
     @Override
     protected boolean shouldRunReactor() {
         if (!isFormed() || getComponentManager().getActiveFuelRods().isEmpty() || isScramActive()) return false;
 
         return getFuelManager().hasFuelAvailableForNextTick();
     }
-
 
     @Override
     public boolean onWorking() {

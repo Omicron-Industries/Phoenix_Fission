@@ -1,6 +1,7 @@
 package net.phoenix.phoenix_fission.api.examples.managers;
 
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
+
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -84,7 +85,6 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
     /** Whether fuel consumption scales with computed parallels. */
     private final boolean fuelScalesWithParallels;
 
-
     /** All-defaults constructor. Mirrors the old PhoenixConfigs defaults. */
     public LegacyPhysicsFuelManager(FissionWorkableElectricMultiblockMachine machine) {
         this(machine, 0.0, 0.0, true, false);
@@ -99,7 +99,6 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
         this.fuelScalesWithRodCount = fuelScalesWithRodCount;
         this.fuelScalesWithParallels = fuelScalesWithParallels;
     }
-
 
     /**
      * Old formula:
@@ -127,8 +126,6 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
         int total = base + modBonus + heatBonus;
         machine.lastParallels = Math.max(1, Math.min(total, cfg.maxParallels));
     }
-
-
 
     /**
      * Old formula replaces the whole tick-heat method because the structure is
@@ -160,8 +157,6 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
 
         return (baseHeatPerTick + totalRodHeat * moderatorMult) * parallels * burnMult * reactivity;
     }
-
-
 
     /**
      * Old fuel consumption uses the primary fuel rod type only, with optional
@@ -203,7 +198,7 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
         String itemIn = fuelType.getFuelKey();
         if (itemIn.isEmpty()) return;
 
-       ResourceLocation inRl = ResourceLocation.tryParse(itemIn);
+        ResourceLocation inRl = ResourceLocation.tryParse(itemIn);
         if (inRl == null || !ForgeRegistries.ITEMS.containsKey(inRl)) return;
 
         ItemStack inStack = new ItemStack(
@@ -227,9 +222,6 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
         }
     }
 
-
-
-
     /**
      * Adds burn bonus on top of the standard power curve, mirroring old behavior
      * where EU output also scaled with continuousBurnTicks.
@@ -243,8 +235,6 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
         return base * computeBurnMultiplier();
     }
 
-
-
     @Override
     protected double computeHeatThermalScalar(double heat, double maxSafeHeat) {
         return 1.0;
@@ -254,8 +244,6 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
     protected double computeFuelConsumptionThermalScalar(double heat, double maxSafeHeat) {
         return 1.0;
     }
-
-
 
     /**
      * Ramps from 1.0 to 1 + (burnBonusMaxPercent/100) over burnBonusRampSeconds

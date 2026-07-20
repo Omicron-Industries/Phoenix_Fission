@@ -92,7 +92,6 @@ public class FissionBlanketBlock extends ActiveBlock {
                 .withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
     }
 
-
     public static class BindableBlanketType implements IFissionBlanketType {
 
         @Getter

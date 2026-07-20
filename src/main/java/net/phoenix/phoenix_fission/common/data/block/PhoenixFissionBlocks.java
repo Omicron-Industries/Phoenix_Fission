@@ -51,13 +51,10 @@ public class PhoenixFissionBlocks {
                             ctx.getName(),
                             PhoenixFission.id("block/nuke_side"),
                             PhoenixFission.id("block/nuke_bottom"),
-                            PhoenixFission.id("block/nuke_top")
-                    )))
+                            PhoenixFission.id("block/nuke_top"))))
             .item(BlockItem::new)
             .build()
             .register();
-
-
 
     public static BlockEntry<Block> FISSILE_HEAT_SAFE_CASING = null;
     public static BlockEntry<Block> FISSILE_REACTION_SAFE_CASING = null;
@@ -84,7 +81,6 @@ public class PhoenixFissionBlocks {
                     .register();
         }
     }
-
 
     private static @NotNull BlockEntry<Block> registerSimpleBlock(String name, String id, String texture,
                                                                   NonNullBiFunction<Block, Item.Properties, ? extends BlockItem> func) {

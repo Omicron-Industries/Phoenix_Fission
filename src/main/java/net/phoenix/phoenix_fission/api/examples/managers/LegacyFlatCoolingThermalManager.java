@@ -1,6 +1,7 @@
 package net.phoenix.phoenix_fission.api.examples.managers;
 
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
@@ -16,8 +17,6 @@ import net.phoenix.phoenix_fission.common.data.block.PhoenixFissionBlocks;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.FissionWorkableElectricMultiblockMachine;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.managers.FissionThermalManager;
 import net.phoenix.phoenix_fission.configs.PhoenixFissionConfigs;
-
-
 
 /**
  * EXAMPLE -- LEGACY PHYSICS: Pre-refactor Flat Cooling Thermal Model
@@ -70,8 +69,6 @@ public class LegacyFlatCoolingThermalManager extends FissionThermalManager {
     public LegacyFlatCoolingThermalManager(FissionWorkableElectricMultiblockMachine machine) {
         this(machine, 2.0);
     }
-
-
 
     /**
      * Replaces the entire thermal tick with the old flat-cooling model.
@@ -146,8 +143,6 @@ public class LegacyFlatCoolingThermalManager extends FissionThermalManager {
         processMeltdownTimer();
     }
 
-
-
     private boolean legacyCanConsumeCoolant() {
         return processCoolantAction(false);
     }
@@ -212,7 +207,6 @@ public class LegacyFlatCoolingThermalManager extends FissionThermalManager {
         }
         return true;
     }
-
 
     private void processMeltdownTimer() {
         var md = PhoenixFissionConfigs.INSTANCE.fission.meltdown;

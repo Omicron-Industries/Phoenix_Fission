@@ -168,13 +168,12 @@ public class PhoenixFissionMachines {
     public static MultiblockMachineDefinition PRESSURIZED_FISSION_REACTOR = null;
 
     public record FissionReactorEntry(MultiblockMachineDefinition definition,
-            Class<? extends FissionWorkableElectricMultiblockMachine> machineClass) {}
+                                      Class<? extends FissionWorkableElectricMultiblockMachine> machineClass) {}
 
     public static final List<FissionReactorEntry> ALL_FISSION_REACTORS = new ArrayList<>();
 
-
     public static void registerFissionReactor(MultiblockMachineDefinition definition,
-            Class<? extends FissionWorkableElectricMultiblockMachine> machineClass) {
+                                              Class<? extends FissionWorkableElectricMultiblockMachine> machineClass) {
         ALL_FISSION_REACTORS.add(new FissionReactorEntry(definition, machineClass));
     }
 
@@ -461,7 +460,6 @@ public class PhoenixFissionMachines {
                 return shapeInfos;
             })
             .register();
-
 
     public static void init() {}
 }

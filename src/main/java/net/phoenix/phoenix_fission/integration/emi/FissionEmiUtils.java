@@ -49,7 +49,6 @@ final class FissionEmiUtils {
         });
     }
 
-
     static int tierColor(int tier) {
         return switch (Math.max(1, Math.min(tier, 6))) {
             case 1 -> 0xFF_AAAAAA;

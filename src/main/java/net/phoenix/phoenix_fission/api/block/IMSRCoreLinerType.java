@@ -11,7 +11,6 @@ public interface IMSRCoreLinerType extends StringRepresentable {
 
     ResourceLocation getTexture();
 
-
     int getFluidFlowRate();
 
     double getHeatPerMb();

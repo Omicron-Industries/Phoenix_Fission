@@ -39,7 +39,6 @@ public class FissionCoolerBlockBuilder extends BlockBuilder {
     @Setter
     public transient String texture = "phoenix_fission:block/fission/cooler_base";
 
-
     public FissionCoolerBlockBuilder(ResourceLocation i) {
         super(i);
         noValidSpawns(true);
@@ -120,8 +119,6 @@ public class FissionCoolerBlockBuilder extends BlockBuilder {
         public @NotNull Material getMaterial() {
             return GTMaterials.NULL;
         }
-
-
     }
 
     @Override

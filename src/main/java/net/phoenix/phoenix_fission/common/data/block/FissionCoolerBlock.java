@@ -93,7 +93,6 @@ public class FissionCoolerBlock extends ActiveBlock {
         return Component.translatable(fluidId).withStyle(ChatFormatting.YELLOW);
     }
 
-
     public static class BindableCoolerType implements StringRepresentable, IFissionCoolerType {
 
         @Getter

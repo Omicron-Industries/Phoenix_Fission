@@ -4,8 +4,8 @@ import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.recipe.GTRecipe;
 import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
-
 import com.gregtechceu.gtceu.api.recipe.modifier.RecipeModifier;
+
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -26,8 +26,6 @@ public class DynamicFissionReactorMachine extends FissionWorkableElectricMultibl
     public ManagedFieldHolder getFieldHolder() {
         return MANAGED_FIELD_HOLDER;
     }
-
-
 
     public static ModifierFunction recipeModifier(MetaMachine machine, GTRecipe recipe) {
         if (!(machine instanceof FissionWorkableElectricMultiblockMachine m)) {

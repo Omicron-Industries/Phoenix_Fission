@@ -76,7 +76,6 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
         return MANAGED_FIELD_HOLDER;
     }
 
-
     @Override
     public void onStructureFormed() {
         super.onStructureFormed();
@@ -95,7 +94,6 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
                     .min(java.util.Comparator.comparingInt(IMSRCoreLinerType::getTier))
                     .orElse(null);
         }
-
 
         if (this.coreLinerSpec != null) {
             this.linerName = this.coreLinerSpec.getName();
@@ -129,14 +127,12 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
         this.lastXenonPurgeSucceeded = false;
     }
 
-
     @Override
     protected boolean shouldRunReactor() {
         if (!isFormed() || coreLinerSpec == null) return false;
         if (isScramActive()) return false;
 
         int totalRequiredMb = Math.max(1, this.structuralLinerCount) * coreLinerSpec.getFluidFlowRate();
-
 
         FluidStack targetSalt = resolveFluidStack(coreLinerSpec.getInputFluidId(), totalRequiredMb);
         assert targetSalt != null;
@@ -145,7 +141,6 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
 
     @Override
     public boolean onWorking() {
-
         boolean wasWorking = super.onWorking();
 
         boolean running = shouldRunReactor();
@@ -232,7 +227,6 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
         return running || wasWorking;
     }
 
-
     protected boolean tryConvertFuelSalt(@NotNull String inFluid, @NotNull String outFluid, int mb) {
         if (mb <= 0) return true;
 
@@ -270,7 +264,6 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
     private void tryAddEnergy(long joules) {
         getEnergyContainer().addEnergy(joules);
     }
-
 
     @Override
     public void addDisplayText(@NotNull List<Component> textList) {
@@ -327,7 +320,6 @@ public class MoltenSaltReactorMultiblockMachine extends FissionWorkableElectricM
                 .withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(lastXenonPurgeSucceeded ? "OK" : "Blocked")
                         .withStyle(s -> s.withColor(lastXenonPurgeSucceeded ? 0x55FF55 : 0xFF5555))));
-
 
         textList.add(Component.translatable("phoenix_fission.cooling_power", lastProvidedCooling)
                 .withStyle(s -> s.withColor(0x55FFFF)));

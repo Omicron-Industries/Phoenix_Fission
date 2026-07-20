@@ -50,7 +50,6 @@ public class FissionThermalManager {
         overcooledThisTick = false;
     }
 
-
     /**
      * Passive (ambient) heat change applied every tick regardless of running state.
      * Negative return value means the core is cooling toward ambient.
@@ -232,13 +231,17 @@ public class FissionThermalManager {
 
                 int refund = (int) Math.floor(amount * 0.9);
                 if (refund > 0) {
-                    machine.executeFluidIO(new FluidStack(Objects.requireNonNull(ForgeRegistries.FLUIDS.getValue(inRl)), refund), IO.OUT,
+                    machine.executeFluidIO(
+                            new FluidStack(Objects.requireNonNull(ForgeRegistries.FLUIDS.getValue(inRl)), refund),
+                            IO.OUT,
                             false);
                 }
             } else if (!outId.isEmpty() && !"none".equalsIgnoreCase(outId) && !outId.equalsIgnoreCase(inId)) {
                 ResourceLocation outRl = ResourceLocation.tryParse(outId);
                 if (outRl != null && ForgeRegistries.FLUIDS.containsKey(outRl)) {
-                    machine.executeFluidIO(new FluidStack(Objects.requireNonNull(ForgeRegistries.FLUIDS.getValue(outRl)), amount), IO.OUT,
+                    machine.executeFluidIO(
+                            new FluidStack(Objects.requireNonNull(ForgeRegistries.FLUIDS.getValue(outRl)), amount),
+                            IO.OUT,
                             false);
                 }
             }

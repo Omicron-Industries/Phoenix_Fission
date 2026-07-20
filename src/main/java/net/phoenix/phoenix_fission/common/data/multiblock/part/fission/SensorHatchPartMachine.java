@@ -32,7 +32,6 @@ public abstract class SensorHatchPartMachine extends TieredPartMachine {
         return MANAGED_FIELD_HOLDER;
     }
 
-
     @Override
     public void onLoad() {
         super.onLoad();
@@ -57,7 +56,6 @@ public abstract class SensorHatchPartMachine extends TieredPartMachine {
         signalUpdateHandler.updateSubscription();
     }
 
-
     @Override
     public boolean canConnectRedstone(@NotNull Direction side) {
         return side == getFrontFacing().getOpposite();
@@ -65,13 +63,11 @@ public abstract class SensorHatchPartMachine extends TieredPartMachine {
 
     public abstract int getOutputSignal(@Nullable Direction direction);
 
-
     public void updateSignal() {
         if (getLevel() != null && !getLevel().isClientSide) {
             getLevel().updateNeighborsAt(getPos(), getHolder().getSelf().getBlockState().getBlock());
         }
     }
-
 
     public @Nullable IMultiController getController() {
         if (getControllers().isEmpty()) return null;

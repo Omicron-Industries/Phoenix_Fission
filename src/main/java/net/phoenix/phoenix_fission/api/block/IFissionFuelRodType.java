@@ -3,9 +3,7 @@ package net.phoenix.phoenix_fission.api.block;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 
-
 import org.jetbrains.annotations.NotNull;
-
 
 public interface IFissionFuelRodType extends StringRepresentable {
 
@@ -36,11 +34,8 @@ public interface IFissionFuelRodType extends StringRepresentable {
 
     ResourceLocation getTexture();
 
-
     @Override
     default @NotNull String getSerializedName() {
         return getName();
     }
-
-
 }

@@ -4,9 +4,8 @@ import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
+
 import org.jetbrains.annotations.NotNull;
-
-
 
 public interface IFissionCoolerType extends StringRepresentable {
 
@@ -30,18 +29,15 @@ public interface IFissionCoolerType extends StringRepresentable {
         return getRequiredCoolantMaterialId();
     }
 
-
     int getCoolantUsagePerTick();
 
     default int getCoolantPerTick() {
         return getCoolantUsagePerTick();
     }
 
-
     default double getFlatCoolingHUt() {
         return 0.0;
     }
-
 
     default boolean isPassive() {
         return getFlatCoolingHUt() > 0.0;
@@ -55,10 +51,8 @@ public interface IFissionCoolerType extends StringRepresentable {
 
     ResourceLocation getTexture();
 
-
     @Override
     default @NotNull String getSerializedName() {
         return getName();
     }
-
 }

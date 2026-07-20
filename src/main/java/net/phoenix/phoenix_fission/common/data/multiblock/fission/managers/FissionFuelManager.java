@@ -3,8 +3,8 @@ package net.phoenix.phoenix_fission.common.data.multiblock.fission.managers;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
-
 import com.gregtechceu.gtceu.utils.GTUtil;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -144,7 +144,6 @@ public class FissionFuelManager {
         return baseEU * bonus;
     }
 
-
     public double calculateTickHeat(int ignoredMachineParallels) {
         var comp = machine.getComponentManager();
         if (comp.getActiveFuelRods().isEmpty() || machine.getReactivityFactor() <= 0.0) return 0.0;
@@ -215,7 +214,9 @@ public class FissionFuelManager {
             if (!itemOut.isEmpty() && !"none".equalsIgnoreCase(itemOut) && !itemOut.equalsIgnoreCase(itemIn)) {
                 ResourceLocation outRl = ResourceLocation.tryParse(itemOut);
                 if (outRl != null && ForgeRegistries.ITEMS.containsKey(outRl)) {
-                    machine.executeItemIO(new ItemStack(Objects.requireNonNull(ForgeRegistries.ITEMS.getValue(outRl)), directConsume), IO.OUT);
+                    machine.executeItemIO(
+                            new ItemStack(Objects.requireNonNull(ForgeRegistries.ITEMS.getValue(outRl)), directConsume),
+                            IO.OUT);
                 }
             }
         }
@@ -228,7 +229,8 @@ public class FissionFuelManager {
             verifiedTypes.add(rod.getFuelKey());
             ResourceLocation rl = ResourceLocation.tryParse(rod.getFuelKey());
             if (rl == null || !ForgeRegistries.ITEMS.containsKey(rl) ||
-                    !machine.executeItemIO(new ItemStack(Objects.requireNonNull(ForgeRegistries.ITEMS.getValue(rl)), 1), IO.IN, true))
+                    !machine.executeItemIO(new ItemStack(Objects.requireNonNull(ForgeRegistries.ITEMS.getValue(rl)), 1),
+                            IO.IN, true))
                 return false;
         }
         return true;
@@ -237,7 +239,8 @@ public class FissionFuelManager {
     private boolean processItemConsumption(String id, int count) {
         ResourceLocation rl = ResourceLocation.tryParse(id);
         if (rl == null || !ForgeRegistries.ITEMS.containsKey(rl)) return false;
-        return machine.executeItemIO(new ItemStack(Objects.requireNonNull(ForgeRegistries.ITEMS.getValue(rl)), count), IO.IN, false);
+        return machine.executeItemIO(new ItemStack(Objects.requireNonNull(ForgeRegistries.ITEMS.getValue(rl)), count),
+                IO.IN, false);
     }
 
     public void processPowerGeneration(boolean running) {

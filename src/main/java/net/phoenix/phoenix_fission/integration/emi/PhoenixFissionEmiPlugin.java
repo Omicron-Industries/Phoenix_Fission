@@ -28,28 +28,23 @@ public class PhoenixFissionEmiPlugin implements EmiPlugin {
     public void register(EmiRegistry registry) {
         FUEL_BURN = new EmiRecipeCategory(
                 PhoenixFission.id("fission_fuel_burn"),
-                EmiStack.of(Items.BLAZE_POWDER)
-        );
+                EmiStack.of(Items.BLAZE_POWDER));
 
         COOLANT_CYCLE = new EmiRecipeCategory(
                 PhoenixFission.id("fission_coolant_cycle"),
-                EmiStack.of(Items.PACKED_ICE)
-        );
+                EmiStack.of(Items.PACKED_ICE));
 
         MODERATOR = new EmiRecipeCategory(
                 PhoenixFission.id("fission_moderator"),
-                EmiStack.of(Items.GLOWSTONE)
-        );
+                EmiStack.of(Items.GLOWSTONE));
 
         BLANKET = new EmiRecipeCategory(
                 PhoenixFission.id("fission_blanket"),
-                EmiStack.of(Items.IRON_BARS)
-        );
+                EmiStack.of(Items.IRON_BARS));
 
         MSR_LINER = new EmiRecipeCategory(
                 PhoenixFission.id("fission_msr_liner"),
-                EmiStack.of(Items.MAGMA_BLOCK)
-        );
+                EmiStack.of(Items.MAGMA_BLOCK));
 
         registry.addCategory(FUEL_BURN);
         registry.addCategory(COOLANT_CYCLE);

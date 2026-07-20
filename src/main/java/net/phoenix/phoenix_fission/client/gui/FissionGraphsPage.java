@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
-
 public class FissionGraphsPage implements IFancyUIProvider {
 
     private final FissionWorkableElectricMultiblockMachine reactor;
@@ -68,7 +67,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
 
         private final FissionWorkableElectricMultiblockMachine reactor;
 
-
         private int activeGraph = 0;
 
         private final int[] tabRect0 = new int[4];
@@ -92,7 +90,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
             this.reactor = reactor;
         }
 
-
         @Override
         @OnlyIn(Dist.CLIENT)
         public boolean mouseClicked(double mx, double my, int btn) {
@@ -112,7 +109,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
         private static boolean hit(int[] r, double mx, double my) {
             return r[2] > 0 && mx >= r[0] && mx < r[0] + r[2] && my >= r[1] && my < r[1] + r[3];
         }
-
 
         @Override
         @OnlyIn(Dist.CLIENT)
@@ -134,7 +130,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
                 g.drawString(font, "Reactor not formed.", x, y + 4, C_DIM, false);
                 return;
             }
-
 
             List<IFissionFuelRodType> rods = resolveTypes(reactor.getPersistedFuelRodIDs(),
                     PhoenixAPI.FISSION_FUEL_RODS.keySet(), IFissionFuelRodType::getName);
@@ -170,7 +165,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
             }
         }
 
-
         @OnlyIn(Dist.CLIENT)
         private int drawGraphTabs(GuiGraphics g, Font font, int x, int y, int W,
                                   int mouseX, int mouseY) {
@@ -202,7 +196,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
             }
             return y + btnH + 5;
         }
-
 
         @OnlyIn(Dist.CLIENT)
         private int drawEquilibriumGraph(GuiGraphics g, Font font,
@@ -248,7 +241,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
 
             return drawXAxisLabels(g, font, x, y, SAMPLES, plotH, xMax, maxSafeHU);
         }
-
 
         @OnlyIn(Dist.CLIENT)
         private int drawNetRateGraph(GuiGraphics g, Font font,
@@ -343,7 +335,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
             g.drawString(font, "Assumes: reactivity=1.0, coolant present", x, y, C_DIM, false);
         }
 
-
         @OnlyIn(Dist.CLIENT)
         private static void drawPlot(GuiGraphics g, int x, int y, int W, int H) {
             g.fill(x, y, x + W, y + H, 0x18_FFFFFF);
@@ -353,8 +344,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
                 g.fill(x, gy, x + W, gy + 1, 0x18_FFFFFF);
             }
         }
-
-
 
         @OnlyIn(Dist.CLIENT)
         private int drawXAxisLabels(GuiGraphics g, Font font, int x, int y, int W, int plotH,
@@ -403,11 +392,9 @@ public class FissionGraphsPage implements IFancyUIProvider {
             }
         }
 
-
         private double computeHeatProduction(double T,
                                              List<IFissionFuelRodType> rods, double modBonus,
                                              PhoenixFissionConfigs.HeatModelConfigs hm) {
-
             if (reactor instanceof MoltenSaltReactorMultiblockMachine msr) {
                 if (msr.linerFlowRate <= 0 || msr.linerHeatPerMb <= 0) return 0.0;
                 int flow = Math.max(1, msr.structuralLinerCount) * msr.linerFlowRate;
@@ -464,7 +451,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
             return -1.0;
         }
 
-
         private static int computeModBonus(List<IFissionModeratorType> mods) {
             int raw = mods.stream().mapToInt(IFissionModeratorType::getEUBoost).sum();
             return Math.min(raw, PhoenixFissionConfigs.INSTANCE.fission.maxEUBoostPercent);
@@ -482,8 +468,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
             }
             return result;
         }
-
-
 
         private static String formatK(double v) {
             if (v >= 1_000_000) return String.format("%.2fM K", v / 1_000_000.0);

@@ -19,8 +19,8 @@ import net.phoenix.phoenix_fission.api.block.IFissionBlanketType;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.BreederWorkableElectricMultiblockMachine;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.FissionWorkableElectricMultiblockMachine;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.MoltenSaltReactorMultiblockMachine;
-
 import net.phoenix.phoenix_fission.configs.PhoenixFissionConfigs;
+
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
 import snownee.jade.api.IServerDataProvider;

@@ -78,7 +78,6 @@ public class BurnupTrackingFuelManager extends FissionFuelManager {
         burnupAccumulator.clear();
     }
 
-
     /**
      * Reduces heat output by the burnup fraction for this rod type.
      * As burnup approaches 1, heat approaches minOutputFraction × base.
@@ -111,7 +110,6 @@ public class BurnupTrackingFuelManager extends FissionFuelManager {
 
         return consumed;
     }
-
 
     /**
      * Returns the output multiplier for a rod type based on its burnup.

@@ -22,7 +22,6 @@ import net.phoenix.phoenix_fission.common.data.multiblock.fission.FissionWorkabl
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
-
 public class AdvancedFissionScramHatchPart extends TieredPartMachine {
 
     public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
@@ -48,7 +47,6 @@ public class AdvancedFissionScramHatchPart extends TieredPartMachine {
         return MANAGED_FIELD_HOLDER;
     }
 
-
     @Override
     public void onLoad() {
         super.onLoad();
@@ -61,7 +59,6 @@ public class AdvancedFissionScramHatchPart extends TieredPartMachine {
         updateScramStatus();
     }
 
-
     @Override
     public boolean canConnectRedstone(@NotNull Direction side) {
         return true;
@@ -72,7 +69,6 @@ public class AdvancedFissionScramHatchPart extends TieredPartMachine {
         super.onNeighborChanged(block, fromPos, isMoving);
         updateScramStatus();
     }
-
 
     public void tick() {
         Level level = getLevel();
@@ -115,18 +111,14 @@ public class AdvancedFissionScramHatchPart extends TieredPartMachine {
         }
     }
 
-
-
     @Override
     public Widget createUIWidget() {
         WidgetGroup group = new WidgetGroup(0, 0, 200, 175);
 
         group.addWidget(new LabelWidget(10, 8, "§6Advanced Fission SCRAM Hatch"));
 
-
         group.addWidget(new LabelWidget(10, 24,
                 () -> isScrammed ? "§c[SCRAM] Reactor HALTED" : "§a[OK] Standby - Reactor Permitted"));
-
 
         group.addWidget(new LabelWidget(10, 36, () -> {
             if (sustainCounter > 0 && !isScrammed) {

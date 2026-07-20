@@ -63,7 +63,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
 
     private int activePanel = 0;
 
-
     private int hudScroll = 0;
 
     private final int[] panelScroll = new int[5];
@@ -109,7 +108,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
     }
 
     static void applyTheme(TabsWidget tabs) {
-
         tabs.setTabTexture(new ColorBorderTexture(1, 0xBB_00E5CC)
                 .setColor(0xFF_010810));
         tabs.setTabHoverTexture(new ColorBorderTexture(1, 0xDD_00E5CC)
@@ -309,8 +307,7 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         } else if (isCurrentlyRunning) {
             badge = "RUNNING";
             badgeColor = C_GREEN;
-        }
-        else {
+        } else {
             badge = "STANDBY";
             badgeColor = C_GOLD;
         }
@@ -394,10 +391,8 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         g.fill(safeX, y - 1, safeX + 1, y + barH + 1, 0xAA_FFFFFF);
         y += barH + 2;
 
-
         g.drawString(font, "safe", safeX - font.width("safe") / 2, y, 0x55_FFFFFF, false);
         y += 10;
-
 
         String pctStr = String.format("%.1f%%", pct * 100);
         String absStr = String.format("%.0f HU", Math.min(heat, 9_999_999));
@@ -409,7 +404,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         rule(g, x, W, y);
         return y + 4;
     }
-
 
     @OnlyIn(Dist.CLIENT)
     private int drawTrendGraph(GuiGraphics g, Font font, int x, int y, int W) {
@@ -509,7 +503,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return Math.max(lo, Math.min(1.0, v));
     }
 
-
     @OnlyIn(Dist.CLIENT)
     private int drawPerTickBreakdown(GuiGraphics g, Font font, int x, int y, int W) {
         double gained = reactor.lastHeatGainedPerTick;
@@ -551,7 +544,7 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         String euStr = FormattingUtil.formatNumbers(reactor.lastGeneratedEUt) + " EU/t";
         String parStr = "x" + reactor.lastParallels + " par";
         int parW = font.width(parStr);
-        int euMaxW = W - parW - 4  - 6  - 4 ;
+        int euMaxW = W - parW - 4 - 6 - 4;
         g.drawString(font, truncate(font, euStr, euMaxW), x + 4, y + 3, C_WHITE, false);
         g.drawString(font, parStr, x + W - parW - 4, y + 3, C_MID, false);
 
@@ -719,7 +712,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-
     @OnlyIn(Dist.CLIENT)
     private void drawStatusFooter(GuiGraphics g, Font font, int x, int y, int W) {
         double maxHeat = reactor.getMaxSafeHeatHU();
@@ -735,8 +727,7 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
 
             g.fill(x, y, x + W, y + barH, 0x44_000000);
 
-            int fillCol = scrammed ? 0xFF_AA4400
-                    : pulsingColor(C_RED, 0xFF_FF8844, 0.012);
+            int fillCol = scrammed ? 0xFF_AA4400 : pulsingColor(C_RED, 0xFF_FF8844, 0.012);
             if (fillW > 0) g.fill(x, y, x + fillW, y + barH, fillCol);
             DrawerHelper.drawBorder(g, x, y, W, barH, scrammed ? 0x88_AA6600 : 0x88_FF3300, 1);
 
@@ -992,7 +983,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
                     g.drawString(font, tempStr, x + 5, iy + 12, A_COOL, false);
                     g.drawString(font, mbStr, x + W - font.width(mbStr) - 6, iy + 12, C_MID, false);
 
-
                     boolean activeNow = currentHeat > c.getCoolerTemperature();
                     String activeStr = activeNow ? "Active now" : "Idle (heat < threshold)";
                     g.drawString(font, activeStr, x + 5, iy + 21,
@@ -1030,7 +1020,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         }
 
         LinkedHashMap<IFissionBlanketType, Long> blanketCounts = groupBy(blankets);
-
 
         int contentStart = y;
 
@@ -1113,7 +1102,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         y = drawSubHeader(g, font, x, y, W, "HEAT & COOLING", C_CYAN);
 
         int contentStart = y;
-
 
         g.fill(x, y + 1, x + 5, y + 1 + 5, C_ORANGE);
         g.drawString(font, "heat (net)", x + 7, y, C_DIM, false);
@@ -1277,7 +1265,7 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
 
     @OnlyIn(Dist.CLIENT)
     private void drawScanlines(GuiGraphics g, int x, int y, int w, int h) {
-        DrawerHelper.drawGradientRect(g, x, y, w,  (float) h / 2, 0x10_000000, 0x04_000000, false);
+        DrawerHelper.drawGradientRect(g, x, y, w, (float) h / 2, 0x10_000000, 0x04_000000, false);
         DrawerHelper.drawGradientRect(g, x, y + (float) h / 2, w, (float) h / 2, 0x04_000000, 0x10_000000, false);
     }
 
@@ -1330,7 +1318,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return ((aa + (int) ((ba - aa) * f)) << 24) | ((ar + (int) ((br - ar) * f)) << 16) |
                 ((ag + (int) ((bg - ag) * f)) << 8) | (ab + (int) ((bb - ab) * f));
     }
-
 
     @OnlyIn(Dist.CLIENT)
     static void drawMeltdownScreen(GuiGraphics g, Font font,
@@ -1438,7 +1425,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         g.drawString(font, "Net rate", bx, cy, 0xFF_886655, false);
         g.drawString(font, netLabel, bx + barW - font.width(netLabel), cy, netCol, false);
         cy += font.lineHeight + 3;
-
 
         g.drawString(font, "Coolant", bx, cy, 0xFF_886655, false);
         String coolStr = hasCoolant ? "OK" : "ABSENT";

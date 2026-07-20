@@ -23,7 +23,6 @@ import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
-import lombok.Setter;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -43,6 +42,7 @@ import net.phoenix.phoenix_fission.common.data.multiblock.part.fission.SensorHat
 import net.phoenix.phoenix_fission.configs.PhoenixFissionConfigs;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;

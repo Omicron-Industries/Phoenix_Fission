@@ -20,7 +20,6 @@ public class PhoenixMachineLangHandler {
         provider.add("phoenix_fission.tooltip.amount", "Yield Batch Size");
         provider.add("phoenix_fission.tooltip.required_fuel_tier", "Required Driver Fuel");
 
-
         provider.add("phoenix_fission.coolant_usage_value",
                 "§dConsumption Rate: §5%d mB/t");
 
@@ -42,7 +41,6 @@ public class PhoenixMachineLangHandler {
         provider.add("gui.phoenix_fission.heat_exchanger.heat_exchange_surface", "Exchange Columns: %d");
         provider.add("gui.phoenix_fission.heat_exchanger.current_efficiency", "Thermal Conductivity: Tier %d");
         provider.add("gui.phoenix_fission.missing_spring", "Missing Heat Exchange Spring!");
-
 
         // Fission Reactor System
         provider.add("tooltip.phoenix.empty_component.0", "This is an empty component, provides no stats.");
@@ -253,6 +251,5 @@ public class PhoenixMachineLangHandler {
         provider.add("phoenix_fission.msr_liner.output_salt", "< Yields Waste: §7%s");
 
         provider.add("phoenix_fission.msr_liner.info_header", "--- Molten Salt Core Liner Specifications ---");
-
     }
 }

@@ -29,7 +29,6 @@ import java.util.Locale;
 
 import javax.annotation.Nonnull;
 
-
 public class FissionMathPage implements IFancyUIProvider {
 
     private final FissionWorkableElectricMultiblockMachine reactor;
@@ -70,7 +69,6 @@ public class FissionMathPage implements IFancyUIProvider {
         scrollPane.setYScrollBarWidth(4);
 
         MathWidget mathWidget = new MathWidget(reactor, w - 10, targetTextHeight);
-
 
         scrollPane.addWidget(mathWidget);
 
@@ -196,7 +194,6 @@ public class FissionMathPage implements IFancyUIProvider {
                     "heat/tick scales * parallels");
             note(g, font, x, y, W, "Live: x" + reactor.lastParallels);
         }
-
 
         private static int section(GuiGraphics g, Font font, int x, int y, int W,
                                    String title, int accent) {

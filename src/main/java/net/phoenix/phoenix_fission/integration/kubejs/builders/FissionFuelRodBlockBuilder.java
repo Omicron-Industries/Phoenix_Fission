@@ -102,7 +102,6 @@ public class FissionFuelRodBlockBuilder extends BlockBuilder {
             };
         }
 
-
         @Override
         public @NotNull String getSerializedName() {
             return getName();

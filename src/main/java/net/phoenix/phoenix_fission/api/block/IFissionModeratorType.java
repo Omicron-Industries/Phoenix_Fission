@@ -4,8 +4,8 @@ import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
-import org.jetbrains.annotations.NotNull;
 
+import org.jetbrains.annotations.NotNull;
 
 public interface IFissionModeratorType extends StringRepresentable {
 
@@ -38,7 +38,4 @@ public interface IFissionModeratorType extends StringRepresentable {
     default @NotNull String getSerializedName() {
         return getName();
     }
-
-
-
 }

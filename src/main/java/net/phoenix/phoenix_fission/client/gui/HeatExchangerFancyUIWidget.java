@@ -36,7 +36,6 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
     private static final int C_BLUE = 0xFF_44AAFF;
     private static final int C_ICE = 0xFF_AADDFF;
 
-
     private static final int C_CRYO = 0xFF_55DDFF;
 
     private static final int COOLDOWN_MAX = 600;
@@ -100,7 +99,6 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
             return;
         }
 
-
         y = drawHeatBar(g, font, x, y, W, burnt);
 
         if (burnt) {
@@ -109,10 +107,8 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
 
         y = drawExchangeStats(g, font, x, y, W, helium);
 
-
         drawCoolantStatus(g, font, x, y, working, helium);
     }
-
 
     @OnlyIn(Dist.CLIENT)
     private int drawHeader(GuiGraphics g, Font font, int x, int y, int W,
@@ -240,11 +236,9 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
         y = statRow(g, font, x, y, W, "Columns", len + " layers",
                 len > 3 ? C_GREEN : len > 1 ? C_GOLD : C_WHITE);
 
-
         String euStr = String.format(java.util.Locale.ROOT, "x%.2f", euMulti) + (helium ? "  (cryo)" : "");
         y = statRow(g, font, x, y, W, "EU multiplier", euStr,
                 helium ? C_CRYO : euMulti > 2.0 ? C_GREEN : C_MID);
-
 
         String throughputStr = helium ? heliumMb + " mB/s helium  +  " + waterMb + " mB/s water" :
                 waterMb + " mB/s water";

@@ -24,7 +24,6 @@ public class PhoenixFissionConfigs {
 
     public static class FissionConfigs {
 
-
         @Configurable
         @Configurable.Comment("Enable the base Fission Reactor multiblock.")
         public boolean fissionReactorEnabled = true;
@@ -272,6 +271,5 @@ public class PhoenixFissionConfigs {
         @Configurable
         @Configurable.Comment("Additional explosion power per unit of average fuel rod base heat production.")
         public double explosionPowerPerHeatUnit = 0.001;
-
     }
 }

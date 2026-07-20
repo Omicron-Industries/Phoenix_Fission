@@ -3,9 +3,7 @@ package net.phoenix.phoenix_fission.api.block;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 
-
 import org.jetbrains.annotations.NotNull;
-
 
 import java.util.List;
 
@@ -38,10 +36,8 @@ public interface IFissionBlanketType extends StringRepresentable {
     @NotNull
     ResourceLocation getTexture();
 
-
     @Override
     default @NotNull String getSerializedName() {
         return getName();
     }
-
 }
