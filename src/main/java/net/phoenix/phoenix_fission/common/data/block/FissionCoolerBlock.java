@@ -93,10 +93,7 @@ public class FissionCoolerBlock extends ActiveBlock {
         return Component.translatable(fluidId).withStyle(ChatFormatting.YELLOW);
     }
 
-    /**
-     * Completely dynamic container class.
-     * KubeJS or other Java addons can initialize this directly to add new tiers.
-     */
+
     public static class BindableCoolerType implements StringRepresentable, IFissionCoolerType {
 
         @Getter
@@ -107,7 +104,6 @@ public class FissionCoolerBlock extends ActiveBlock {
         @Getter
         private final int tintColor;
 
-        // Using Suppliers so values can be fetched dynamically (e.g., from Configs or KJS bindings)
         private final Supplier<Integer> tempSupplier;
         private final Supplier<Integer> usageSupplier;
         private final Supplier<String> inputSupplier;
@@ -123,11 +119,11 @@ public class FissionCoolerBlock extends ActiveBlock {
             this.name = name;
             this.tier = tier;
             this.tintColor = tintColor;
-            this.tempSupplier = tempSupplier != null ? tempSupplier : () -> 0;
-            this.usageSupplier = usageSupplier != null ? usageSupplier : () -> 0;
-            this.inputSupplier = inputSupplier != null ? inputSupplier : () -> "none";
-            this.outputSupplier = outputSupplier != null ? outputSupplier : () -> "none";
-            this.flatSupplier = flatSupplier != null ? flatSupplier : () -> 0.0;
+            this.tempSupplier = tempSupplier;
+            this.usageSupplier = usageSupplier;
+            this.inputSupplier = inputSupplier;
+            this.outputSupplier = outputSupplier;
+            this.flatSupplier = flatSupplier;
         }
 
         @Override

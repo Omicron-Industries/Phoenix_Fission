@@ -20,6 +20,7 @@ import net.phoenix.phoenix_fission.common.data.multiblock.fission.BreederWorkabl
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.FissionWorkableElectricMultiblockMachine;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.MoltenSaltReactorMultiblockMachine;
 
+import net.phoenix.phoenix_fission.configs.PhoenixFissionConfigs;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
 import snownee.jade.api.IServerDataProvider;
@@ -61,13 +62,12 @@ public class FissionMachineProvider implements IBlockComponentProvider, IServerD
         }
 
         CompoundTag data = accessor.getServerData();
-        if (data == null || data.isEmpty()) return;
+        if (data.isEmpty()) return;
 
         boolean isMSR = data.getBoolean(NBT_IS_MSR);
         double heat = data.getDouble(NBT_HEAT);
         double netHeat = data.getDouble(NBT_NET_HEAT);
 
-        // Core Heat Warnings
         int meltdownSeconds = data.getInt(NBT_MELTDOWN_SECONDS);
         if (meltdownSeconds > 0) {
             tooltip.add(Component.translatable("jade.phoenix_fission.fission_meltdown_timer", meltdownSeconds)
@@ -88,12 +88,11 @@ public class FissionMachineProvider implements IBlockComponentProvider, IServerD
                     .withStyle(s -> s.withColor(0xFF5555)));
         }
 
-        // Processing & Energy Specs
         int parallels = data.getInt(NBT_PARALLELS);
         long eut = data.getLong(NBT_EUT);
 
         tooltip.add(Component.literal("Parallels: " + parallels));
-        if (net.phoenix.phoenix_fission.configs.PhoenixFissionConfigs.INSTANCE.fission.enableDirectEUOutput) {
+        if (PhoenixFissionConfigs.INSTANCE.fission.enableDirectEUOutput) {
             tooltip.add(Component.literal("EU/t: " + eut));
         }
 
@@ -125,7 +124,6 @@ public class FissionMachineProvider implements IBlockComponentProvider, IServerD
         tooltip.add(Component.literal("Max Cool @ Cap: " + coolingPower + " HU/t")
                 .withStyle(s -> s.withColor(0x55FFFF)));
 
-        // ---- Breeder blanket info ----
         if (!isMSR && data.getBoolean(NBT_IS_BREEDER) && data.getInt(NBT_BLANKETS) > 0 &&
                 data.contains(NBT_BLANKET_INPUT)) {
             String inKey = data.getString(NBT_BLANKET_INPUT);
@@ -187,7 +185,6 @@ public class FissionMachineProvider implements IBlockComponentProvider, IServerD
         boolean msr = machine instanceof MoltenSaltReactorMultiblockMachine;
         tag.putBoolean(NBT_IS_MSR, msr);
 
-        // Ported components tracking variables to getComponentManager() mapping layer
         tag.putInt(NBT_COOLERS, machine.getComponentManager().getActiveCoolers().size());
         tag.putDouble(NBT_HEAT, machine.getHeat());
         tag.putDouble(NBT_NET_HEAT, machine.lastHeatGainedPerTick - machine.lastHeatRemovedPerTick);
@@ -197,7 +194,6 @@ public class FissionMachineProvider implements IBlockComponentProvider, IServerD
         tag.putLong(NBT_EUT, machine.lastGeneratedEUt);
         tag.putInt(NBT_COOLING_POWER, machine.lastProvidedCooling);
 
-        // FIXED: Calculated remaining meltdown seconds safely from raw meltdown field attributes
         int secondsRemaining = machine.meltdownTimerTicks > 0 ? (int) Math.ceil(machine.meltdownTimerTicks / 20.0) : 0;
         tag.putInt(NBT_MELTDOWN_SECONDS, secondsRemaining);
 
@@ -225,7 +221,6 @@ public class FissionMachineProvider implements IBlockComponentProvider, IServerD
             return;
         }
 
-        // Clean modern sub-manager component counts queries
         tag.putInt(NBT_RODS, machine.getComponentManager().getActiveFuelRods().size());
         tag.putInt(NBT_MODS, machine.getComponentManager().getActiveModerators().size());
         tag.putInt(NBT_BLANKETS, machine.getComponentManager().getActiveBlankets().size());
@@ -281,7 +276,7 @@ public class FissionMachineProvider implements IBlockComponentProvider, IServerD
         }
 
         Material mat = GTMaterials.get(key);
-        if (mat != null && mat != GTMaterials.NULL) {
+        if (mat != GTMaterials.NULL) {
             try {
                 String transKey = mat.getDefaultTranslation();
                 if (transKey != null && !transKey.isEmpty()) {

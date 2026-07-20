@@ -11,27 +11,14 @@ import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.phys.BlockHitResult;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.FissionWorkableElectricMultiblockMachine;
 
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * Basic SCRAM Hatch.
- *
- * Triggers on ANY redstone signal, ANY face, NO configuration.
- * Sounds simple — is actually the harder puzzle tier.
- *
- * The trap: a comparator reading heat fires almost constantly; a button
- * pulse disappears too fast; a lever works but is purely manual.
- * The player must build a circuit that sustains a signal ONLY during the
- * danger window, with zero knobs to tune the behaviour.
- */
+
 public class FissionScramHatchPart extends TieredPartMachine {
 
     @Getter
@@ -41,7 +28,6 @@ public class FissionScramHatchPart extends TieredPartMachine {
         super(holder, tier);
     }
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     @Override
     public void onLoad() {
@@ -50,12 +36,11 @@ public class FissionScramHatchPart extends TieredPartMachine {
     }
 
     @Override
-    public void addedToController(IMultiController controller) {
+    public void addedToController(@NotNull IMultiController controller) {
         super.addedToController(controller);
         updateScramStatus();
     }
 
-    // ── Redstone ──────────────────────────────────────────────────────────────
 
     @Override
     public boolean canConnectRedstone(@NotNull Direction side) {
@@ -63,7 +48,7 @@ public class FissionScramHatchPart extends TieredPartMachine {
     }
 
     @Override
-    public void onNeighborChanged(Block block, BlockPos fromPos, boolean isMoving) {
+    public void onNeighborChanged(@NotNull Block block, @NotNull BlockPos fromPos, boolean isMoving) {
         super.onNeighborChanged(block, fromPos, isMoving);
         updateScramStatus();
     }
@@ -86,24 +71,16 @@ public class FissionScramHatchPart extends TieredPartMachine {
         }
     }
 
-    // ── UI ────────────────────────────────────────────────────────────────────
-
-    @Override
-    public boolean shouldOpenUI(Player player, InteractionHand hand, BlockHitResult hit) {
-        return true;
-    }
 
     @Override
     public Widget createUIWidget() {
         WidgetGroup group = new WidgetGroup(0, 0, 200, 145);
 
-        // Cleared '§l' formatting rule
         group.addWidget(new LabelWidget(10, 8, "§cFission SCRAM Hatch"));
 
         group.addWidget(new LabelWidget(10, 24,
                 () -> isScrammed ? "§c[SCRAM] Reactor HALTED" : "§a[OK] Standby - Reactor Permitted"));
 
-        // Native divider line instead of text dashes
         group.addWidget(new Widget(10, 43, 180, 1).setBackground(GuiTextures.BLANK));
 
         group.addWidget(new LabelWidget(10, 52, "§eHow it works:"));
@@ -111,7 +88,6 @@ public class FissionScramHatchPart extends TieredPartMachine {
         group.addWidget(new LabelWidget(10, 73, "§7halts the reactor immediately."));
         group.addWidget(new LabelWidget(10, 83, "§7Removing the signal resumes it."));
 
-        // Native divider line instead of text dashes
         group.addWidget(new Widget(10, 102, 180, 1).setBackground(GuiTextures.BLANK));
 
         group.addWidget(new LabelWidget(10, 111, "Hint: not every redstone source"));

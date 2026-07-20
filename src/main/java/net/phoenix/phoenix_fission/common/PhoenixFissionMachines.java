@@ -29,6 +29,7 @@ import net.phoenix.phoenix_fission.common.data.PhoenixRecipeTypes;
 import net.phoenix.phoenix_fission.common.data.block.PhoenixFissionBlocks;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.BreederWorkableElectricMultiblockMachine;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.DynamicFissionReactorMachine;
+import net.phoenix.phoenix_fission.common.data.multiblock.fission.FissionWorkableElectricMultiblockMachine;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.HeatExchangerMachine;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.MoltenSaltReactorMultiblockMachine;
 import net.phoenix.phoenix_fission.common.data.multiblock.part.fission.AdvancedFissionScramHatchPart;
@@ -71,7 +72,6 @@ public class PhoenixFissionMachines {
             "fission_stability_sensor", "Fission Stability Sensor", GTValues.HV, GTValues.UV);
 
     private static MachineDefinition[] registerScramHatches(String name, String displayName, int minTier, int maxTier) {
-        // Scram is an "Input" (Redstone In), so we use Input overlays
         final String ioOverlay = "overlay_pipe_in_emissive";
         final String emissiveOverlay = OVERLAY_PLASMA_HATCH_TEX;
 
@@ -129,7 +129,6 @@ public class PhoenixFissionMachines {
 
     private static MachineDefinition[] registerStabilitySensors(String name, String displayName, int minTier,
                                                                 int maxTier) {
-        // Sensor is an "Output" (Redstone Out), so we use Output overlays
         final String ioOverlay = "overlay_pipe_out_emissive";
         final String emissiveOverlay = OVERLAY_PLASMA_HATCH_TEX;
 
@@ -147,8 +146,6 @@ public class PhoenixFissionMachines {
 
     private static MachineDefinition[] registerAdvancedScramHatches(String name, String displayName, int minTier,
                                                                     int maxTier) {
-        // Still an input (reads redstone in), but visually distinct from basic —
-        // using the emissive input overlay signals "this one does more"
         final String ioOverlay = "overlay_pipe_in_emissive";
         final String emissiveOverlay = OVERLAY_PLASMA_HATCH_TEX;
 
@@ -169,6 +166,17 @@ public class PhoenixFissionMachines {
     public static MultiblockMachineDefinition HIGH_PERFORMANCE_BREEDER_REACTOR = null;
     public static MultiblockMachineDefinition MOLTEN_SALT_REACTOR = null;
     public static MultiblockMachineDefinition PRESSURIZED_FISSION_REACTOR = null;
+
+    public record FissionReactorEntry(MultiblockMachineDefinition definition,
+            Class<? extends FissionWorkableElectricMultiblockMachine> machineClass) {}
+
+    public static final List<FissionReactorEntry> ALL_FISSION_REACTORS = new ArrayList<>();
+
+
+    public static void registerFissionReactor(MultiblockMachineDefinition definition,
+            Class<? extends FissionWorkableElectricMultiblockMachine> machineClass) {
+        ALL_FISSION_REACTORS.add(new FissionReactorEntry(definition, machineClass));
+    }
 
     static {
         if ((PhoenixFissionConfigs.INSTANCE != null && PhoenixFissionConfigs.INSTANCE.fission.breederReactorEnabled) ||
@@ -218,7 +226,6 @@ public class PhoenixFissionMachines {
                                     .or(Predicates.abilities(PartAbility.SUBSTATION_OUTPUT_ENERGY)
                                             .setMaxGlobalLimited(2))
                                     .or(Predicates.autoAbilities(definition.getRecipeTypes()))
-                                    // Add new hatches here:
                                     .or(Predicates.abilities(PhoenixPartAbility.FISSION_SCRAM).setMaxGlobalLimited(1))
                                     .or(Predicates.abilities(PhoenixPartAbility.FISSION_SENSOR).setMaxGlobalLimited(2)))
                             .where('D', blocks(PhoenixFissionBlocks.FISSILE_HEAT_SAFE_CASING.get()))
@@ -241,6 +248,7 @@ public class PhoenixFissionMachines {
                                     PhoenixFission.id("block/fission/fissile_reaction_safe_casing"),
                                     GTCEu.id("block/multiblock/fusion_reactor")))
                     .register();
+            registerFissionReactor(HIGH_PERFORMANCE_BREEDER_REACTOR, BreederWorkableElectricMultiblockMachine.class);
         }
 
         if ((PhoenixFissionConfigs.INSTANCE != null && PhoenixFissionConfigs.INSTANCE.fission.fissionReactorEnabled) ||
@@ -286,11 +294,12 @@ public class PhoenixFissionMachines {
                                     PhoenixFission.id("block/fission/fissile_reaction_safe_casing"),
                                     GTCEu.id("block/multiblock/fusion_reactor")))
                     .register();
+            registerFissionReactor(PRESSURIZED_FISSION_REACTOR, DynamicFissionReactorMachine.class);
         }
         if ((PhoenixFissionConfigs.INSTANCE != null && PhoenixFissionConfigs.INSTANCE.fission.msrEnabled) ||
                 GTCEu.isDataGen()) {
 
-            MultiblockMachineDefinition MOLTEN_SALT_REACTOR = PHOENIX_REGISTRATE
+            MOLTEN_SALT_REACTOR = PHOENIX_REGISTRATE
                     .multiblock("molten_salt_reactor", MoltenSaltReactorMultiblockMachine::new)
                     .langValue("Molten Salt Reactor")
                     .recipeType(PhoenixRecipeTypes.PRESSURIZED_FISSION_REACTOR_RECIPES)
@@ -344,6 +353,7 @@ public class PhoenixFissionMachines {
                                     GTCEu.id("block/casings/gcym/high_temperature_smelting_casing"),
                                     GTCEu.id("block/multiblock/fusion_reactor")))
                     .register();
+            registerFissionReactor(MOLTEN_SALT_REACTOR, MoltenSaltReactorMultiblockMachine.class);
         }
 
     }
@@ -452,7 +462,6 @@ public class PhoenixFissionMachines {
             })
             .register();
 
-    // Fission Parts
 
     public static void init() {}
 }

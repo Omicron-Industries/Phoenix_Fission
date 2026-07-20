@@ -53,10 +53,7 @@ public class FissionModeratorBlock extends ActiveBlock {
                 moderatorType.getFuelDiscount()).withStyle(ChatFormatting.YELLOW));
     }
 
-    /**
-     * Completely modular wrapper class.
-     * Ready for registration via standard Java addons or KubeJS script injections.
-     */
+
     public static class BindableModeratorType implements IFissionModeratorType {
 
         @Getter

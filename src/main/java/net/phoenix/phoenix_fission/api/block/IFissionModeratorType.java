@@ -4,16 +4,9 @@ import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
-import net.minecraftforge.common.util.Lazy;
-import net.phoenix.phoenix_fission.PhoenixAPI;
-
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.Comparator;
 
-// Extending StringRepresentable completes the interface contract for dynamic loading
 public interface IFissionModeratorType extends StringRepresentable {
 
     @NotNull
@@ -41,21 +34,11 @@ public interface IFissionModeratorType extends StringRepresentable {
 
     ResourceLocation getTexture();
 
-    // Satisfies StringRepresentable contract cleanly using your existing getName() method
     @Override
     default @NotNull String getSerializedName() {
         return getName();
     }
 
-    Lazy<IFissionModeratorType[]> ALL_FISSION_MODERATORS_SORTED = Lazy
-            .of(() -> PhoenixAPI.FISSION_MODERATORS.keySet().stream()
-                    .sorted(Comparator.comparingInt(IFissionModeratorType::getFuelDiscount))
-                    .toArray(IFissionModeratorType[]::new));
 
-    @Nullable
-    static IFissionModeratorType getMinRequiredType(int requiredTemperature) {
-        return Arrays.stream(ALL_FISSION_MODERATORS_SORTED.get())
-                .filter(moderatorType -> moderatorType.getFuelDiscount() >= requiredTemperature)
-                .findFirst().orElse(null);
-    }
+
 }

@@ -74,14 +74,14 @@ public class NukePrimedRenderer extends EntityRenderer<NukePrimedEntity> {
 
         ps.popPose();
 
-        renderBillboardGlow(e, partialTicks, ps, buffer, danger, pulseStrong, flash);
+        renderBillboardGlow(ps, buffer, danger, pulseStrong, flash);
 
-        renderShockwaveRing(e, partialTicks, ps, buffer, danger);
+        renderShockwaveRing(ps, buffer, danger);
 
         super.render(e, entityYaw, partialTicks, ps, buffer, packedLight);
     }
 
-    private void renderBillboardGlow(NukePrimedEntity e, float partialTicks, PoseStack ps, MultiBufferSource buffer,
+    private void renderBillboardGlow(PoseStack ps, MultiBufferSource buffer,
                                      float danger, float pulseStrong, boolean flash) {
         float alpha = Mth.clamp(0.15f + danger * 0.65f + pulseStrong * 0.35f, 0.0f, 1.0f);
         if (flash) alpha = 1.0f;
@@ -104,7 +104,7 @@ public class NukePrimedRenderer extends EntityRenderer<NukePrimedEntity> {
         ps.popPose();
     }
 
-    private void renderShockwaveRing(NukePrimedEntity e, float partialTicks, PoseStack ps, MultiBufferSource buffer,
+    private void renderShockwaveRing(PoseStack ps, MultiBufferSource buffer,
                                      float danger) {
         float t = Mth.clamp(danger, 0.0f, 1.0f);
         float radius = 0.5f + t * 10.0f;

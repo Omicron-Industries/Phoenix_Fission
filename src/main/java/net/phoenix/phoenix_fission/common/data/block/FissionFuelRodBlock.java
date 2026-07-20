@@ -50,7 +50,6 @@ public class FissionFuelRodBlock extends ActiveBlock {
         tooltip.add(Component.translatable("block.phoenix_fission.fission_fuel_rod.info_header")
                 .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD));
 
-        // Fuel and Output Info
         tooltip.add(Component
                 .translatable("phoenix_fission.fuel_required", getRegistryDisplayName(fuelRodType.getFuelKey()))
                 .withStyle(ChatFormatting.WHITE));
@@ -59,7 +58,6 @@ public class FissionFuelRodBlock extends ActiveBlock {
                 .translatable("phoenix_fission.depleted_fuel", getRegistryDisplayName(fuelRodType.getOutputKey()))
                 .withStyle(ChatFormatting.DARK_GRAY));
 
-        // Stats
         tooltip.add(Component.translatable("phoenix_fission.heat_production",
                 Component.literal(String.valueOf(fuelRodType.getBaseHeatProduction()))
                         .withStyle(ChatFormatting.RED))
@@ -79,7 +77,6 @@ public class FissionFuelRodBlock extends ActiveBlock {
                         .withStyle(bias >= 0 ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.BLUE))
                 .withStyle(ChatFormatting.GRAY));
 
-        // Safely bound the tier view so bad script inputs don't array-index-out-of-bounds crash GT's string array
         int tierIdx = Math.max(0, Math.min(fuelRodType.getTier(), GTValues.VNF.length - 1));
         tooltip.add(Component.translatable("gtceu.tooltip.tier",
                 Component.literal(GTValues.VNF[tierIdx])
@@ -87,7 +84,7 @@ public class FissionFuelRodBlock extends ActiveBlock {
     }
 
     public static Component getRegistryDisplayName(String key) {
-        if (key == null || key.isEmpty()) return Component.literal("None").withStyle(ChatFormatting.GRAY);
+        if (key.isEmpty()) return Component.literal("None").withStyle(ChatFormatting.GRAY);
 
         ResourceLocation rl = ResourceLocation.tryParse(key);
         if (rl == null) return Component.literal(key).withStyle(ChatFormatting.YELLOW);
@@ -105,10 +102,6 @@ public class FissionFuelRodBlock extends ActiveBlock {
         return Component.literal(key).withStyle(ChatFormatting.YELLOW);
     }
 
-    /**
-     * Completely modular container class.
-     * Ready for registration via standard code-loops or KubeJS.
-     */
     public static class BindableFuelRodType implements IFissionFuelRodType {
 
         @Getter
@@ -136,12 +129,12 @@ public class FissionFuelRodBlock extends ActiveBlock {
             this.name = name;
             this.tier = tier;
             this.tintColor = tintColor;
-            this.heatSupplier = heatSupplier != null ? heatSupplier : () -> 0;
-            this.durationSupplier = durationSupplier != null ? durationSupplier : () -> 200;
-            this.amountSupplier = amountSupplier != null ? amountSupplier : () -> 1;
-            this.biasSupplier = biasSupplier != null ? biasSupplier : () -> 0;
-            this.fuelKeySupplier = fuelKeySupplier != null ? fuelKeySupplier : () -> "minecraft:air";
-            this.outputKeySupplier = outputKeySupplier != null ? outputKeySupplier : () -> "minecraft:air";
+            this.heatSupplier = heatSupplier;
+            this.durationSupplier = durationSupplier;
+            this.amountSupplier = amountSupplier;
+            this.biasSupplier = biasSupplier;
+            this.fuelKeySupplier = fuelKeySupplier;
+            this.outputKeySupplier = outputKeySupplier;
         }
 
         @Override

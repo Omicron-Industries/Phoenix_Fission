@@ -2,7 +2,6 @@ package net.phoenix.phoenix_fission.integration.emi;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.phoenix.phoenix_fission.PhoenixFission;
 import net.phoenix.phoenix_fission.api.block.IFissionFuelRodType;
@@ -72,7 +71,6 @@ public class FissionFuelBurnEmiRecipe implements EmiRecipe {
 
         FissionEmiUtils.drawPanel(widgets, W, H);
 
-        // Item slots + arrow icon between them
         widgets.addSlot(FissionEmiUtils.resolveItem(type.getFuelKey(), type.getAmountPerCycle()), IN_X, SLOT_Y);
         widgets.addSlot(FissionEmiUtils.resolveItem(type.getOutputKey(), 1), OUT_X, SLOT_Y).recipeContext(this);
 
@@ -80,19 +78,17 @@ public class FissionFuelBurnEmiRecipe implements EmiRecipe {
         int arrowX = IN_X + 18 + (OUT_X - (IN_X + 18) - arrow.width) / 2;
         widgets.addTexture(arrow, arrowX, SLOT_Y + 1);
 
-        // Name row, color-coded by tier
-        String name = type.getName();
+        String name = FissionEmiUtils.formatName(type.getName());
         int nameX = W / 2 - font.width(name) / 2;
-        widgets.addText(Component.literal(name), nameX, 34, FissionEmiUtils.tierColor(type.getTier()), false);
+        FissionEmiUtils.text(widgets, name, nameX, 34, FissionEmiUtils.tierColor(type.getTier()));
 
-        // Stat rows
         String hut = type.getBaseHeatProduction() + " HU/t";
         double sec = type.getDurationTicks() / 20.0;
         String dur = String.format(Locale.ROOT, "%.0fs cycle", sec);
-        widgets.addText(Component.literal(hut), 8, 46, 0xFF_FF9944, false);
-        widgets.addText(Component.literal(dur), W - font.width(dur) - 8, 46, 0xFF_AADDFF, false);
+        FissionEmiUtils.text(widgets, hut, 8, 46, 0xFF_FF9944);
+        FissionEmiUtils.text(widgets, dur, W - font.width(dur) - 8, 46, 0xFF_AADDFF);
 
         String amt = "x" + type.getAmountPerCycle() + " consumed per cycle";
-        widgets.addText(Component.literal(amt), W / 2 - font.width(amt) / 2, 58, 0xFF_AAAAAA, false);
+        FissionEmiUtils.text(widgets, amt, W / 2 - font.width(amt) / 2, 58, 0xFF_FFFFFF);
     }
 }

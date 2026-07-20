@@ -22,13 +22,8 @@ public class PhoenixFissionConfigs {
     @Configurable
     public FissionConfigs fission = new FissionConfigs();
 
-    // ========================================================================
-    // Top-level reactor config
-    // ========================================================================
     public static class FissionConfigs {
 
-        // ── FEATURE ENABLE/DISABLE ──────────────────────────────────────────
-        // Check here first to toggle whole systems on/off.
 
         @Configurable
         @Configurable.Comment("Enable the base Fission Reactor multiblock.")
@@ -41,6 +36,10 @@ public class PhoenixFissionConfigs {
         @Configurable
         @Configurable.Comment("Enable the Molten Salt Reactor multiblock.")
         public boolean msrEnabled = true;
+
+        @Configurable
+        @Configurable.Comment("The Fluid that poisons the Molten Salt Reactor's efficiency")
+        public String msrReactorPoisoningOutputFluid = "minecraft:lava";
 
         @Configurable
         @Configurable.Comment("Enable the Nuke block.")
@@ -66,14 +65,8 @@ public class PhoenixFissionConfigs {
         @Configurable.Comment("If true, all installed blanket types are processed each breeding cycle. If false, only the highest-tier blanket is used.")
         public boolean blanketUsageAdditive = true;
 
-        // ── HEAT MODEL ──────────────────────────────────────────────────────
-        // Controls the thermal physics simulation.
-        // See heatModel sub-section for conductivity constants.
-
         @Configurable
         public HeatModelConfigs heatModel = new HeatModelConfigs();
-
-        // ── PARALLEL SCALING ────────────────────────────────────────────────
 
         @Configurable
         @Configurable.Comment("Base GT recipe parallels contributed by each installed fuel rod.")
@@ -83,13 +76,8 @@ public class PhoenixFissionConfigs {
         @Configurable.Comment("Hard ceiling on total GT recipe parallels.")
         public int maxParallels = 256;
 
-        // ── EU GENERATION ───────────────────────────────────────────────────
-        // Only relevant when enableDirectEUOutput is true.
-
         @Configurable
         public EUOutputConfigs euOutput = new EUOutputConfigs();
-
-        // ── CONTINUOUS BURN BONUS ───────────────────────────────────────────
 
         @Configurable
         @Configurable.Comment("Maximum bonus percent applied to heat production and EU output after long continuous run. Example: 30 = up to +30%.")
@@ -99,8 +87,6 @@ public class PhoenixFissionConfigs {
         @Configurable.Comment("Seconds of continuous running required to reach the full burn bonus.")
         public double burnBonusRampSeconds = 1200.0;
 
-        // ── MODERATOR LIMITS ────────────────────────────────────────────────
-
         @Configurable
         @Configurable.Comment("Maximum total fuel discount percent that moderators can contribute.")
         public int maxFuelDiscountPercent = 90;
@@ -109,17 +95,11 @@ public class PhoenixFissionConfigs {
         @Configurable.Comment("Maximum total EU/heat boost percent that moderators can contribute.")
         public int maxEUBoostPercent = 100;
 
-        // ── MELTDOWN ────────────────────────────────────────────────────────
-
         @Configurable
         public MeltdownConfigs meltdown = new MeltdownConfigs();
 
-        // ── EXPLOSION ───────────────────────────────────────────────────────
-
         @Configurable
         public ExplosionConfigs explosion = new ExplosionConfigs();
-
-        // ── NUKE BLOCK ──────────────────────────────────────────────────────
 
         @Configurable
         @Configurable.Comment("Cube radius in blocks. Total affected volume is (2r+1)^3.")
@@ -150,9 +130,6 @@ public class PhoenixFissionConfigs {
         public boolean nukeReplaceWithFire = false;
     }
 
-    // ========================================================================
-    // Heat model — Xefyr's thermal physics formulas
-    // ========================================================================
     public static class HeatModelConfigs {
 
         @Configurable
@@ -201,7 +178,6 @@ public class PhoenixFissionConfigs {
         })
         public double fuelConductivity = 1.0;
 
-        // ── EXPONENTIAL BALANCING CURVES ────────────────────────────────────
         @Configurable
         @Configurable.Comment("Exponent scaling for the fuel consumption rate curve. Xefyr recommends: 4.0")
         public double fuelConsumptionExponent = 4.0;
@@ -234,9 +210,6 @@ public class PhoenixFissionConfigs {
         public double reactivityRampRatePerTick = 1.0;
     }
 
-    // ========================================================================
-    // EU output — only active when enableDirectEUOutput = true
-    // ========================================================================
     public static class EUOutputConfigs {
 
         @Configurable
@@ -260,9 +233,6 @@ public class PhoenixFissionConfigs {
         public double powerStartFraction = 0.0;
     }
 
-    // ========================================================================
-    // Meltdown timer
-    // ========================================================================
     public static class MeltdownConfigs {
 
         @Configurable
@@ -282,9 +252,6 @@ public class PhoenixFissionConfigs {
         public boolean clearTimerWhenSafe = true;
     }
 
-    // ========================================================================
-    // Explosion
-    // ========================================================================
     public static class ExplosionConfigs {
 
         @Configurable
@@ -306,8 +273,5 @@ public class PhoenixFissionConfigs {
         @Configurable.Comment("Additional explosion power per unit of average fuel rod base heat production.")
         public double explosionPowerPerHeatUnit = 0.001;
 
-        @Configurable
-        @Configurable.Comment("Max radius used when destructiveExplosion = true.")
-        public int maxDestructiveRadius = 6;
     }
 }

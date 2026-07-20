@@ -27,7 +27,5 @@ public class PhoenixAPI {
     public static final Map<IFissionBlanketType, Supplier<FissionBlanketBlock>> FISSION_BLANKETS = new HashMap<>();
     public static final Map<IFissionStabilityHatchType, Supplier<FissionScramHatchPart>> FISSION_STABILITY_HATCHES = new HashMap<>();
     public static final Map<IFissionSensorHatchType, Supplier<FissionStabilitySensorPart>> FISSION_SENSOR_HATCHES = new HashMap<>();
-
-    // FIX: Added missing MSR Core Liner API map
     public static final Map<IMSRCoreLinerType, Supplier<MSRCoreLinerBlock>> MSR_LINERS = new HashMap<>();
 }

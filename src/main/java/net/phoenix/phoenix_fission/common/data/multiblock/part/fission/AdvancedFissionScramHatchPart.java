@@ -15,49 +15,25 @@ import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.phys.BlockHitResult;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.FissionWorkableElectricMultiblockMachine;
 
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * Advanced SCRAM Hatch.
- *
- * Two configurable guards the basic hatch lacks:
- *
- * 1. Signal threshold — only triggers when signal strength >= the configured
- * minimum. A weak comparator bleed or accidental dust connection won't
- * fire it. The player must deliberately produce a strong enough signal.
- *
- * 2. Sustain timer — the signal must be held for N ticks continuously
- * before the SCRAM fires. Momentary pulses (buttons, short-range dust
- * drop-off, clock edges) are ignored. The player needs a latching or
- * sustained source — which paradoxically makes this hatch *easier* to
- * wire correctly once you understand it.
- *
- * The tradeoff vs the basic hatch: the basic hatch punishes you for any signal
- * at all. This one lets you be precise — at the cost of having to think about
- * what "precise" means in your circuit.
- */
+
 public class AdvancedFissionScramHatchPart extends TieredPartMachine {
 
     public static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
             AdvancedFissionScramHatchPart.class, TieredPartMachine.MANAGED_FIELD_HOLDER);
 
-    /** Minimum redstone signal strength required to begin the sustain countdown. */
     @Persisted
     private int signalThreshold = 8;
 
-    /** How many consecutive ticks the threshold must be met before SCRAMing. */
     @Persisted
     private int sustainTicks = 5;
 
-    /** Ticks the threshold has been continuously met. Resets if signal drops. */
     private int sustainCounter = 0;
 
     @Getter
@@ -68,11 +44,10 @@ public class AdvancedFissionScramHatchPart extends TieredPartMachine {
     }
 
     @Override
-    public ManagedFieldHolder getFieldHolder() {
+    public @NotNull ManagedFieldHolder getFieldHolder() {
         return MANAGED_FIELD_HOLDER;
     }
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     @Override
     public void onLoad() {
@@ -81,12 +56,11 @@ public class AdvancedFissionScramHatchPart extends TieredPartMachine {
     }
 
     @Override
-    public void addedToController(IMultiController controller) {
+    public void addedToController(@NotNull IMultiController controller) {
         super.addedToController(controller);
         updateScramStatus();
     }
 
-    // ── Redstone ──────────────────────────────────────────────────────────────
 
     @Override
     public boolean canConnectRedstone(@NotNull Direction side) {
@@ -94,19 +68,12 @@ public class AdvancedFissionScramHatchPart extends TieredPartMachine {
     }
 
     @Override
-    public void onNeighborChanged(Block block, BlockPos fromPos, boolean isMoving) {
+    public void onNeighborChanged(@NotNull Block block, @NotNull BlockPos fromPos, boolean isMoving) {
         super.onNeighborChanged(block, fromPos, isMoving);
         updateScramStatus();
     }
 
-    /**
-     * Called every game tick via the reactor's tickSensorHatches() pass so the
-     * sustain counter increments even when no neighbour change event fires.
-     *
-     * If the signal is at or above threshold, increment the counter and SCRAM
-     * once it reaches sustainTicks. If it drops below threshold, reset the
-     * counter and clear the SCRAM immediately.
-     */
+
     public void tick() {
         Level level = getLevel();
         if (level == null || level.isClientSide) return;
@@ -120,7 +87,6 @@ public class AdvancedFissionScramHatchPart extends TieredPartMachine {
                 notifyController();
             }
         } else {
-            // Signal dropped — reset counter and lift the SCRAM.
             if (sustainCounter > 0 || isScrammed) {
                 sustainCounter = 0;
                 isScrammed = false;
@@ -149,25 +115,19 @@ public class AdvancedFissionScramHatchPart extends TieredPartMachine {
         }
     }
 
-    // ── UI ────────────────────────────────────────────────────────────────────
 
-    @Override
-    public boolean shouldOpenUI(Player player, InteractionHand hand, BlockHitResult hit) {
-        return true;
-    }
 
     @Override
     public Widget createUIWidget() {
         WidgetGroup group = new WidgetGroup(0, 0, 200, 175);
 
-        // Cleared '§l' formatting rule
         group.addWidget(new LabelWidget(10, 8, "§6Advanced Fission SCRAM Hatch"));
 
-        // Live status
+
         group.addWidget(new LabelWidget(10, 24,
                 () -> isScrammed ? "§c[SCRAM] Reactor HALTED" : "§a[OK] Standby - Reactor Permitted"));
 
-        // Sustain progress
+
         group.addWidget(new LabelWidget(10, 36, () -> {
             if (sustainCounter > 0 && !isScrammed) {
                 return String.format("§eArming: %d / %d ticks", sustainCounter, sustainTicks);
@@ -177,22 +137,18 @@ public class AdvancedFissionScramHatchPart extends TieredPartMachine {
             return "§7Waiting for signal...";
         }));
 
-        // Native divider line instead of text dashes
         group.addWidget(new Widget(10, 53, 180, 1).setBackground(GuiTextures.BLANK));
 
-        // Threshold input
         group.addWidget(new LabelWidget(10, 64, "§fMin Signal Strength §7(1-15):"));
         group.addWidget(new IntInputWidget(10, 76, 80, 20,
                 () -> signalThreshold,
                 val -> signalThreshold = Mth.clamp(val, 1, 15)));
 
-        // Sustain timer input
         group.addWidget(new LabelWidget(10, 104, "§fSustain Ticks §7(1-100):"));
         group.addWidget(new IntInputWidget(10, 116, 80, 20,
                 () -> sustainTicks,
                 val -> sustainTicks = Mth.clamp(val, 1, 100)));
 
-        // Native divider line instead of text dashes
         group.addWidget(new Widget(10, 147, 180, 1).setBackground(GuiTextures.BLANK));
 
         group.addWidget(new LabelWidget(10, 156, "Signal must meet strength threshold"));

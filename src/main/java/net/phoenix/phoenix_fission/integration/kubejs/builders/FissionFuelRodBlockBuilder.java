@@ -102,7 +102,7 @@ public class FissionFuelRodBlockBuilder extends BlockBuilder {
             };
         }
 
-        // Restored @Override now that IFissionFuelRodType implements StringRepresentable
+
         @Override
         public @NotNull String getSerializedName() {
             return getName();
@@ -113,7 +113,6 @@ public class FissionFuelRodBlockBuilder extends BlockBuilder {
     public Block createObject() {
         KjsFuelRodType type = new KjsFuelRodType();
         FissionFuelRodBlock result = new FissionFuelRodBlock(this.createProperties(), type);
-        // Linked to the exact FISSION_FUEL_RODS endpoint mapped in the interface Lazy evaluator
         PhoenixAPI.FISSION_FUEL_RODS.put(type, () -> result);
         return result;
     }

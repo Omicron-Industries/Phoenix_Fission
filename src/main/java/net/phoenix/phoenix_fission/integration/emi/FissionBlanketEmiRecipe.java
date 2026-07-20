@@ -18,7 +18,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Locale;
 
-/** Shows a breeder blanket's input and its weighted possible outputs. */
 public class FissionBlanketEmiRecipe implements EmiRecipe {
 
     private static final int W = 200;
@@ -77,9 +76,8 @@ public class FissionBlanketEmiRecipe implements EmiRecipe {
 
         FissionEmiUtils.drawPanel(widgets, W, h);
 
-        String name = type.getName();
-        widgets.addText(Component.literal(name), W / 2 - font.width(name) / 2, 6,
-                FissionEmiUtils.tierColor(type.getTier()), false);
+        String name = FissionEmiUtils.formatName(type.getName());
+        FissionEmiUtils.text(widgets, name, W / 2 - font.width(name) / 2, 6, FissionEmiUtils.tierColor(type.getTier()));
 
         int inputY = 20;
         widgets.addSlot(FissionEmiUtils.resolveItem(type.getInputKey(), type.getAmountPerCycle()), 8, inputY);
@@ -112,7 +110,7 @@ public class FissionBlanketEmiRecipe implements EmiRecipe {
         int statsY = inputY + outputRows * SLOT_STEP + 4;
         String dur = String.format(Locale.ROOT, "%.0fs cycle", type.getDurationTicks() / 20.0);
         String amt = "x" + type.getAmountPerCycle() + " consumed";
-        widgets.addText(Component.literal(dur), 8, statsY, 0xFF_AADDFF, false);
-        widgets.addText(Component.literal(amt), W - font.width(amt) - 8, statsY, 0xFF_AAAAAA, false);
+        FissionEmiUtils.text(widgets, dur, 8, statsY, 0xFF_AADDFF);
+        FissionEmiUtils.text(widgets, amt, W - font.width(amt) - 8, statsY, 0xFF_FFFFFF);
     }
 }

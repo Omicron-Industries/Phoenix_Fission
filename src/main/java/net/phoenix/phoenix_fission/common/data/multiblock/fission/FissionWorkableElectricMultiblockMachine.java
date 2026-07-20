@@ -23,11 +23,17 @@ import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
+import lombok.Setter;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fluids.FluidStack;
+import net.phoenix.phoenix_fission.client.gui.FissionGraphsPage;
+import net.phoenix.phoenix_fission.client.gui.FissionMathPage;
+import net.phoenix.phoenix_fission.client.gui.FissionReactorFancyUIWidget;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.managers.FissionComponentManager;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.managers.FissionFuelManager;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.managers.FissionThermalManager;
@@ -64,10 +70,12 @@ public class FissionWorkableElectricMultiblockMachine extends WorkableElectricMu
     public int meltdownTimerMax = 0;
     @Persisted
     public long continuousBurnTicks = 0;
+    @Setter
     @Persisted
     @DescSynced
     @Getter
     protected double heat = 0.0;
+    @Setter
     @Persisted
     @Getter
     protected double reactivityFactor = 0.0;
@@ -161,21 +169,11 @@ public class FissionWorkableElectricMultiblockMachine extends WorkableElectricMu
         return MANAGED_FIELD_HOLDER;
     }
 
-    public void setHeat(double newHeat) {
-        this.heat = newHeat;
-    }
-
-    public void setReactivityFactor(double factor) {
-        this.reactivityFactor = factor;
-    }
-
-    /** Heat capacity of this reactor in HU/K — scales with multi block count. */
     public double getHeatCapacity() {
         var hm = PhoenixFissionConfigs.INSTANCE.fission.heatModel;
         return Math.max(1.0, multiBlockCount * hm.heatCapacityPerBlock);
     }
 
-    /** Maximum safe heat in HU — scales with multi size so bigger reactors have more margin. */
     public double getMaxSafeHeatHU() {
         return PhoenixFissionConfigs.INSTANCE.fission.heatModel.maxSafeTempK * getHeatCapacity();
     }
@@ -183,11 +181,6 @@ public class FissionWorkableElectricMultiblockMachine extends WorkableElectricMu
     /** Absolute heat clamp in HU — scales with multi size. */
     public double getMaxHeatClampHU() {
         return PhoenixFissionConfigs.INSTANCE.fission.heatModel.maxHeatClampTempK * getHeatCapacity();
-    }
-
-    /** Current reactor temperature in Kelvin. */
-    public double getTemperatureK() {
-        return heat / getHeatCapacity();
     }
 
     @Override
@@ -275,10 +268,6 @@ public class FissionWorkableElectricMultiblockMachine extends WorkableElectricMu
         }
     }
 
-    public boolean executeFluidIO(FluidStack stack, IO type) {
-        return executeFluidIO(stack, type, false);
-    }
-
     public boolean executeFluidIO(FluidStack stack, IO type, boolean simulate) {
         if (stack.isEmpty()) return false;
 
@@ -304,8 +293,8 @@ public class FissionWorkableElectricMultiblockMachine extends WorkableElectricMu
         return RecipeHelper.handleRecipeIO(this, dummy, type, getRecipeLogic().getChanceCaches()).isSuccess();
     }
 
-    public boolean executeItemIO(ItemStack stack, IO type) {
-        return executeItemIO(stack, type, false);
+    public void executeItemIO(ItemStack stack, IO type) {
+        executeItemIO(stack, type, false);
     }
 
     public boolean executeItemIO(ItemStack stack, IO type, boolean simulate) {
@@ -340,27 +329,20 @@ public class FissionWorkableElectricMultiblockMachine extends WorkableElectricMu
     }
 
     @Override
-    @net.minecraftforge.api.distmarker.OnlyIn(net.minecraftforge.api.distmarker.Dist.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public void attachSideTabs(TabsWidget tabs) {
         super.attachSideTabs(tabs);
-        tabs.attachSubTab(new net.phoenix.phoenix_fission.client.gui.FissionMathPage(this));
-        tabs.attachSubTab(new net.phoenix.phoenix_fission.client.gui.FissionGraphsPage(this));
+        tabs.attachSubTab(new FissionMathPage(this));
+        tabs.attachSubTab(new FissionGraphsPage(this));
     }
 
     @Override
-    public @NotNull ModularUI createUI(Player player) {
-        // Force a description-packet resync to the opening player so all
-        // @DescSynced fields (runningForHud, isScrammedClientCache, heat, etc.)
-        // are guaranteed fresh on the client right when the screen appears.
-        // Without this, a field that was already correct before this client
-        // started watching the block (e.g. a reactor that was already running)
-        // never gets pushed, since sync only fires on value CHANGE, not on
-        // UI-open.
+    public ModularUI createUI(@NotNull Player player) {
         if (getLevel() != null && !getLevel().isClientSide) {
             getLevel().sendBlockUpdated(getPos(), getBlockState(), getBlockState(), 3);
         }
         return new ModularUI(264, 256, this, player)
-                .widget(new net.phoenix.phoenix_fission.client.gui.FissionReactorFancyUIWidget(this, 264, 256));
+                .widget(new FissionReactorFancyUIWidget(this, 264, 256));
     }
 
     @Override

@@ -13,13 +13,12 @@ import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.BlockHitResult;
+
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.FissionWorkableElectricMultiblockMachine;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class AdvancedFissionStabilitySensorPart extends SensorHatchPartMachine {
@@ -50,16 +49,10 @@ public class AdvancedFissionStabilitySensorPart extends SensorHatchPartMachine {
     }
 
     @Override
-    public ManagedFieldHolder getFieldHolder() {
+    public @NotNull ManagedFieldHolder getFieldHolder() {
         return MANAGED_FIELD_HOLDER;
     }
 
-    // ── UI ────────────────────────────────────────────────────────────────────
-
-    @Override
-    public boolean shouldOpenUI(Player player, InteractionHand hand, BlockHitResult hit) {
-        return true;
-    }
 
     @Override
     public Widget createUIWidget() {
@@ -113,7 +106,6 @@ public class AdvancedFissionStabilitySensorPart extends SensorHatchPartMachine {
         return group;
     }
 
-    // ── Signal logic ──────────────────────────────────────────────────────────
 
     @Override
     public int getOutputSignal(@Nullable Direction direction) {

@@ -1,16 +1,20 @@
 package net.phoenix.phoenix_fission.integration.emi;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import dev.emi.emi.api.stack.EmiStack;
+import dev.emi.emi.api.widget.TextWidget;
 import dev.emi.emi.api.widget.WidgetHolder;
 
-/** Shared rendering/resolution helpers for the fission component EMI pages. */
+import java.util.Locale;
+
 final class FissionEmiUtils {
 
     private FissionEmiUtils() {}
@@ -18,7 +22,23 @@ final class FissionEmiUtils {
     static final int BG_FILL = 0x30_FFFFFF;
     static final int BG_BORDER = 0xFF_555555;
 
-    /** Draws a subtle panel background + border behind a recipe widget. */
+    static TextWidget text(WidgetHolder widgets, String text, int x, int y, int color) {
+        return widgets.addText(Component.literal(text), x, y, color, true);
+    }
+
+    static String formatName(String raw) {
+        if (raw == null || raw.isEmpty()) return "";
+        String name = raw.contains(":") ? raw.substring(raw.indexOf(':') + 1) : raw;
+        String[] words = name.replace('_', ' ').trim().split("\\s+");
+        StringBuilder sb = new StringBuilder();
+        for (String w : words) {
+            if (w.isEmpty()) continue;
+            if (sb.length() > 0) sb.append(' ');
+            sb.append(Character.toUpperCase(w.charAt(0))).append(w.substring(1).toLowerCase(Locale.ROOT));
+        }
+        return sb.toString();
+    }
+
     static void drawPanel(WidgetHolder widgets, int w, int h) {
         widgets.addDrawable(0, 0, w, h, (gg, mouseX, mouseY, delta) -> {
             gg.fill(1, 1, w - 1, h - 1, BG_FILL);
@@ -29,7 +49,7 @@ final class FissionEmiUtils {
         });
     }
 
-    /** Loose tier -> color ramp used to color-code component names by tier. */
+
     static int tierColor(int tier) {
         return switch (Math.max(1, Math.min(tier, 6))) {
             case 1 -> 0xFF_AAAAAA;
@@ -46,7 +66,7 @@ final class FissionEmiUtils {
         ResourceLocation rl = ResourceLocation.tryParse(id);
         if (rl == null) return EmiStack.EMPTY;
         Item item = ForgeRegistries.ITEMS.getValue(rl);
-        if (item == null || item == net.minecraft.world.item.Items.AIR) return EmiStack.EMPTY;
+        if (item == null || item == Items.AIR) return EmiStack.EMPTY;
         return EmiStack.of(new ItemStack(item, Math.max(1, count)));
     }
 

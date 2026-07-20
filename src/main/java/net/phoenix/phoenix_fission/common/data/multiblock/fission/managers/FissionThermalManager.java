@@ -50,9 +50,6 @@ public class FissionThermalManager {
         overcooledThisTick = false;
     }
 
-    // -------------------------------------------------------------------------
-    // Math hooks — override in a subclass to change thermal physics.
-    // -------------------------------------------------------------------------
 
     /**
      * Passive (ambient) heat change applied every tick regardless of running state.
@@ -108,9 +105,6 @@ public class FissionThermalManager {
         return (float) (base + (comp.getActiveFuelRods().size() * powerPerRod) + (avgRodHeat * powerPerHeat));
     }
 
-    // -------------------------------------------------------------------------
-
-    // Set for the duration of a single tick; threaded into handleFluidConversion.
     private boolean overcooledThisTick = false;
 
     public void tickThermalLogic(boolean running) {
@@ -152,8 +146,6 @@ public class FissionThermalManager {
             }
         }
 
-        // Overcooling: reactor heat at or below ambient while running → hot coolant
-        // becomes cold coolant refund (90%) and EU is suppressed this tick.
         overcooledThisTick = running && !comp.getActiveFuelRods().isEmpty() &&
                 machine.getHeat() <= hm.ambientTemperatureHU;
         machine.isOverCooled = overcooledThisTick;
@@ -232,21 +224,21 @@ public class FissionThermalManager {
         ResourceLocation inRl = ResourceLocation.tryParse(inId);
         if (inRl == null || !ForgeRegistries.FLUIDS.containsKey(inRl)) return false;
 
-        FluidStack inStack = new FluidStack(ForgeRegistries.FLUIDS.getValue(inRl), amount);
+        FluidStack inStack = new FluidStack(Objects.requireNonNull(ForgeRegistries.FLUIDS.getValue(inRl)), amount);
         if (!machine.executeFluidIO(inStack, IO.IN, !execute)) return false;
 
         if (execute) {
             if (overcooledThisTick) {
-                // Reactor is below ambient — refund 90% of the cold input fluid instead of hot output.
+
                 int refund = (int) Math.floor(amount * 0.9);
                 if (refund > 0) {
-                    machine.executeFluidIO(new FluidStack(ForgeRegistries.FLUIDS.getValue(inRl), refund), IO.OUT,
+                    machine.executeFluidIO(new FluidStack(Objects.requireNonNull(ForgeRegistries.FLUIDS.getValue(inRl)), refund), IO.OUT,
                             false);
                 }
             } else if (!outId.isEmpty() && !"none".equalsIgnoreCase(outId) && !outId.equalsIgnoreCase(inId)) {
                 ResourceLocation outRl = ResourceLocation.tryParse(outId);
                 if (outRl != null && ForgeRegistries.FLUIDS.containsKey(outRl)) {
-                    machine.executeFluidIO(new FluidStack(ForgeRegistries.FLUIDS.getValue(outRl), amount), IO.OUT,
+                    machine.executeFluidIO(new FluidStack(Objects.requireNonNull(ForgeRegistries.FLUIDS.getValue(outRl)), amount), IO.OUT,
                             false);
                 }
             }

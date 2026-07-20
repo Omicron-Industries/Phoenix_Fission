@@ -44,13 +44,11 @@ public class FissionBlanketBlock extends ActiveBlock {
         tooltip.add(Component.translatable("block.phoenix_fission.fission_blanket.info_header")
                 .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD));
 
-        // --- Required Driver Fuel Info ---
         tooltip.add(Component.literal(" - ")
                 .append(Component.translatable("phoenix_fission.tooltip.required_fuel_tier"))
                 .append(Component.literal(": Tier " + blanketType.getRequiredFuelTier() + "+")
                         .withStyle(ChatFormatting.DARK_RED)));
 
-        // --- Cycle Stats ---
         double seconds = blanketType.getDurationTicks() / 20.0;
 
         tooltip.add(Component.translatable("phoenix_fission.blanket.generation_features")
@@ -65,7 +63,6 @@ public class FissionBlanketBlock extends ActiveBlock {
 
         tooltip.add(Component.empty());
 
-        // --- Potential Outputs ---
         tooltip.add(Component.translatable("phoenix_fission.blanket.potential_outputs")
                 .withStyle(ChatFormatting.YELLOW));
 
@@ -74,7 +71,6 @@ public class FissionBlanketBlock extends ActiveBlock {
             tooltip.add(Component.literal(" - (none)").withStyle(ChatFormatting.DARK_GRAY));
         } else {
             for (IFissionBlanketType.BlanketOutput o : outs) {
-                // Ensure this static utility exists on your modern Fuel Rod file
                 Component outName = FissionFuelRodBlock.getRegistryDisplayName(o.key());
 
                 ChatFormatting instabilityColor = o.instability() > 3 ? ChatFormatting.RED :
@@ -91,16 +87,12 @@ public class FissionBlanketBlock extends ActiveBlock {
             }
         }
 
-        // --- Mechanic Hint ---
         tooltip.add(Component.empty());
         tooltip.add(Component.translatable("phoenix_fission.blanket.bias_hint")
                 .withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
     }
 
-    /**
-     * Completely empty container class for runtime registration.
-     * Accessible by KubeJS builders or standard Java registration loops.
-     */
+
     public static class BindableBlanketType implements IFissionBlanketType {
 
         @Getter
@@ -127,11 +119,11 @@ public class FissionBlanketBlock extends ActiveBlock {
             this.name = name;
             this.tier = tier;
             this.tintColor = tintColor;
-            this.outputs = outputs != null ? outputs : List.of();
-            this.requiredFuelTierSupplier = requiredFuelTierSupplier != null ? requiredFuelTierSupplier : () -> 1;
-            this.durationSupplier = durationSupplier != null ? durationSupplier : () -> 200;
-            this.amountSupplier = amountSupplier != null ? amountSupplier : () -> 1;
-            this.inputKeySupplier = inputKeySupplier != null ? inputKeySupplier : () -> "minecraft:air";
+            this.outputs = outputs;
+            this.requiredFuelTierSupplier = requiredFuelTierSupplier;
+            this.durationSupplier = durationSupplier;
+            this.amountSupplier = amountSupplier;
+            this.inputKeySupplier = inputKeySupplier;
         }
 
         @Override

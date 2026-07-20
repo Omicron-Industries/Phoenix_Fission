@@ -60,7 +60,7 @@ public class NeutronModeratedFuelManager extends FissionFuelManager {
 
         int moderatorCount = machine.getComponentManager().getActiveModerators().size();
         double moderatorRatio = Math.min((double) moderatorCount / totalRods, maxModeratorRatio);
-        double moderatorBonus = moderatorRatio / maxModeratorRatio; // normalised [0, 1]
+        double moderatorBonus = moderatorRatio / maxModeratorRatio;
 
         return Math.sqrt((totalRods + 1.0) / 2.0) * (1.0 + moderatorBonus);
     }

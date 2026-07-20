@@ -13,13 +13,15 @@ import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Containers;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.material.Fluids;
-import net.minecraftforge.fluids.FluidStack;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.phoenix.phoenix_fission.PhoenixAPI;
 import net.phoenix.phoenix_fission.api.block.IFissionBlanketType;
@@ -90,9 +92,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         this.primaryBlanket = null;
     }
 
-    /**
-     * Updated Breeder gating rule utilizing modern Fuel Manager engine capabilities.
-     */
+
     @Override
     protected boolean shouldRunReactor() {
         if (!isFormed() || getComponentManager().getActiveFuelRods().isEmpty() || isScramActive()) return false;
@@ -100,9 +100,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         return getFuelManager().hasFuelAvailableForNextTick();
     }
 
-    /**
-     * Intercepts the working tick to process random-chance breeding alongside active recipe ticks.
-     */
+
     @Override
     public boolean onWorking() {
         boolean isWorking = super.onWorking();
@@ -125,11 +123,9 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
 
         this.activeBlankets = new ArrayList<>();
         for (String id : this.persistedBlanketIDs) {
-            IFissionBlanketType t = PhoenixAPI.FISSION_BLANKETS.keySet().stream()
+            PhoenixAPI.FISSION_BLANKETS.keySet().stream()
                     .filter(b -> b.getName().equals(id))
-                    .findFirst()
-                    .orElse(null);
-            if (t != null) this.activeBlankets.add(t);
+                    .findFirst().ifPresent(t -> this.activeBlankets.add(t));
         }
     }
 
@@ -139,15 +135,13 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         IFissionBlanketType primary = primaryBlanket != null ? primaryBlanket : activeBlankets.get(0);
         int duration = Math.max(1, primary.getDurationTicks());
 
-        // FALLBACK: Default to 1.0 if getBurnMultiplier() is deprecated or a flat config rate
         double burnMul = 1.0;
 
-        // GATING CHECK FOR NON-ADDITIVE USAGE: Verify item is present before progressing the cycle
         if (!cfg.blanketUsageAdditive) {
             int amount = (int) Math.ceil(Math.max(0, primary.getAmountPerCycle()) * parallels * burnMul);
 
             if (amount > 0 && !canConsumeResource(primary.getInputKey(), amount)) {
-                return; // Missing breeding inputs, pause progression
+                return;
             }
         }
 
@@ -164,7 +158,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
             int amount = (int) Math.ceil(Math.max(0, primary.getAmountPerCycle()) * parallels * burnMul);
             if (amount <= 0) return;
 
-            if (!tryConsumeResource(primary.getInputKey(), amount)) return;
+            if (tryConsumeResource(primary.getInputKey(), amount)) return;
 
             var dist = buildAdjustedDistribution(primary, spectrumBias);
             var outputs = sampleOutputs(dist, amount, rng);
@@ -176,7 +170,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
             int amount = (int) Math.ceil(Math.max(0, blanket.getAmountPerCycle()) * parallels * burnMul);
             if (amount <= 0) continue;
 
-            if (!tryConsumeResource(blanket.getInputKey(), amount)) continue;
+            if (tryConsumeResource(blanket.getInputKey(), amount)) continue;
 
             var dist = buildAdjustedDistribution(blanket, spectrumBias);
             var outputs = sampleOutputs(dist, amount, rng);
@@ -184,36 +178,14 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         }
     }
 
-    private String keyToPrettyName(String key) {
-        ResourceLocation rl = ResourceLocation.tryParse(key);
-        if (rl != null) {
-            Item it = ForgeRegistries.ITEMS.getValue(rl);
-            if (it != null && it != net.minecraft.world.item.Items.AIR) {
-                return new ItemStack(it, 1).getHoverName().getString();
-            }
-            var fl = ForgeRegistries.FLUIDS.getValue(rl);
-            if (fl != null && fl != Fluids.EMPTY) {
-                return Component.translatable(fl.getFluidType().getDescriptionId()).getString();
-            }
-        }
-        return key;
-    }
-
     private boolean canConsumeResource(String key, int amount) {
         if (amount <= 0) return true;
 
         ItemStack is = resolveKeyToItem(key, amount);
+        assert is != null;
         if (!is.isEmpty()) return canConsumeItem(is);
 
         return false;
-    }
-
-    private boolean canConsumeFluid(FluidStack fs) {
-        if (fs.isEmpty()) return true;
-        GTRecipe dummy = GTRecipeBuilder.ofRaw()
-                .inputFluids(fs)
-                .buildRawRecipe();
-        return RecipeHelper.matchRecipe(this, dummy).isSuccess();
     }
 
     private boolean canConsumeItem(ItemStack stack) {
@@ -239,7 +211,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         if (rl == null) return ItemStack.EMPTY;
 
         Item item = ForgeRegistries.ITEMS.getValue(rl);
-        if (item == null || item == net.minecraft.world.item.Items.AIR) {
+        if (item == null || item == Items.AIR) {
             return ItemStack.EMPTY;
         }
 
@@ -250,6 +222,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         if (amount <= 0) return;
 
         ItemStack is = resolveKeyToItem(key, amount);
+        assert is != null;
         if (!is.isEmpty()) {
             GTRecipe dummy = GTRecipeBuilder.ofRaw()
                     .outputItems(is)
@@ -258,7 +231,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
             var result = RecipeHelper.handleRecipeIO(this, dummy, IO.OUT, getRecipeLogic().getChanceCaches());
 
             if (!result.isSuccess() && getLevel() != null) {
-                net.minecraft.world.Containers.dropItemStack(
+                Containers.dropItemStack(
                         getLevel(),
                         getPos().getX(), getPos().getY(), getPos().getZ(),
                         is);
@@ -273,24 +246,13 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
     }
 
     private boolean tryConsumeResource(String key, int amount) {
-        if (amount <= 0) return true;
+        if (amount <= 0) return false;
 
         ItemStack is = resolveKeyToItem(key, amount);
-        if (!is.isEmpty()) return tryConsumeItem(is);
+        assert is != null;
+        if (!is.isEmpty()) return !tryConsumeItem(is);
 
-        return false;
-    }
-
-    private boolean tryConsumeFluid(FluidStack fs) {
-        if (fs.isEmpty()) return true;
-
-        GTRecipe dummy = GTRecipeBuilder.ofRaw()
-                .inputFluids(fs)
-                .buildRawRecipe();
-
-        if (!RecipeHelper.matchRecipe(this, dummy).isSuccess()) return false;
-
-        return RecipeHelper.handleRecipeIO(this, dummy, IO.IN, getRecipeLogic().getChanceCaches()).isSuccess();
+        return true;
     }
 
     private boolean tryConsumeItem(ItemStack stack) {
@@ -315,9 +277,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
             IFissionFuelRodType rod = activeRods.stream()
                     .max(Comparator.comparingInt(IFissionFuelRodType::getTier))
                     .orElse(null);
-            if (rod != null) {
-                bias += rod.getNeutronBias();
-            }
+            bias += rod.getNeutronBias();
         }
 
         return Math.max(-100, Math.min(100, bias));
@@ -330,7 +290,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
         for (var bo : blanket.getOutputs()) {
             if (bo == null) continue;
             int baseWeight = Math.max(0, bo.weight());
-            if (baseWeight <= 0) continue;
+            if (baseWeight == 0) continue;
 
             double factor = 1.0 + (normalizedBias * bo.instability() * 0.5);
             double adjustedWeight = baseWeight * Math.max(0.1, factor);
@@ -342,7 +302,7 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
 
     private Random makeBlanketRng() {
         long seed = 0x9E3779B97F4A7C15L;
-        if (getLevel() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+        if (getLevel() instanceof ServerLevel serverLevel) {
             seed ^= serverLevel.getSeed();
         }
 
@@ -391,10 +351,10 @@ public class BreederWorkableElectricMultiblockMachine extends DynamicFissionReac
 
         if (activeBlankets.isEmpty()) {
             textList.add(Component.literal("Breeding Offline - No Blankets Present")
-                    .withStyle(net.minecraft.ChatFormatting.RED));
+                    .withStyle(ChatFormatting.RED));
         } else {
             textList.add(Component.literal("Breeding Active")
-                    .withStyle(net.minecraft.ChatFormatting.GREEN));
+                    .withStyle(ChatFormatting.GREEN));
         }
     }
 }

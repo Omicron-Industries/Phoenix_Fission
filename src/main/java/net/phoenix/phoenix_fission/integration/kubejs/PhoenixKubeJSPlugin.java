@@ -10,6 +10,7 @@ import net.phoenix.phoenix_fission.common.data.block.PhoenixFissionBlocks;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.BreederWorkableElectricMultiblockMachine;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.DynamicFissionReactorMachine;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.FissionWorkableElectricMultiblockMachine;
+import net.phoenix.phoenix_fission.common.data.multiblock.fission.MoltenSaltReactorMultiblockMachine;
 import net.phoenix.phoenix_fission.configs.PhoenixFissionConfigs;
 import net.phoenix.phoenix_fission.integration.kubejs.builders.*;
 import net.phoenix.phoenix_fission.integration.kubejs.recipe.PhoenixRecipeSchema;
@@ -25,7 +26,6 @@ public class PhoenixKubeJSPlugin extends dev.latvian.mods.kubejs.KubeJSPlugin {
     @Override
     public void registerClasses(ScriptType type, ClassFilter filter) {
         super.registerClasses(type, filter);
-        // Allows user scripts to inspect/import all of your mod packages
         filter.allow("net.phoenix.phoenix_fission");
     }
 
@@ -47,12 +47,11 @@ public class PhoenixKubeJSPlugin extends dev.latvian.mods.kubejs.KubeJSPlugin {
         event.add("FissionWorkableElectricMultiblockMachine", FissionWorkableElectricMultiblockMachine.class);
         event.add("BreederWorkableElectricMultiblockMachine", BreederWorkableElectricMultiblockMachine.class);
         event.add("DynamicFissionReactorMachine", DynamicFissionReactorMachine.class);
+        event.add("MoltenSaltReactorMultiblockMachine", MoltenSaltReactorMultiblockMachine.class);
         event.add("PhoenixFission", PhoenixFission.class);
         event.add("PhoenixFissionPredicates", PhoenixFissionPredicates.class);
     }
 
-    // FIXED: Moved type registration to the standard plugin init() lifecycle phase.
-    // This perfectly mirrors GTCEu's block builder type assignment pattern.
     @Override
     public void init() {
         super.init();

@@ -24,9 +24,9 @@ public class FissionCoolerBlockBuilder extends BlockBuilder {
     @Setter
     public transient int coolantUsagePerTick = 10;
     @Setter
-    public transient double flatCoolingHUt = 0.0; // Added for passive dry coolers
+    public transient double flatCoolingHUt = 0.0;
     @Setter
-    public transient boolean isPassive = false;    // Flags if it should skip fluid requirements
+    public transient boolean isPassive = false;
 
     @Setter
     @NotNull
@@ -38,8 +38,7 @@ public class FissionCoolerBlockBuilder extends BlockBuilder {
     public transient int tintColor = -1;
     @Setter
     public transient String texture = "phoenix_fission:block/fission/cooler_base";
-    @Setter
-    public transient String maskTexture = "phoenix_fission:block/fission/cooler_mask";
+
 
     public FissionCoolerBlockBuilder(ResourceLocation i) {
         super(i);
@@ -122,11 +121,7 @@ public class FissionCoolerBlockBuilder extends BlockBuilder {
             return GTMaterials.NULL;
         }
 
-        public @NotNull ResourceLocation getMaskTexture() {
-            ResourceLocation rl = ResourceLocation.tryParse(maskTexture);
-            return rl != null ? rl :
-                    ResourceLocation.fromNamespaceAndPath("phoenix_fission", "block/fission/cooler_mask");
-        }
+
     }
 
     @Override

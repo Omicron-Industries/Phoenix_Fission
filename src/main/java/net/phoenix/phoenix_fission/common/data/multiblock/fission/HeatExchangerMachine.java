@@ -35,6 +35,7 @@ import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Objects;
 
 public class HeatExchangerMachine extends WorkableElectricMultiblockMachine implements ITieredMachine {
 
@@ -75,7 +76,7 @@ public class HeatExchangerMachine extends WorkableElectricMultiblockMachine impl
     }
 
     @Override
-    public ManagedFieldHolder getFieldHolder() {
+    public @NotNull ManagedFieldHolder getFieldHolder() {
         return MANAGED_FIELD_HOLDER;
     }
 
@@ -83,26 +84,19 @@ public class HeatExchangerMachine extends WorkableElectricMultiblockMachine impl
     public void onStructureFormed() {
         super.onStructureFormed();
         calculateExchangerLength();
-        detectDynamoTier(); // Your logic already finds the correct tier here!
+        detectDynamoTier();
 
         this.updateHandler.updateSubscription();
 
-        if (getRecipeLogic() != null) {
-            getRecipeLogic().updateTickSubscription();
-        }
+        getRecipeLogic().updateTickSubscription();
 
-        // FORCE THE CLIENT PACKET UPDATE IMMEDIATELY
-        if (!getLevel().isClientSide) {
+        if (!Objects.requireNonNull(getLevel()).isClientSide) {
             this.markDirty();
-            // This forces Minecraft/Forge to resend the description packet
-            // containing all @DescSynced fields to nearby players right now.
             getLevel().sendBlockUpdated(getPos(), getBlockState(), getBlockState(), 3);
         }
     }
 
-    // Checks the multiblock cache for gearbox casings.
-    // The shapeInfo of the registration sets gearbox casings as one per layer so we can assume
-    // 1 gearbox = 1 layer.
+
     private void calculateExchangerLength() {
         if (getLevel() == null) return;
 
@@ -122,39 +116,28 @@ public class HeatExchangerMachine extends WorkableElectricMultiblockMachine impl
         this.length = Math.max(1, validLayers);
     }
 
-    /** Returns true if the given block counts as one exchanger layer during length calculation. */
     protected boolean isExchangerLayerBlock(Block block) {
         return block == PhoenixFissionBlocks.FISSILE_SAFE_GEARBOX_CASING.get();
     }
 
-    // Searches each multiblock part for an EnergyHatchPartMachine configured as
-    // an output (dynamo) hatch and reads its public energyContainer field
-    // directly. The part itself does NOT implement IEnergyContainer - it HOLDS
-    // one as a field (NotifiableEnergyContainer, which does implement
-    // IEnergyContainer) - so checking "part instanceof IEnergyContainer" never
-    // matches, and neither does the recipe-handler + EURecipeCapability lookup
-    // tried earlier (outHandlersSeen was always 0 in testing).
     private void detectDynamoTier() {
         int detectedTier = GTValues.ULV;
         long totalPower = 0;
 
         var parts = getParts();
-        if (parts != null) {
-            for (IMultiPart part : parts) {
-                if (!(part instanceof EnergyHatchPartMachine hatch)) continue;
+        for (IMultiPart part : parts) {
+            if (!(part instanceof EnergyHatchPartMachine hatch)) continue;
 
-                IEnergyContainer container = hatch.energyContainer;
-                if (container == null) continue;
+            IEnergyContainer container = hatch.energyContainer;
+            if (container == null) continue;
 
-                long voltage = container.getOutputVoltage();
-                long amperage = container.getOutputAmperage();
+            long voltage = container.getOutputVoltage();
+            long amperage = container.getOutputAmperage();
 
-                // If it can't output voltage or amperage, it's an energy input hatch!
-                if (voltage <= 0 || amperage <= 0) continue;
+            if (voltage <= 0 || amperage <= 0) continue;
 
-                detectedTier = Math.max(detectedTier, GTUtil.getFloorTierByVoltage(voltage));
-                totalPower += (voltage * amperage);
-            }
+            detectedTier = Math.max(detectedTier, GTUtil.getFloorTierByVoltage(voltage));
+            totalPower += (voltage * amperage);
         }
 
         if (this.dynamoTier != detectedTier || this.maxHatchOutput != totalPower) {
@@ -168,13 +151,12 @@ public class HeatExchangerMachine extends WorkableElectricMultiblockMachine impl
         }
     }
 
-    // Some gtm internals use this, we just provide current tier unless it's not formed (in which case it assumes ulv)
     @Override
     public int getTier() {
         return isFormed() ? this.dynamoTier : GTValues.ULV;
     }
 
-    // When there is liquid helium present the eu produced from the machine is boosted.
+  // Idiot thing is saying recipe is not used, it is. Recipe modifer for the heat exhcnager or smth idk.
     public static ModifierFunction recipeModifier(@NotNull MetaMachine machine, @NotNull GTRecipe recipe) {
         if (!(machine instanceof HeatExchangerMachine exchanger))
             return ModifierFunction.IDENTITY;
@@ -188,7 +170,6 @@ public class HeatExchangerMachine extends WorkableElectricMultiblockMachine impl
                 .build();
     }
 
-    // Gates/mutates recipe running based on recipe and cold coolants.
     protected void updateLogic() {
         if (getLevel() == null || getLevel().isClientSide) return;
 
@@ -225,7 +206,6 @@ public class HeatExchangerMachine extends WorkableElectricMultiblockMachine impl
         }
     }
 
-    // Handles consumption of the cold coolant necessary to run the machine.
     private boolean consumeColdCoolant() {
         int effectiveLength = Math.max(1, length);
         int waterAmount = (int) (100 * (1.0 + (effectiveLength - 1) * 0.2));
@@ -276,12 +256,12 @@ public class HeatExchangerMachine extends WorkableElectricMultiblockMachine impl
     }
 
     @Override
-    public @NotNull ModularUI createUI(Player entityPlayer) {
+    public @NotNull ModularUI createUI(@NotNull Player entityPlayer) {
         return new ModularUI(198, 208, this, entityPlayer).widget(new HeatExchangerFancyUIWidget(this, 198, 208));
     }
 
     @Override
     public void addDisplayText(@NotNull List<Component> textList) {
-        // Purposeful noop
+     // We leave this empty, ON PURPOSE. Trust.
     }
 }

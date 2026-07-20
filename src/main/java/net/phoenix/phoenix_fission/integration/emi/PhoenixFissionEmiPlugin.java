@@ -5,7 +5,9 @@ import net.minecraft.world.item.Items;
 import net.phoenix.phoenix_fission.PhoenixAPI;
 import net.phoenix.phoenix_fission.PhoenixFission;
 import net.phoenix.phoenix_fission.common.PhoenixFissionMachines;
-import net.phoenix.phoenix_fission.common.data.block.PhoenixFissionBlocks;
+import net.phoenix.phoenix_fission.common.data.multiblock.fission.DynamicFissionReactorMachine;
+import net.phoenix.phoenix_fission.common.data.multiblock.fission.FissionWorkableElectricMultiblockMachine;
+import net.phoenix.phoenix_fission.common.data.multiblock.fission.MoltenSaltReactorMultiblockMachine;
 
 import dev.emi.emi.api.EmiEntrypoint;
 import dev.emi.emi.api.EmiPlugin;
@@ -16,58 +18,63 @@ import dev.emi.emi.api.stack.EmiStack;
 @EmiEntrypoint
 public class PhoenixFissionEmiPlugin implements EmiPlugin {
 
-    // Lambda is the main icon (2nd arg). By render time blocks are registered.
-    public static final EmiRecipeCategory FUEL_BURN = new EmiRecipeCategory(
-            PhoenixFission.id("fission_fuel_burn"),
-            (draw, x, y, delta) -> {
-                // Using Vanilla Blaze Powder as the icon
-                EmiStack.of(new ItemStack(Items.BLAZE_POWDER)).render(draw, x, y, delta, EmiStack.RENDER_AMOUNT);
-            });
-
-    public static final EmiRecipeCategory COOLANT_CYCLE = new EmiRecipeCategory(
-            PhoenixFission.id("fission_coolant_cycle"),
-            (draw, x, y, delta) -> {
-                // Using Vanilla Packed Ice as the icon
-                EmiStack.of(new ItemStack(Items.PACKED_ICE)).render(draw, x, y, delta, EmiStack.RENDER_AMOUNT);
-            });
-
-    public static final EmiRecipeCategory MODERATOR = new EmiRecipeCategory(
-            PhoenixFission.id("fission_moderator"),
-            (draw, x, y, delta) -> {
-                // Using Vanilla Glowstone Block as the icon
-                EmiStack.of(new ItemStack(Items.GLOWSTONE)).render(draw, x, y, delta, EmiStack.RENDER_AMOUNT);
-            });
-
-    public static final EmiRecipeCategory BLANKET = new EmiRecipeCategory(
-            PhoenixFission.id("fission_blanket"),
-            (draw, x, y, delta) -> {
-                // Using Vanilla Iron Bars as the icon
-                EmiStack.of(new ItemStack(Items.IRON_BARS)).render(draw, x, y, delta, EmiStack.RENDER_AMOUNT);
-            });
+    public static EmiRecipeCategory FUEL_BURN;
+    public static EmiRecipeCategory COOLANT_CYCLE;
+    public static EmiRecipeCategory MODERATOR;
+    public static EmiRecipeCategory BLANKET;
+    public static EmiRecipeCategory MSR_LINER;
 
     @Override
     public void register(EmiRegistry registry) {
+        FUEL_BURN = new EmiRecipeCategory(
+                PhoenixFission.id("fission_fuel_burn"),
+                EmiStack.of(Items.BLAZE_POWDER)
+        );
+
+        COOLANT_CYCLE = new EmiRecipeCategory(
+                PhoenixFission.id("fission_coolant_cycle"),
+                EmiStack.of(Items.PACKED_ICE)
+        );
+
+        MODERATOR = new EmiRecipeCategory(
+                PhoenixFission.id("fission_moderator"),
+                EmiStack.of(Items.GLOWSTONE)
+        );
+
+        BLANKET = new EmiRecipeCategory(
+                PhoenixFission.id("fission_blanket"),
+                EmiStack.of(Items.IRON_BARS)
+        );
+
+        MSR_LINER = new EmiRecipeCategory(
+                PhoenixFission.id("fission_msr_liner"),
+                EmiStack.of(Items.MAGMA_BLOCK)
+        );
+
         registry.addCategory(FUEL_BURN);
         registry.addCategory(COOLANT_CYCLE);
         registry.addCategory(MODERATOR);
         registry.addCategory(BLANKET);
+        registry.addCategory(MSR_LINER);
 
-        // Machine controllers as workstations
-        if (PhoenixFissionMachines.PRESSURIZED_FISSION_REACTOR != null) {
-            EmiStack reactor = safeStack(PhoenixFissionMachines.PRESSURIZED_FISSION_REACTOR.asStack());
-            if (!reactor.isEmpty()) {
-                registry.addWorkstation(FUEL_BURN, reactor);
-                registry.addWorkstation(COOLANT_CYCLE, reactor);
+        for (var reactor : PhoenixFissionMachines.ALL_FISSION_REACTORS) {
+            if (reactor.definition() == null) continue;
+            EmiStack stack = safeStack(reactor.definition().asStack());
+            if (stack.isEmpty()) continue;
+
+            Class<? extends FissionWorkableElectricMultiblockMachine> machineClass = reactor.machineClass();
+
+            registry.addWorkstation(COOLANT_CYCLE, stack);
+
+            if (MoltenSaltReactorMultiblockMachine.class.isAssignableFrom(machineClass)) {
+                registry.addWorkstation(MSR_LINER, stack);
+            } else if (DynamicFissionReactorMachine.class.isAssignableFrom(machineClass)) {
+                registry.addWorkstation(FUEL_BURN, stack);
+                registry.addWorkstation(MODERATOR, stack);
+                registry.addWorkstation(BLANKET, stack);
             }
         }
-        if (PhoenixFissionMachines.HIGH_PERFORMANCE_BREEDER_REACTOR != null) {
-            EmiStack breeder = safeStack(PhoenixFissionMachines.HIGH_PERFORMANCE_BREEDER_REACTOR.asStack());
-            if (!breeder.isEmpty()) {
-                registry.addWorkstation(FUEL_BURN, breeder);
-            }
-        }
 
-        // Fuel rod blocks as workstations for FUEL_BURN so clicking them opens category
         for (var entry : PhoenixAPI.FISSION_FUEL_RODS.entrySet()) {
             var block = entry.getValue().get();
             if (block != null) {
@@ -76,7 +83,6 @@ public class PhoenixFissionEmiPlugin implements EmiPlugin {
             }
         }
 
-        // Cooler blocks as workstations for COOLANT_CYCLE
         for (var entry : PhoenixAPI.FISSION_COOLERS.entrySet()) {
             var block = entry.getValue().get();
             if (block != null) {
@@ -85,7 +91,6 @@ public class PhoenixFissionEmiPlugin implements EmiPlugin {
             }
         }
 
-        // Moderator blocks as workstations for MODERATOR
         for (var entry : PhoenixAPI.FISSION_MODERATORS.entrySet()) {
             var block = entry.getValue().get();
             if (block != null) {
@@ -94,7 +99,6 @@ public class PhoenixFissionEmiPlugin implements EmiPlugin {
             }
         }
 
-        // Blanket blocks as workstations for BLANKET
         for (var entry : PhoenixAPI.FISSION_BLANKETS.entrySet()) {
             var block = entry.getValue().get();
             if (block != null) {
@@ -103,21 +107,14 @@ public class PhoenixFissionEmiPlugin implements EmiPlugin {
             }
         }
 
-        if (PhoenixFissionMachines.HIGH_PERFORMANCE_BREEDER_REACTOR != null) {
-            EmiStack breeder = safeStack(PhoenixFissionMachines.HIGH_PERFORMANCE_BREEDER_REACTOR.asStack());
-            if (!breeder.isEmpty()) {
-                registry.addWorkstation(MODERATOR, breeder);
-                registry.addWorkstation(BLANKET, breeder);
-            }
-        }
-        if (PhoenixFissionMachines.PRESSURIZED_FISSION_REACTOR != null) {
-            EmiStack reactor = safeStack(PhoenixFissionMachines.PRESSURIZED_FISSION_REACTOR.asStack());
-            if (!reactor.isEmpty()) {
-                registry.addWorkstation(MODERATOR, reactor);
+        for (var entry : PhoenixAPI.MSR_LINERS.entrySet()) {
+            var block = entry.getValue().get();
+            if (block != null) {
+                EmiStack s = safeStack(new ItemStack(block.asItem()));
+                if (!s.isEmpty()) registry.addWorkstation(MSR_LINER, s);
             }
         }
 
-        // Register recipes
         for (var fuel : PhoenixAPI.FISSION_FUEL_RODS.keySet()) {
             try {
                 registry.addRecipe(new FissionFuelBurnEmiRecipe(fuel));
@@ -136,6 +133,11 @@ public class PhoenixFissionEmiPlugin implements EmiPlugin {
         for (var blanket : PhoenixAPI.FISSION_BLANKETS.keySet()) {
             try {
                 registry.addRecipe(new FissionBlanketEmiRecipe(blanket));
+            } catch (Exception ignored) {}
+        }
+        for (var liner : PhoenixAPI.MSR_LINERS.keySet()) {
+            try {
+                registry.addRecipe(new FissionMsrLinerEmiRecipe(liner));
             } catch (Exception ignored) {}
         }
     }

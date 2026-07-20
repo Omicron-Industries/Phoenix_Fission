@@ -2,6 +2,7 @@ package net.phoenix.phoenix_fission.client.gui;
 
 import com.gregtechceu.gtceu.api.gui.fancy.FancyMachineUIWidget;
 import com.gregtechceu.gtceu.api.gui.fancy.IFancyUIProvider;
+import com.gregtechceu.gtceu.api.gui.fancy.TabsWidget;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
 import com.lowdragmc.lowdraglib.gui.texture.ColorBorderTexture;
@@ -38,9 +39,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
     private final FissionWorkableElectricMultiblockMachine reactor;
     private final boolean isBreeder;
 
-    // =========================================================================
-    // Palette
-    // =========================================================================
     private static final int BG_TOP = 0xFF04090F;
     private static final int BG_BOT = 0xFF010508;
     private static final int GRID_COL = 0x07_00E5CC;
@@ -63,28 +61,18 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
     private static final int A_COOL = 0xFF_44AAFF;
     private static final int A_BLNK = 0xFF_CC66FF;
 
-    // =========================================================================
-    // Panel routing
-    // 0 = main HUD, 1 = fuel, 2 = moderators, 3 = coolers, 4 = blankets,
-    // 5 = heat & cooling detail (opened by clicking the trend graph)
-    // =========================================================================
     private int activePanel = 0;
 
-    // Scroll offset for the main HUD panel (0)
+
     private int hudScroll = 0;
 
-    // Scroll offset per panel (panels 1-5 map to indices 0-4)
     private final int[] panelScroll = new int[5];
 
-    // Hit regions [x,y,w,h] - rebuilt each draw
-    private final int[][] tabBtnBounds = new int[4][4]; // up to 4 tabs
+    private final int[][] tabBtnBounds = new int[4][4];
     private final int[] backBtnBounds = new int[4];
-    private final int[] trendGraphBounds = new int[4]; // click target on the main HUD that opens panel 5
+    private final int[] trendGraphBounds = new int[4];
     private int tabCount = 0;
 
-    // =========================================================================
-    // Net heat / coolant history (client-side ring buffer for the trend graph)
-    // =========================================================================
     private static final int HISTORY_LEN = 64;
     private static final int HISTORY_SAMPLE_INTERVAL_MS = 250;
 
@@ -110,7 +98,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         applySlotTheme(this);
     }
 
-    /** Recursively finds every SlotWidget in the tree and gives it a dark themed background. */
     static void applySlotTheme(WidgetGroup group) {
         for (Widget w : group.widgets) {
             if (w instanceof SlotWidget slot) {
@@ -121,18 +108,14 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         }
     }
 
-    /** Replace GT's default white tab textures with our dark-cyan theme. */
-    static void applyTheme(com.gregtechceu.gtceu.api.gui.fancy.TabsWidget tabs) {
-        // Normal tab: fully opaque dark fill, solid cyan border
+    static void applyTheme(TabsWidget tabs) {
+
         tabs.setTabTexture(new ColorBorderTexture(1, 0xBB_00E5CC)
                 .setColor(0xFF_010810));
-        // Hover: slightly lighter fill, brighter border
         tabs.setTabHoverTexture(new ColorBorderTexture(1, 0xDD_00E5CC)
                 .setColor(0xFF_061825));
-        // Pressed/selected: teal fill, solid
         tabs.setTabPressedTexture(new ColorBorderTexture(1, 0xFF_00AAA0)
                 .setColor(0xFF_002830));
-        // Scroll arrows (only visible when there are many tabs)
         tabs.setLeftButtonTexture(new ColorBorderTexture(1, 0x88_00E5CC)
                 .setColor(0xFF_010810));
         tabs.setLeftButtonHoverTexture(new ColorBorderTexture(1, 0xBB_00E5CC)
@@ -145,9 +128,7 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
 
     private void applyTheme() {
         applyTheme(sideTabsWidget);
-        if (sideTabsWidget != null) {
-            sideTabsWidget.addSelfPosition(-3, 0);
-        }
+        sideTabsWidget.addSelfPosition(-3, 0);
     }
 
     @Override
@@ -158,7 +139,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
                         panelScroll[activePanel - 1] - (int) (amount * 10));
                 return true;
             } else if (activePanel == 0) {
-                // Caps the scrolling at 80px downwards; increase this value if more space is needed
                 hudScroll = Math.max(0, Math.min(80, hudScroll - (int) (amount * 12)));
                 return true;
             }
@@ -169,18 +149,15 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && currentPage == currentHomePage) {
-            // Back button (in sub-screens)
             if (activePanel > 0 && inBounds(backBtnBounds, mouseX, mouseY)) {
                 activePanel = 0;
                 return true;
             }
-            // Main HUD: trend graph opens the heat & cooling detail panel
             if (activePanel == 0 && inBounds(trendGraphBounds, mouseX, mouseY)) {
                 activePanel = 5;
                 panelScroll[4] = 0;
                 return true;
             }
-            // Tab buttons (on main screen)
             if (activePanel == 0) {
                 for (int i = 0; i < tabCount; i++) {
                     if (inBounds(tabBtnBounds[i], mouseX, mouseY)) {
@@ -198,9 +175,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return b[2] > 0 && mx >= b[0] && mx <= b[0] + b[2] && my >= b[1] && my <= b[1] + b[3];
     }
 
-    // =========================================================================
-    // Root draw
-    // =========================================================================
     @Override
     @OnlyIn(Dist.CLIENT)
     public void drawInBackground(@Nonnull GuiGraphics g, int mouseX, int mouseY, float dt) {
@@ -214,21 +188,16 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
 
         super.drawInBackground(g, mouseX, mouseY, dt);
 
-        // Cover GT's default white title bar with our dark themed one.
-        // We measure the exact height by reading where pageContainer actually starts.
         if (pageContainer != null) {
             int contentY = pageContainer.getPosition().y;
             int titleH = contentY - y;
             if (titleH > 4) {
                 g.fill(x, y, x + w, contentY, BG_TOP);
-                // Left accent bar
                 g.fill(x + 3, y + 3, x + 6, contentY - 3, C_TEAL);
-                // Machine name
                 Font titleFont = Minecraft.getInstance().font;
                 String uiTitle = isBreeder ? "BREEDER FISSION REACTOR" : "FISSION REACTOR";
                 int titleY = y + (titleH - titleFont.lineHeight) / 2;
                 g.drawString(titleFont, uiTitle, x + 10, titleY, C_CYAN, false);
-                // Separator line under title
                 g.fill(x, contentY - 1, x + w, contentY, 0x44_00E5CC);
             }
         }
@@ -252,7 +221,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         g.enableScissor(px - 2, py - 2, px + pw + 2, py + ph + 2);
         int cx = px + 6, cy = py + 5, cw = pw - 12, ch = ph - 8;
 
-        // Meltdown takes over the entire page regardless of which panel is open.
         if (reactor.meltdownTimerTicks > 0 || (reactor.meltdownTimerMax > 0 && reactor.isScramActive())) {
             drawMeltdownScreen(g, Minecraft.getInstance().font, px, py, pw, ph, reactor);
         } else {
@@ -262,15 +230,12 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
                 case 3 -> drawCoolPanel(g, cx, cy, cw, ch);
                 case 4 -> drawBlnkPanel(g, cx, cy, cw, ch);
                 case 5 -> drawHeatDetailPanel(g, cx, cy, cw, ch);
-                default -> drawReactorHUD(g, cx, cy, cw, ch);
+                default -> drawReactorHUD(g, cx, cy, cw);
             }
         }
         g.disableScissor();
     }
 
-    // =========================================================================
-    // History sampling
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
     private void sampleHistoryIfDue() {
         if (!reactor.isFormed()) return;
@@ -288,26 +253,22 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         historyHead = (historyHead + 1) % HISTORY_LEN;
         historyFilled = Math.min(HISTORY_LEN, historyFilled + 1);
 
-        // Track rolling peaks (decay slowly so the graph rescales instead of
-        // permanently flattening after a single spike)
         double sampleMag = Math.max(Math.abs(netHeat), 1.0);
         netHeatPeak = Math.max(sampleMag, netHeatPeak * 0.995);
         coolingPeak = Math.max(Math.max(cooling, 1.0), coolingPeak * 0.995);
     }
 
-    // =========================================================================
-    // Main HUD
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
-    private void drawReactorHUD(GuiGraphics g, int x, int y, int W, int H) {
-        // Apply the scrolling offset to the entire HUD layout
+    private void drawReactorHUD(GuiGraphics g, int x, int y, int W) {
         y -= hudScroll;
 
         Font font = Minecraft.getInstance().font;
         boolean formed = reactor.isFormed();
-        boolean working = formed && reactor.getRecipeLogic().isWorking();
+        if (formed) {
+            reactor.getRecipeLogic().isWorking();
+        }
 
-        y = drawHeader(g, font, x, y, W, formed, working);
+        y = drawHeader(g, font, x, y, W, formed);
         if (!formed) {
             g.drawString(font, "Structure not complete", x + 4, y + 6, C_DIM, false);
             return;
@@ -324,17 +285,14 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         drawStatusFooter(g, font, x, y + 2, W);
     }
 
-    // =========================================================================
-    // Header
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
     private int drawHeader(GuiGraphics g, Font font, int x, int y, int W,
-                           boolean formed, boolean working) {
+                           boolean formed) {
         String title = isBreeder ? "BREEDER REACTOR" : "FISSION REACTOR";
         boolean scrammed = formed && reactor.isScramActive();
         boolean isCurrentlyRunning = formed && !scrammed && reactor.isRunningForHud();
 
-        if (System.currentTimeMillis() % 1000 < 50) { // throttle so it's not spamming every frame
+        if (System.currentTimeMillis() % 1000 < 50) {
             System.out.println("[FISSION-UI][" + reactor.getPos() + "] formed=" + formed + " scrammed=" + scrammed +
                     " runningForHud(client)=" + reactor.isRunningForHud() + " isCurrentlyRunning=" +
                     isCurrentlyRunning);
@@ -351,23 +309,21 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         } else if (isCurrentlyRunning) {
             badge = "RUNNING";
             badgeColor = C_GREEN;
-        } // Changed "ACTIVE" to "RUNNING"
+        }
         else {
             badge = "STANDBY";
             badgeColor = C_GOLD;
         }
 
-        // Draw badge right-aligned first so we know how much title space is left
         int bw = font.width(badge) + 8, bh = 10;
         int bx = x + W - bw, by = y - 1;
         g.fill(bx, by, bx + bw, by + bh, 0x44_000000);
         DrawerHelper.drawBorder(g, bx, by, bw, bh, (0x88 << 24) | (badgeColor & 0xFFFFFF), 1);
         if (scrammed) {
-            drawHazardStripe(g, bx, by + bh - 2, bw, 2);
+            drawHazardStripe(g, bx, by + bh - 2, bw);
         }
         g.drawString(font, badge, bx + 4, by + 1, badgeColor, false);
 
-        // Title with dot, truncated to not collide with badge
         int dotColor = !formed ? C_DIM :
                 scrammed ? C_RED : isCurrentlyRunning ? pulsingColor(C_GREEN, 0xFF_AAFFCC, 0.006) : C_GOLD;
         g.fill(x, y + 2, x + 5, y + 7, dotColor);
@@ -380,21 +336,17 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return y + 5;
     }
 
-    /** Small red/black diagonal-ish hazard underline used under the SCRAMMED badge. */
     @OnlyIn(Dist.CLIENT)
-    private static void drawHazardStripe(GuiGraphics g, int x, int y, int w, int h) {
+    private static void drawHazardStripe(GuiGraphics g, int x, int y, int w) {
         int stripeW = 3;
         boolean red = true;
         for (int sx = 0; sx < w; sx += stripeW) {
             int segW = Math.min(stripeW, w - sx);
-            g.fill(x + sx, y, x + sx + segW, y + h, red ? 0xFF_FF3333 : 0xFF_1A1A1A);
+            g.fill(x + sx, y, x + sx + segW, y + 2, red ? 0xFF_FF3333 : 0xFF_1A1A1A);
             red = !red;
         }
     }
 
-    // =========================================================================
-    // Heat section (bar + scale on separate lines, no text inside bar)
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
     private int drawHeatSection(GuiGraphics g, Font font, int x, int y, int W) {
         double maxHeat = reactor.getMaxSafeHeatHU();
@@ -402,7 +354,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         double pct = Math.min(1.0, heat / maxHeat);
         double netDelta = reactor.lastHeatGainedPerTick - reactor.lastHeatRemovedPerTick;
 
-        // Section label + delta rate, right-aligned
         String deltaStr;
         int deltaColor;
         if (Math.abs(netDelta) < 0.05) {
@@ -419,7 +370,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         g.drawString(font, deltaStr, x + W - font.width(deltaStr), y, deltaColor, false);
         y += 10;
 
-        // Bar - no text drawn inside it
         int barH = 8, fillW = (int) (pct * W), half = W / 2;
         g.fill(x, y, x + W, y + barH, 0x22_FFFFFF);
         g.fill(x, y, x + 1, y + barH, 0x44_FFFFFF);
@@ -428,7 +378,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             if (fillW > half)
                 DrawerHelper.drawGradientRect(g, x + half, y, fillW - half, barH, C_GOLD, C_RED, true);
         }
-        // Shimmer when hot
         if (pct > 0.70 && fillW > 0) {
             long t = System.currentTimeMillis();
             int sw = 18;
@@ -440,22 +389,16 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
                 DrawerHelper.drawGradientRect(g, mid, y, sx2 - mid, barH, 0x33_FFFFFF, 0x00_FFFFFF, true);
             }
         }
-        // 85% danger marker
+
         int safeX = x + (int) (0.85 * W);
         g.fill(safeX, y - 1, safeX + 1, y + barH + 1, 0xAA_FFFFFF);
         y += barH + 2;
 
-        // Scale row: just the "safe" danger marker label — no max-HU number,
-        // the absolute value is already shown in the percentage row below.
+
         g.drawString(font, "safe", safeX - font.width("safe") / 2, y, 0x55_FFFFFF, false);
         y += 10;
 
-        // Percentage (left) + absolute heat value (right), anchored to opposite
-        // edges instead of one free-floating centered string. A centered string
-        // built from heat's raw, unclamped magnitude could grow wide enough
-        // during a runaway to visually fold back on itself; anchoring each
-        // half to its own edge guarantees they can never collide regardless
-        // of how large heat gets.
+
         String pctStr = String.format("%.1f%%", pct * 100);
         String absStr = String.format("%.0f HU", Math.min(heat, 9_999_999));
         int pctColor = pct > 0.85 ? C_RED : pct > 0.5 ? C_ORANGE : C_GREEN;
@@ -467,24 +410,13 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-    // =========================================================================
-    // Net heat / coolant trend graph
-    // Two overlaid sparklines sharing one plot area:
-    // - net heat (gain - removal), colored by sign (red=heating, green=cooling)
-    // - coolant throughput (HU/t actually being removed), in blue
-    // Both series are independently auto-scaled against a slow-decaying peak
-    // so the graph stays readable whether the reactor is idling or surging.
-    // The whole strip is clickable - it opens the heat & cooling detail
-    // panel, which has the full-size graph plus the per-tick breakdown that
-    // used to live cramped into the stats box below this.
-    // =========================================================================
+
     @OnlyIn(Dist.CLIENT)
     private int drawTrendGraph(GuiGraphics g, Font font, int x, int y, int W) {
         int regionStart = y;
 
         g.drawString(font, "NET HEAT / COOLANT", x, y, C_MID, false);
 
-        // "tap for detail" hint, right-aligned
         String hint = "details >";
         g.drawString(font, hint, x + W - font.width(hint), y, C_TEAL, false);
         y += 10;
@@ -510,7 +442,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-    /** Renders just the sparkline content into the given plot rect; shared by the mini and detail views. */
     @OnlyIn(Dist.CLIENT)
     private void drawTrendLines(GuiGraphics g, int x, int plotY, int W, int plotH) {
         if (historyFilled < 2) {
@@ -530,19 +461,17 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
 
         for (int i = 0; i < n; i++) {
             int idx = (oldest + i) % HISTORY_LEN;
-            // Align so the most recent sample sits at the right edge
+
             int slot = HISTORY_LEN - n + i;
             int px = x + (int) (slot * stepX);
 
             double netHeat = netHeatHistory[idx];
             double cooling = coolingHistory[idx];
 
-            // net heat: signed, plotted around the midline
-            double heatNorm = clamp(netHeat / netHeatPeak, -1.0, 1.0);
+            double heatNorm = clamp(netHeat / netHeatPeak, -1.0);
             int hy = midY - (int) (heatNorm * (plotH / 2f - 2));
 
-            // cooling: unsigned, plotted from the bottom upward
-            double coolNorm = clamp(cooling / coolingPeak, 0.0, 1.0);
+            double coolNorm = clamp(cooling / coolingPeak, 0.0);
             int cy = plotY + plotH - 2 - (int) (coolNorm * (plotH - 4));
 
             if (prevHx != null) {
@@ -557,14 +486,10 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             prevCy = cy;
         }
 
-        // Highlight the latest sample with small dots
-        if (prevHx != null) {
-            g.fill(prevHx - 1, prevHy - 1, prevHx + 2, prevHy + 2, 0xFF_FFFFFF);
-            g.fill(prevCx - 1, prevCy - 1, prevCx + 2, prevCy + 2, 0xFF_FFFFFF);
-        }
+        g.fill(prevHx - 1, prevHy - 1, prevHx + 2, prevHy + 2, 0xFF_FFFFFF);
+        g.fill(prevCx - 1, prevCy - 1, prevCx + 2, prevCy + 2, 0xFF_FFFFFF);
     }
 
-    /** Simple Bresenham-ish line draw using 1px-tall fills, fine for short sparkline segments. */
     @OnlyIn(Dist.CLIENT)
     private static void drawLine(GuiGraphics g, int x1, int y1, int x2, int y2, int color) {
         int dx = x2 - x1, dy = y2 - y1;
@@ -580,16 +505,11 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         }
     }
 
-    private static double clamp(double v, double lo, double hi) {
-        return Math.max(lo, Math.min(hi, v));
+    private static double clamp(double v, double lo) {
+        return Math.max(lo, Math.min(1.0, v));
     }
 
-    // =========================================================================
-    // Per-tick breakdown: heat generated | heat removed | cooling power
-    // Stacked rows (label left, value right) - this used to be crammed into
-    // one 3-column line under the EU box, which ran out of room as soon as
-    // any value got a couple digits longer. Lives in the heat detail panel now.
-    // =========================================================================
+
     @OnlyIn(Dist.CLIENT)
     private int drawPerTickBreakdown(GuiGraphics g, Font font, int x, int y, int W) {
         double gained = reactor.lastHeatGainedPerTick;
@@ -609,7 +529,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return y;
     }
 
-    /** One label-left / value-right row, the standard layout for the detail panel. */
     @OnlyIn(Dist.CLIENT)
     private static int drawStatRow(GuiGraphics g, Font font, int x, int y, int W,
                                    String label, String value, int valueColor) {
@@ -618,39 +537,30 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return y + 10;
     }
 
-    // =========================================================================
-    // EU output section (dedicated focused area)
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
     private int drawStatsSection(GuiGraphics g, Font font, int x, int y, int W) {
         boolean hasCoolant = reactor.lastHasCoolant;
 
-        // Fixed: Routed properly through the fuel manager instance
         int boostPct = reactor.getFuelManager().getModeratorEUBoostClamped();
         int discPct = reactor.getFuelManager().getModeratorFuelDiscountClamped();
 
-        // Bordered EU box
         int boxH = 28;
         g.fill(x, y, x + W, y + boxH, 0x22_00AABB);
         DrawerHelper.drawBorder(g, x, y, W, boxH, 0x55_00E5CC, 1);
 
-        // Row 1 inside box: EU/t (large, left) | parallels (right)
-        // Fixed: Replaced getVoltageFormattedOutput with GregTech's standard formatting utility
         String euStr = FormattingUtil.formatNumbers(reactor.lastGeneratedEUt) + " EU/t";
         String parStr = "x" + reactor.lastParallels + " par";
         int parW = font.width(parStr);
-        int euMaxW = W - parW - 4 /* left pad */ - 6 /* gap before parStr */ - 4 /* right pad */;
+        int euMaxW = W - parW - 4  - 6  - 4 ;
         g.drawString(font, truncate(font, euStr, euMaxW), x + 4, y + 3, C_WHITE, false);
         g.drawString(font, parStr, x + W - parW - 4, y + 3, C_MID, false);
 
-        // Row 2 inside box: EU boost | fuel discount
         String boostStr = "+" + boostPct + "% EU";
         String discStr = "-" + discPct + "% fuel";
         g.drawString(font, boostStr, x + 4, y + 15, boostPct > 0 ? 0xFF_AAFFCC : C_DIM, false);
         g.drawString(font, discStr, x + W - font.width(discStr) - 4, y + 15, discPct > 0 ? C_GOLD : C_DIM, false);
         y += boxH + 3;
 
-        // Coolant status line (outside box, full width)
         if (reactor.isOverCooled) {
             g.fill(x, y + 1, x + 5, y + 6, pulsingColor(0xFF_44AAFF, 0xFF_AADDFF, 0.014));
             g.drawString(font, "  OVER-COOLED  (90% coolant refund, no EU)", x, y, 0xFF_44AAFF, false);
@@ -664,13 +574,9 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-    // =========================================================================
-    // Stats without EU (shown when enableDirectEUOutput = false)
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
     private int drawStatsNoEU(GuiGraphics g, Font font, int x, int y, int W) {
         boolean hasCoolant = reactor.lastHasCoolant;
-        // Routed through the fuel manager instance exactly like your stats section
         int boostPct = reactor.getFuelManager().getModeratorEUBoostClamped();
         int discPct = reactor.getFuelManager().getModeratorFuelDiscountClamped();
 
@@ -698,9 +604,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-    // =========================================================================
-    // Component tab bar (replaces old manifest section)
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
     private int drawTabBar(GuiGraphics g, Font font, int x, int y, int W) {
         List<IFissionFuelRodType> fuels = resolveTypes(reactor.getPersistedFuelRodIDs(),
@@ -719,7 +622,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         tabs.add(new Tab("COOL", A_COOL, coolers.size(), true));
         tabs.add(new Tab("BLNK", A_BLNK, blankets.size(), isBreeder));
 
-        // Filter to shown tabs and compute widths
         List<Tab> shown = tabs.stream().filter(Tab::show).toList();
         tabCount = shown.size();
 
@@ -740,7 +642,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             int bgCol = empty ? 0x22_000000 : 0x33_000000;
 
             g.fill(bx, y, bx + btnW, y + btnH, bgCol);
-            // color stripe on top
             g.fill(bx, y, bx + btnW, y + 2, empty ? 0x33_FFFFFF : (0xBB_000000 | (accent & 0xFFFFFF)));
             DrawerHelper.drawBorder(g, bx, y, btnW, btnH, (0x66 << 24) | (accent & 0xFFFFFF), 1);
 
@@ -753,7 +654,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             tabBtnBounds[i][2] = btnW;
             tabBtnBounds[i][3] = btnH;
         }
-        // zero out unused slots
         for (int i = shown.size(); i < 4; i++) Arrays.fill(tabBtnBounds[i], 0);
 
         y += btnH + 5;
@@ -761,11 +661,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-    // =========================================================================
-    // Stability / sensor hatch sub-bar
-    // Compact two-row indicator: stability hatches on top, sensor hatches below.
-    // Each row shows installed count + total stability score as a small bar.
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
     private int drawStabilityBar(GuiGraphics g, Font font, int x, int y, int W) {
         List<IFissionStabilityHatchType> stabHatches = resolveTypes(
@@ -776,43 +671,40 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
                 IFissionSensorHatchType::getName);
 
         int totalStability = stabHatches.stream().mapToInt(IFissionStabilityHatchType::getStability).sum();
-        int maxStability = 100; // treat 100 as "full"
+        int maxStability = 100;
 
-        // Row label + bar for stability hatches
         String stabLabel = "STAB";
         int stabCount = stabHatches.size();
         g.drawString(font, stabLabel, x, y, stabCount > 0 ? C_GREEN : C_DIM, false);
 
         int barX = x + font.width(stabLabel) + 4;
-        int barW = W - font.width(stabLabel) - 4 - font.width("x00 +000") - 2;
+        int sensBarW = W - font.width(stabLabel) - 4 - font.width("x00 +000") - 2;
         int barH = 5;
         int barY = y + 1;
-        g.fill(barX, barY, barX + barW, barY + barH, 0x22_FFFFFF);
+        g.fill(barX, barY, barX + sensBarW, barY + barH, 0x22_FFFFFF);
         if (stabCount > 0) {
             double stabFrac = Math.min(1.0, totalStability / (double) maxStability);
-            int fillW = (int) (stabFrac * barW);
+            int fillW = (int) (stabFrac * sensBarW);
             if (fillW > 0) {
                 int stabCol = stabFrac >= 1.0 ? C_GREEN : stabFrac > 0.5 ? 0xFF_AAFFCC : C_GOLD;
                 g.fill(barX, barY, barX + fillW, barY + barH, stabCol);
             }
         }
-        DrawerHelper.drawBorder(g, barX, barY, barW, barH, 0x44_00E5CC, 1);
+        DrawerHelper.drawBorder(g, barX, barY, sensBarW, barH, 0x44_00E5CC, 1);
 
         String stabRight = "x" + stabCount + " +" + totalStability;
         g.drawString(font, stabRight, x + W - font.width(stabRight), y, stabCount > 0 ? C_MID : C_DIM, false);
 
         y += 8;
 
-        // Row for sensor hatches (just count + tier range, no score bar)
         int sensorCount = sensorHatches.size();
         String sensLabel = "SENS";
         g.drawString(font, sensLabel, x, y, sensorCount > 0 ? C_BLUE : C_DIM, false);
 
         int sensBarX = x + font.width(sensLabel) + 4;
-        int sensBarW = barW;
         g.fill(sensBarX, y + 1, sensBarX + sensBarW, y + 1 + barH, 0x22_FFFFFF);
         if (sensorCount > 0) {
-            int maxSens = 4; // assume up to 4 installed is "full"
+            int maxSens = 4;
             double sensFrac = Math.min(1.0, sensorCount / (double) maxSens);
             int sfillW = (int) (sensFrac * sensBarW);
             if (sfillW > 0) g.fill(sensBarX, y + 1, sensBarX + sfillW, y + 1 + barH, C_BLUE);
@@ -827,9 +719,7 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-    // =========================================================================
-    // Status footer — meltdown progress bar + condition line
-    // =========================================================================
+
     @OnlyIn(Dist.CLIENT)
     private void drawStatusFooter(GuiGraphics g, Font font, int x, int y, int W) {
         double maxHeat = reactor.getMaxSafeHeatHU();
@@ -838,30 +728,22 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         int timerMax = reactor.meltdownTimerMax;
         boolean scrammed = reactor.isScramActive();
 
-        // Meltdown countdown bar — shown whenever the timer has ever been started
-        // (timerMax > 0) even if currently frozen by SCRAM so the player can see
-        // the paused state clearly.
-        if (timerMax > 0 && timerTicks >= 0) {
+        if (timerTicks >= 0) {
             double frac = timerMax > 0 ? timerTicks / (double) timerMax : 1.0;
             int barH = 6;
             int fillW = (int) (frac * W);
 
-            // Bar background
             g.fill(x, y, x + W, y + barH, 0x44_000000);
 
-            // Fill color: pulsing red, dims to orange when SCRAM has paused it
-            int fillCol = scrammed ? 0xFF_AA4400   // muted amber — frozen/paused
+            int fillCol = scrammed ? 0xFF_AA4400
                     : pulsingColor(C_RED, 0xFF_FF8844, 0.012);
             if (fillW > 0) g.fill(x, y, x + fillW, y + barH, fillCol);
             DrawerHelper.drawBorder(g, x, y, W, barH, scrammed ? 0x88_AA6600 : 0x88_FF3300, 1);
 
-            // Label inside the bar: "MELTDOWN Xs" on the left,
-            // "PAUSED" or remaining-% on the right
             String leftStr = scrammed ? "MELTDOWN" : "MELTDOWN  " + (int) Math.ceil(timerTicks / 20.0) + "s";
             String rightStr = scrammed ? "PAUSED - SCRAM" : String.format("%.0f%%", frac * 100);
             int rightColor = scrammed ? 0xFF_FFAA44 : C_RED;
 
-            // Render text above the bar (bar is only 6px — too short for font)
             g.drawString(font, leftStr, x, y - 9, scrammed ? 0xFF_FFAA44 : pulsingColor(C_RED, 0xFF_FF9966, 0.010),
                     false);
             g.drawString(font, rightStr, x + W - font.width(rightStr), y - 9, rightColor, false);
@@ -869,9 +751,7 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             y += barH + 3;
         }
 
-        // Condition line
         if (timerTicks > 0 && !scrammed) {
-            // Already showed the bar above — just a short pulsing reinforcement
             drawWrappedFooterLine(g, font, x, y, W,
                     "!! EVACUATE -- meltdown imminent", pulsingColor(C_RED, 0xFF_FF9966, 0.010));
         } else if (scrammed) {
@@ -915,9 +795,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         }
     }
 
-    // =========================================================================
-    // Sub-screen: FUEL RODS (variable-height card per unique type)
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
     private void drawFuelPanel(GuiGraphics g, int x, int y, int W, int H) {
         Font font = Minecraft.getInstance().font;
@@ -941,7 +818,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             String cycle = prettyName(e.getKey().getFuelKey()) + " ->" + prettyName(e.getKey().getOutputKey());
             List<String> lines = wrapText(font, cycle, textW);
             cards.add(new FuelCard(e.getKey(), e.getValue(), lines));
-            // name + heat row + dur/amt row + cycle lines + separator
             totalH += 33 + lines.size() * 9;
         }
 
@@ -958,27 +834,23 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             if (iy + cardH > contentStart && iy < contentStart + H - 4) {
                 g.fill(x, iy, x + 2, iy + cardH - 2, f.getTintColor() | 0xFF000000);
 
-                // Line 1: name | T{tier} x{count}
                 String right1 = "T" + f.getTier() + "  x" + card.count();
                 int r1w = font.width(right1);
                 g.drawString(font, truncate(font, f.getName(), W - r1w - 14), x + 5, iy + 2, C_WHITE, false);
                 g.drawString(font, right1, x + W - r1w - 6, iy + 2, C_GOLD, false);
 
-                // Line 2: heat/rod (left) | total HU/t for this type (right)
                 long cnt = card.count();
                 String heatStr = f.getBaseHeatProduction() + " HU/rod";
                 String totalStr = "= " + (f.getBaseHeatProduction() * cnt) + " HU/t";
                 g.drawString(font, heatStr, x + 5, iy + 12, A_FUEL, false);
                 g.drawString(font, totalStr, x + W - font.width(totalStr) - 6, iy + 12, 0xFF_FFBB66, false);
 
-                // Line 3: cycle duration (left) | amount per cycle (right)
                 double durSec = f.getDurationTicks() / 20.0;
                 String durStr = String.format(java.util.Locale.ROOT, "%.0fs cycle", durSec);
                 String amtStr = "x" + f.getAmountPerCycle() + " per cycle";
                 g.drawString(font, durStr, x + 5, iy + 21, C_MID, false);
                 g.drawString(font, amtStr, x + W - font.width(amtStr) - 6, iy + 21, C_DIM, false);
 
-                // Wrapped cycle lines (→ input to output)
                 int ly = iy + 30;
                 for (String line : card.cycleLines()) {
                     g.drawString(font, line, x + 5, ly, C_DIM, false);
@@ -989,12 +861,9 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             iy += cardH;
         }
         g.disableScissor();
-        drawScrollbar(g, x + W - 4, contentStart, 3, H - 4, scroll, totalH);
+        drawScrollbar(g, x + W - 4, contentStart, H - 4, scroll, totalH);
     }
 
-    // =========================================================================
-    // Sub-screen: MODERATORS (3-line card per unique type)
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
     private void drawModsPanel(GuiGraphics g, int x, int y, int W, int H) {
         Font font = Minecraft.getInstance().font;
@@ -1023,13 +892,11 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             if (iy + CARD > contentStart && iy < contentStart + H - 4) {
                 g.fill(x, iy, x + 2, iy + CARD - 2, m.getTintColor() | 0xFF000000);
 
-                // Line 1: name | T{tier} x{count}
                 String right1 = "T" + m.getTier() + "  x" + e.getValue();
                 int right1W = font.width(right1);
                 g.drawString(font, truncate(font, m.getName(), W - right1W - 14), x + 5, iy + 2, C_WHITE, false);
                 g.drawString(font, right1, x + W - right1W - 6, iy + 2, C_GOLD, false);
 
-                // Line 2: EU boost (left) | fuel discount (right)
                 int eu = m.getEUBoost();
                 int disc = m.getFuelDiscount();
                 String euStr = "+" + eu + "% EU";
@@ -1037,7 +904,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
                 g.drawString(font, euStr, x + 5, iy + 12, eu > 0 ? 0xFF_AAFFCC : C_DIM, false);
                 g.drawString(font, discStr, x + W - font.width(discStr) - 6, iy + 12, disc > 0 ? C_GOLD : C_DIM, false);
 
-                // Line 3: parallel bonus (left) | heat multiplier (right)
                 int parB = m.getParallelBonus();
                 double heatMult = m.getHeatMultiplier();
                 String parStr = parB > 0 ? "+" + parB + " parallel" : "no par bonus";
@@ -1051,12 +917,9 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             iy += CARD;
         }
         g.disableScissor();
-        drawScrollbar(g, x + W - 4, contentStart, 3, H - 4, scroll, contentH);
+        drawScrollbar(g, x + W - 4, contentStart, H - 4, scroll, contentH);
     }
 
-    // =========================================================================
-    // Sub-screen: COOLERS (variable-height card, passive vs active layout)
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
     private void drawCoolPanel(GuiGraphics g, int x, int y, int W, int H) {
         Font font = Minecraft.getInstance().font;
@@ -1083,13 +946,12 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             boolean passive = c.isPassive();
             List<String> extra;
             if (passive) {
-                extra = List.of(); // no fluid lines for passive
+                extra = List.of();
             } else {
                 String fluid = prettyName(c.getInputCoolantFluidId()) + " ->" + prettyName(c.getOutputCoolantFluidId());
                 extra = wrapText(font, fluid, textW);
             }
             cards.add(new CoolCard(c, e.getValue(), extra, passive));
-            // 3 content lines (name+2, stats+12, status+21) = base 33; fluid from +30
             totalH += 33 + extra.size() * 9;
         }
 
@@ -1107,41 +969,35 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
                 g.fill(x, iy, x + 2, iy + cardH - 2, c.getTintColor() | 0xFF000000);
 
                 if (card.passive()) {
-                    // Line 1: name | PASSIVE x{count}
                     String right1 = "PASSIVE  x" + card.count();
                     int r1w = font.width(right1);
                     g.drawString(font, truncate(font, c.getName(), W - r1w - 14), x + 5, iy + 2, C_WHITE, false);
                     g.drawString(font, right1, x + W - r1w - 6, iy + 2, 0xFF_AAFFCC, false);
-
-                    // Line 2: flat HU/t (left) | total HU/t for all of this type (right)
                     double flat = c.getFlatCoolingHUt();
                     String flatStr = String.format(java.util.Locale.ROOT, "%.0f HU/t flat", flat);
                     String totalStr = String.format(java.util.Locale.ROOT, "= %.0f total", flat * card.count());
                     g.drawString(font, flatStr, x + 5, iy + 12, A_COOL, false);
                     g.drawString(font, totalStr, x + W - font.width(totalStr) - 6, iy + 12, C_MID, false);
 
-                    // Line 3: always active note
                     g.drawString(font, "Always active - no coolant needed", x + 5, iy + 21, C_DIM, false);
                 } else {
-                    // Line 1: name | T{tier} x{count}
+
                     String right1 = "T" + c.getTier() + "  x" + card.count();
                     int r1w = font.width(right1);
                     g.drawString(font, truncate(font, c.getName(), W - r1w - 14), x + 5, iy + 2, C_WHITE, false);
                     g.drawString(font, right1, x + W - r1w - 6, iy + 2, C_GOLD, false);
 
-                    // Line 2: temp threshold (left) | mB/t (right)
                     String tempStr = c.getCoolerTemperature() + " K threshold";
                     String mbStr = c.getCoolantUsagePerTick() + " mB/t";
                     g.drawString(font, tempStr, x + 5, iy + 12, A_COOL, false);
                     g.drawString(font, mbStr, x + W - font.width(mbStr) - 6, iy + 12, C_MID, false);
 
-                    // Active when reactor heat > threshold indicator
+
                     boolean activeNow = currentHeat > c.getCoolerTemperature();
                     String activeStr = activeNow ? "Active now" : "Idle (heat < threshold)";
                     g.drawString(font, activeStr, x + 5, iy + 21,
                             activeNow ? C_GREEN : C_DIM, false);
 
-                    // Wrapped fluid lines
                     int ly = iy + 30;
                     for (String line : card.extraLines()) {
                         g.drawString(font, line, x + 5, ly, C_DIM, false);
@@ -1153,12 +1009,9 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             iy += cardH;
         }
         g.disableScissor();
-        drawScrollbar(g, x + W - 4, contentStart, 3, H - 4, scroll, totalH);
+        drawScrollbar(g, x + W - 4, contentStart, H - 4, scroll, totalH);
     }
 
-    // =========================================================================
-    // Sub-screen: BLANKETS / BREEDING
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
     private void drawBlnkPanel(GuiGraphics g, int x, int y, int W, int H) {
         Font font = Minecraft.getInstance().font;
@@ -1178,16 +1031,14 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
 
         LinkedHashMap<IFissionBlanketType, Long> blanketCounts = groupBy(blankets);
 
-        // Build full content into a flat list of draw calls via a virtual-scroll approach:
-        // Estimate total content height then scissor + offset
-        // Simpler: just draw everything scrolled, let scissor clip it
+
         int contentStart = y;
-        // Estimate height per blanket entry
-        int estimatedH = blanketCounts.entrySet().stream().mapToInt(e -> {
-            int h = 11 + 10 + 10; // name + input + reqTier
-            List<IFissionBlanketType.BlanketOutput> outs = e.getKey().getOutputs();
+
+        int estimatedH = blanketCounts.keySet().stream().mapToInt(iFissionBlanketType -> {
+            int h = 11 + 10 + 10;
+            List<IFissionBlanketType.BlanketOutput> outs = iFissionBlanketType.getOutputs();
             h += 10 + (outs == null ? 10 : outs.size() * 9);
-            h += 8; // divider gap
+            h += 8;
             return h;
         }).sum();
 
@@ -1231,14 +1082,13 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
                 g.drawString(font, "  No outputs configured", x, iy, C_DIM, false);
                 iy += 10;
             } else {
-                int totalW = outputs.stream().mapToInt(o -> o.weight()).sum();
+                int totalW = outputs.stream().mapToInt(IFissionBlanketType.BlanketOutput::weight).sum();
                 g.drawString(font, "  Outputs:", x, iy, C_MID, false);
                 iy += 10;
                 for (IFissionBlanketType.BlanketOutput out : outputs) {
                     String outName = prettyName(out.key());
                     double pct = totalW > 0 ? (out.weight() * 100.0 / totalW) : 0;
                     String instab = instabilityLabel(out.instability());
-                    // right-align the % and instability tag so names have room
                     String right = String.format(java.util.Locale.ROOT, "%.0f%%  %s", pct, instab);
                     int rw = font.width(right);
                     g.drawString(font, truncate(font, "    " + outName, W - rw - 8), x, iy,
@@ -1254,14 +1104,9 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         }
         g.disableScissor();
 
-        drawScrollbar(g, x + W - 3, contentStart, 3, H - 10, scroll, estimatedH);
+        drawScrollbar(g, x + W - 3, contentStart, H - 10, scroll, estimatedH);
     }
 
-    // =========================================================================
-    // Sub-screen: HEAT & COOLING DETAIL
-    // Opened by clicking the trend graph on the main HUD. Full-size graph
-    // plus the per-tick breakdown that used to be crammed under the EU box.
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
     private void drawHeatDetailPanel(GuiGraphics g, int x, int y, int W, int H) {
         Font font = Minecraft.getInstance().font;
@@ -1269,7 +1114,7 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
 
         int contentStart = y;
 
-        // Legend for the graph below
+
         g.fill(x, y + 1, x + 5, y + 1 + 5, C_ORANGE);
         g.drawString(font, "heat (net)", x + 7, y, C_DIM, false);
         int coolLabelX = x + 7 + font.width("heat (net)") + 10;
@@ -1287,7 +1132,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         rule(g, x, W, y);
         y += 6;
 
-        // Fixed: Swapped to the correct dynamic configuration object instead of old static macro call
         double maxHeat = reactor.getMaxSafeHeatHU();
         double heat = reactor.getHeat();
         double pct = Math.min(1.0, heat / maxHeat);
@@ -1306,15 +1150,10 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         int contentH = y - contentStart;
         int maxScroll = Math.max(0, contentH - H);
         panelScroll[4] = Math.min(panelScroll[4], maxScroll);
-        // Content currently fits in the panel in all observed layouts, but the
-        // scroll plumbing is here defensively in case a future stat row pushes
-        // it past H on a shorter screen - drawScrollbar no-ops when it fits.
-        drawScrollbar(g, x + W - 3, contentStart, 3, H, panelScroll[4], contentH);
+
+        drawScrollbar(g, x + W - 3, contentStart, H, panelScroll[4], contentH);
     }
 
-    // =========================================================================
-    // Shared sub-screen header (title + back button + rule)
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
     private int drawSubHeader(GuiGraphics g, Font font, int x, int y, int W,
                               String title, int accentColor) {
@@ -1338,22 +1177,16 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return y + 5;
     }
 
-    // =========================================================================
-    // Scrollbar helper
-    // =========================================================================
     private static void drawScrollbar(GuiGraphics g, int trackX, int trackY,
-                                      int trackW, int trackH, int scroll, int contentH) {
+                                      int trackH, int scroll, int contentH) {
         if (contentH <= trackH) return;
-        g.fill(trackX, trackY, trackX + trackW, trackY + trackH, 0x22_FFFFFF);
+        g.fill(trackX, trackY, trackX + 3, trackY + trackH, 0x22_FFFFFF);
         int thumbH = Math.max(6, (int) ((trackH / (float) contentH) * trackH));
         int maxScroll = contentH - trackH;
         int thumbY = trackY + (maxScroll > 0 ? (int) ((scroll / (float) maxScroll) * (trackH - thumbH)) : 0);
-        g.fill(trackX, thumbY, trackX + trackW, thumbY + thumbH, 0x99_00E5CC);
+        g.fill(trackX, thumbY, trackX + 3, thumbY + thumbH, 0x99_00E5CC);
     }
 
-    // =========================================================================
-    // Helpers
-    // =========================================================================
     private static <T> LinkedHashMap<T, Long> groupBy(List<T> list) {
         return list.stream().collect(
                 Collectors.groupingBy(t -> t, LinkedHashMap::new, Collectors.counting()));
@@ -1436,9 +1269,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         return result.isEmpty() ? List.of(text) : result;
     }
 
-    // =========================================================================
-    // Atmosphere
-    // =========================================================================
     @OnlyIn(Dist.CLIENT)
     private void drawGrid(GuiGraphics g, int x, int y, int w, int h) {
         for (int gx = x + 18; gx < x + w; gx += 18) g.fill(gx, y, gx + 1, y + h, GRID_COL);
@@ -1447,8 +1277,8 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
 
     @OnlyIn(Dist.CLIENT)
     private void drawScanlines(GuiGraphics g, int x, int y, int w, int h) {
-        DrawerHelper.drawGradientRect(g, x, y, w, h / 2, 0x10_000000, 0x04_000000, false);
-        DrawerHelper.drawGradientRect(g, x, y + h / 2, w, h / 2, 0x04_000000, 0x10_000000, false);
+        DrawerHelper.drawGradientRect(g, x, y, w,  (float) h / 2, 0x10_000000, 0x04_000000, false);
+        DrawerHelper.drawGradientRect(g, x, y + (float) h / 2, w, (float) h / 2, 0x04_000000, 0x10_000000, false);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -1459,7 +1289,7 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             double phase = t * 0.00035 + i * (Math.PI / 3.0);
             int alpha = (int) ((Math.sin(phase) + 1.0) * 7);
             int col = (alpha << 24) | (MIST_HUE & 0xFFFFFF);
-            DrawerHelper.drawGradientRect(g, x, y + (i * h / 6), w, blobH, col, col & 0x00FFFFFF, false);
+            DrawerHelper.drawGradientRect(g, x, y + ((float) (i * h) / 6), w, blobH, col, col & 0x00FFFFFF, false);
         }
     }
 
@@ -1467,11 +1297,10 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
     private int borderColor() {
         if (!reactor.isFormed()) return 0x55_203040;
 
-        // Fixed: Pulling directly from the machine's synced field, converted to seconds
         int sec = reactor.meltdownTimerTicks / 20;
         if (sec > 0) return pulsingColor(0xBB_FF2222, 0xBB_FF8844, 0.012);
 
-        if (reactor.isScramActive()) return 0xAA_FF3333; // steady red, not pulsing - distinct from meltdown
+        if (reactor.isScramActive()) return 0xAA_FF3333;
 
         switch (activePanel) {
             case 1:
@@ -1486,7 +1315,6 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
                 return 0xAA_00E5CC;
         }
 
-        // Fixed: Using the corrected config mapping
         double pct = reactor.getHeat() / Math.max(1, reactor.getMaxSafeHeatHU());
         return pct > 0.85 ? 0xAA_FF6622 : 0xAA_00E5CC;
     }
@@ -1503,9 +1331,7 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
                 ((ag + (int) ((bg - ag) * f)) << 8) | (ab + (int) ((bb - ab) * f));
     }
 
-    // =========================================================================
-    // Shared meltdown screen — call instead of normal HUD when timer is active
-    // =========================================================================
+
     @OnlyIn(Dist.CLIENT)
     static void drawMeltdownScreen(GuiGraphics g, Font font,
                                    int x, int y, int W, int H,
@@ -1516,16 +1342,15 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
 
         double heat = machine.getHeat();
         double maxSafe = Math.max(1.0, machine.getMaxSafeHeatHU());
-        double heatPct = heat / maxSafe;           // >1.0 means over threshold
+        double heatPct = heat / maxSafe;
         double netRate = machine.lastHeatGainedPerTick - machine.lastHeatRemovedPerTick;
         boolean hasCoolant = machine.lastHasCoolant;
 
         long t = System.currentTimeMillis();
 
-        // ── Background ────────────────────────────────────────────────────────
         g.fill(x, y, x + W, y + H, 0xDD_1A0000);
-        DrawerHelper.drawGradientRect(g, x, y, W, H / 2, 0x22_FF0000, 0x00_FF0000, false);
-        DrawerHelper.drawGradientRect(g, x, y + H / 2, W, H / 2, 0x00_FF0000, 0x22_FF0000, false);
+        DrawerHelper.drawGradientRect(g, x, y, W, (float) H / 2, 0x22_FF0000, 0x00_FF0000, false);
+        DrawerHelper.drawGradientRect(g, x, y + (float) H / 2, W, (float) H / 2, 0x00_FF0000, 0x22_FF0000, false);
         for (int sy = y + 4; sy < y + H - 4; sy += 8)
             g.fill(x, sy, x + W, sy + 1, 0x08_FF2222);
 
@@ -1533,10 +1358,9 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         DrawerHelper.drawBorder(g, x, y, W, H, borderCol, 1);
         DrawerHelper.drawBorder(g, x + 2, y + 2, W - 4, H - 4, (borderCol & 0x00FFFFFF) | 0x44_000000, 1);
 
-        int cx = x + 5, cw = W - 10; // content indent
+        int bx = x + 5, barW = W - 10;
         int cy = y + 10;
 
-        // ── Header ────────────────────────────────────────────────────────────
         String header = scrammed ? "MELTDOWN  -  SCRAM ENGAGED" : "!! MELTDOWN IMMINENT !!";
         int headerCol = scrammed ? 0xFF_FFAA44 : lerpRGB(0xFF_FF2222, 0xFF_FF9966, (Math.sin(t * 0.010) + 1.0) * 0.5);
         int hw = font.width(header);
@@ -1544,52 +1368,48 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         g.drawString(font, header, hx + 1, cy + 1, 0x44_000000, false);
         g.drawString(font, header, hx, cy, headerCol, false);
         cy += font.lineHeight + 4;
-        g.fill(cx, cy, cx + cw, cy + 1, (borderCol & 0x00FFFFFF) | 0x88_000000);
+        g.fill(bx, cy, bx + barW, cy + 1, (borderCol & 0x00FFFFFF) | 0x88_000000);
         cy += 6;
 
-        // ── Core heat ─────────────────────────────────────────────────────────
-        // Bar covers 0→150% of safe threshold. Marker at 100% = safe limit.
         String heatLabel = "CORE HEAT";
         String heatVal = String.format(java.util.Locale.ROOT, "%.0f%% of safe", heatPct * 100);
         int heatValCol = heatPct > 1.5 ? lerpRGB(0xFF_FF2222, 0xFF_FF9966, (Math.sin(t * 0.010) + 1.0) * 0.5) :
                 heatPct > 1.0 ? 0xFF_FF6633 : 0xFF_FFAA44;
-        g.drawString(font, heatLabel, cx, cy, 0xFF_886655, false);
-        g.drawString(font, heatVal, cx + cw - font.width(heatVal), cy, heatValCol, false);
+        g.drawString(font, heatLabel, bx, cy, 0xFF_886655, false);
+        g.drawString(font, heatVal, bx + barW - font.width(heatVal), cy, heatValCol, false);
         cy += font.lineHeight + 2;
 
-        int hbarH = 6, hbarW = cw;
-        double heatBarScale = 1.5; // bar represents 0→150% of safe
-        int hfillW = (int) (Math.min(heatPct / heatBarScale, 1.0) * (hbarW - 2));
-        g.fill(cx, cy, cx + hbarW, cy + hbarH, 0x44_000000);
-        DrawerHelper.drawBorder(g, cx, cy, hbarW, hbarH, 0x55_FF3300, 1);
+        int hbarH = 6;
+        double heatBarScale = 1.5;
+        int hfillW = (int) (Math.min(heatPct / heatBarScale, 1.0) * (barW - 2));
+        g.fill(bx, cy, bx + barW, cy + hbarH, 0x44_000000);
+        DrawerHelper.drawBorder(g, bx, cy, barW, hbarH, 0x55_FF3300, 1);
         if (hfillW > 0) {
-            // Green→orange up to safe, orange→red above safe
-            int safeX = (int) ((1.0 / heatBarScale) * (hbarW - 2));
+            int safeX = (int) ((1.0 / heatBarScale) * (barW - 2));
             int f1 = Math.min(hfillW, safeX);
-            if (f1 > 0) DrawerHelper.drawGradientRect(g, cx + 1, cy + 1, f1, hbarH - 2, 0xFF_336633, 0xFF_886600, true);
+            if (f1 > 0) DrawerHelper.drawGradientRect(g, bx + 1, cy + 1, f1, hbarH - 2, 0xFF_336633, 0xFF_886600, true);
             if (hfillW > safeX)
-                DrawerHelper.drawGradientRect(g, cx + 1 + safeX, cy + 1, hfillW - safeX, hbarH - 2, 0xFF_CC4400,
+                DrawerHelper.drawGradientRect(g, bx + 1 + safeX, cy + 1, hfillW - safeX, hbarH - 2, 0xFF_CC4400,
                         0xFF_FF1100, true);
         }
-        // Safe-limit tick mark
-        int safeTick = cx + (int) ((1.0 / heatBarScale) * hbarW);
+
+        int safeTick = bx + (int) ((1.0 / heatBarScale) * barW);
         g.fill(safeTick, cy - 1, safeTick + 1, cy + hbarH + 1, 0xCC_FFFFFF);
         cy += hbarH + 2;
         g.drawString(font, "safe", safeTick - font.width("safe") / 2, cy, 0x55_FFFFFF, false);
         cy += font.lineHeight + 4;
-        g.fill(cx, cy, cx + cw, cy + 1, 0x33_FF2222);
+        g.fill(bx, cy, bx + barW, cy + 1, 0x33_FF2222);
         cy += 5;
 
-        // ── Countdown bar ─────────────────────────────────────────────────────
-        g.drawString(font, "COUNTDOWN", cx, cy, 0xFF_886655, false);
+        g.drawString(font, "COUNTDOWN", bx, cy, 0xFF_886655, false);
         String timeStr = scrammed ? String.format(java.util.Locale.ROOT, "%.1fs  PAUSED", timerTicks / 20.0) :
                 String.format(java.util.Locale.ROOT, "%.1fs remaining", timerTicks / 20.0);
-        g.drawString(font, timeStr, cx + cw - font.width(timeStr), cy,
+        g.drawString(font, timeStr, bx + barW - font.width(timeStr), cy,
                 scrammed ? 0xFF_FFAA44 : headerCol, false);
         cy += font.lineHeight + 2;
 
         double frac = timerMax > 0 ? timerTicks / (double) timerMax : 1.0;
-        int barH = 10, barW = cw, bx = cx;
+        int barH = 10;
         g.fill(bx, cy, bx + barW, cy + barH, 0x44_000000);
         DrawerHelper.drawBorder(g, bx, cy, barW, barH, 0x66_FF2222, 1);
         int fillW = (int) (frac * (barW - 2));
@@ -1609,28 +1429,25 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             }
         }
         cy += barH + 6;
-        g.fill(cx, cy, cx + cw, cy + 1, 0x33_FF2222);
+        g.fill(bx, cy, bx + barW, cy + 1, 0x33_FF2222);
         cy += 5;
 
-        // ── Live status ───────────────────────────────────────────────────────
-        // Net heat rate — is the situation getting better or worse?
         String netLabel = netRate > 0 ? String.format(java.util.Locale.ROOT, "+%.0f HU/t  (gaining heat)", netRate) :
                 String.format(java.util.Locale.ROOT, "%.0f HU/t  (cooling down)", netRate);
         int netCol = netRate > 0 ? lerpRGB(0xFF_FF4444, 0xFF_FF8844, (Math.sin(t * 0.008) + 1.0) * 0.5) : 0xFF_44DD88;
-        g.drawString(font, "Net rate", cx, cy, 0xFF_886655, false);
-        g.drawString(font, netLabel, cx + cw - font.width(netLabel), cy, netCol, false);
+        g.drawString(font, "Net rate", bx, cy, 0xFF_886655, false);
+        g.drawString(font, netLabel, bx + barW - font.width(netLabel), cy, netCol, false);
         cy += font.lineHeight + 3;
 
-        // Cooling status
-        g.drawString(font, "Coolant", cx, cy, 0xFF_886655, false);
+
+        g.drawString(font, "Coolant", bx, cy, 0xFF_886655, false);
         String coolStr = hasCoolant ? "OK" : "ABSENT";
         int coolCol = hasCoolant ? 0xFF_44CC88 : lerpRGB(0xFF_FF2222, 0xFF_FF9966, (Math.sin(t * 0.014) + 1.0) * 0.5);
-        g.drawString(font, coolStr, cx + cw - font.width(coolStr), cy, coolCol, false);
+        g.drawString(font, coolStr, bx + barW - font.width(coolStr), cy, coolCol, false);
         cy += font.lineHeight + 5;
-        g.fill(cx, cy, cx + cw, cy + 1, 0x33_FF2222);
+        g.fill(bx, cy, bx + barW, cy + 1, 0x33_FF2222);
         cy += 5;
 
-        // ── Bottom guidance ───────────────────────────────────────────────────
         if (scrammed) {
             String s1 = "SCRAM has paused the countdown.";
             String s2 = "Cool the core below critical threshold.";

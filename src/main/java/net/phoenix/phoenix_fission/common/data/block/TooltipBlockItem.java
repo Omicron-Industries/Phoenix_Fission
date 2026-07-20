@@ -9,6 +9,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -25,8 +26,7 @@ public class TooltipBlockItem extends BlockItem {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
-        // Logic: Keep adding lines as long as the translation key exists
+    public void appendHoverText(@NotNull ItemStack stack, @Nullable Level level, @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
         int i = 0;
         while (true) {
             String lineKey = baseTooltipKey + "." + i;
@@ -34,7 +34,6 @@ public class TooltipBlockItem extends BlockItem {
                 tooltip.add(Component.translatable(lineKey).withStyle(styles));
                 i++;
             } else {
-                // If line.0 doesn't exist, check if the base key itself exists (fallback for single lines)
                 if (i == 0 && I18n.exists(baseTooltipKey)) {
                     tooltip.add(Component.translatable(baseTooltipKey).withStyle(styles));
                 }

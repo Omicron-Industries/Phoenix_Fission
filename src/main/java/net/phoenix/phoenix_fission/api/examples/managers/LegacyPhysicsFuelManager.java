@@ -1,5 +1,9 @@
 package net.phoenix.phoenix_fission.api.examples.managers;
 
+import com.gregtechceu.gtceu.api.capability.recipe.IO;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.phoenix.phoenix_fission.api.block.IFissionFuelRodType;
 import net.phoenix.phoenix_fission.api.block.IFissionModeratorType;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.FissionWorkableElectricMultiblockMachine;
@@ -80,7 +84,6 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
     /** Whether fuel consumption scales with computed parallels. */
     private final boolean fuelScalesWithParallels;
 
-    // -------------------------------------------------------------------------
 
     /** All-defaults constructor. Mirrors the old PhoenixConfigs defaults. */
     public LegacyPhysicsFuelManager(FissionWorkableElectricMultiblockMachine machine) {
@@ -97,9 +100,6 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
         this.fuelScalesWithParallels = fuelScalesWithParallels;
     }
 
-    // =========================================================================
-    // Parallel scaling
-    // =========================================================================
 
     /**
      * Old formula:
@@ -128,9 +128,7 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
         machine.lastParallels = Math.max(1, Math.min(total, cfg.maxParallels));
     }
 
-    // =========================================================================
-    // Heat production
-    // =========================================================================
+
 
     /**
      * Old formula replaces the whole tick-heat method because the structure is
@@ -163,9 +161,7 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
         return (baseHeatPerTick + totalRodHeat * moderatorMult) * parallels * burnMult * reactivity;
     }
 
-    // =========================================================================
-    // Fuel consumption
-    // =========================================================================
+
 
     /**
      * Old fuel consumption uses the primary fuel rod type only, with optional
@@ -179,7 +175,6 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
         var comp = machine.getComponentManager();
         if (comp.getActiveFuelRods().isEmpty() || machine.getReactivityFactor() <= 0.0) return;
 
-        // Old model: consume from a single representative fuel type (most common)
         IFissionFuelRodType fuelType = comp.getPrimaryFuelRodType();
         if (fuelType == null) fuelType = comp.getActiveFuelRods().get(0);
 
@@ -208,14 +203,13 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
         String itemIn = fuelType.getFuelKey();
         if (itemIn.isEmpty()) return;
 
-        net.minecraft.resources.ResourceLocation inRl = net.minecraft.resources.ResourceLocation.tryParse(itemIn);
-        if (inRl == null || !net.minecraftforge.registries.ForgeRegistries.ITEMS.containsKey(inRl)) return;
+       ResourceLocation inRl = ResourceLocation.tryParse(itemIn);
+        if (inRl == null || !ForgeRegistries.ITEMS.containsKey(inRl)) return;
 
-        net.minecraft.world.item.ItemStack inStack = new net.minecraft.world.item.ItemStack(
-                net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(inRl), toConsume);
+        ItemStack inStack = new ItemStack(
+                ForgeRegistries.ITEMS.getValue(inRl), toConsume);
 
-        if (!machine.executeItemIO(inStack, com.gregtechceu.gtceu.api.capability.recipe.IO.IN, false)) {
-            // No fuel left -- push heat past safe threshold to trigger meltdown
+        if (!machine.executeItemIO(inStack, IO.IN, false)) {
             machine.setHeat(Math.max(machine.getHeat(),
                     machine.getMaxSafeHeatHU() + 1.0));
             return;
@@ -223,19 +217,18 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
 
         String itemOut = fuelType.getOutputKey();
         if (!itemOut.isEmpty() && !"none".equalsIgnoreCase(itemOut) && !itemOut.equalsIgnoreCase(itemIn)) {
-            net.minecraft.resources.ResourceLocation outRl = net.minecraft.resources.ResourceLocation.tryParse(itemOut);
-            if (outRl != null && net.minecraftforge.registries.ForgeRegistries.ITEMS.containsKey(outRl)) {
+            ResourceLocation outRl = ResourceLocation.tryParse(itemOut);
+            if (outRl != null && ForgeRegistries.ITEMS.containsKey(outRl)) {
                 machine.executeItemIO(
-                        new net.minecraft.world.item.ItemStack(
-                                net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(outRl), toConsume),
-                        com.gregtechceu.gtceu.api.capability.recipe.IO.OUT);
+                        new ItemStack(
+                                ForgeRegistries.ITEMS.getValue(outRl), toConsume),
+                        IO.OUT);
             }
         }
     }
 
-    // =========================================================================
-    // Power generation
-    // =========================================================================
+
+
 
     /**
      * Adds burn bonus on top of the standard power curve, mirroring old behavior
@@ -250,9 +243,7 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
         return base * computeBurnMultiplier();
     }
 
-    // =========================================================================
-    // Disabled thermal scalars (no runaway in legacy model)
-    // =========================================================================
+
 
     @Override
     protected double computeHeatThermalScalar(double heat, double maxSafeHeat) {
@@ -264,9 +255,7 @@ public class LegacyPhysicsFuelManager extends FissionFuelManager {
         return 1.0;
     }
 
-    // =========================================================================
-    // Internal helpers
-    // =========================================================================
+
 
     /**
      * Ramps from 1.0 to 1 + (burnBonusMaxPercent/100) over burnBonusRampSeconds

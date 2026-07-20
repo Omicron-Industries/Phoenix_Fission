@@ -9,6 +9,7 @@ import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
 import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
 import com.lowdragmc.lowdraglib.gui.util.DrawerHelper;
+import com.lowdragmc.lowdraglib.gui.widget.DraggableScrollableWidgetGroup;
 import com.lowdragmc.lowdraglib.gui.widget.Widget;
 import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 
@@ -17,22 +18,18 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.Style;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.phoenix.phoenix_fission.common.data.multiblock.fission.FissionWorkableElectricMultiblockMachine;
 import net.phoenix.phoenix_fission.configs.PhoenixFissionConfigs;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import javax.annotation.Nonnull;
 
-/**
- * Sidebar page that shows a static reference for every formula the reactor uses
- * internally, with the current config values substituted in so players can
- * understand the math at a glance without reading source code.
- */
+
 public class FissionMathPage implements IFancyUIProvider {
 
     private final FissionWorkableElectricMultiblockMachine reactor;
@@ -55,7 +52,7 @@ public class FissionMathPage implements IFancyUIProvider {
 
     @Override
     public boolean hasPlayerInventory() {
-        return false; // Tells the container layout to omit player inventory slots
+        return false;
     }
 
     @Override
@@ -63,31 +60,23 @@ public class FissionMathPage implements IFancyUIProvider {
         int w = widget.getPageContainer().getSize().width;
         int h = widget.getPageContainer().getSize().height;
 
-        // 1. Establish how much canvas space you need vertically for text rendering
         int targetTextHeight = 420;
 
-        // 2. Instantiate the scrolling group matching the view pane bounds (w, h)
-        com.lowdragmc.lowdraglib.gui.widget.DraggableScrollableWidgetGroup scrollPane = new com.lowdragmc.lowdraglib.gui.widget.DraggableScrollableWidgetGroup(
+        DraggableScrollableWidgetGroup scrollPane = new DraggableScrollableWidgetGroup(
                 0, 0, w, h);
 
-        // 3. Make it strictly vertical by disabling horizontal wheel adjustments
-        scrollPane.setScrollWheelDirection(
-                com.lowdragmc.lowdraglib.gui.widget.DraggableScrollableWidgetGroup.ScrollWheelDirection.VERTICAL);
+        scrollPane.setScrollWheelDirection(DraggableScrollableWidgetGroup.ScrollWheelDirection.VERTICAL);
 
-        // 4. Set up scrollbar thickness
         scrollPane.setYScrollBarWidth(4);
 
-        // 5. Build your math presentation widget inside the pane.
-        // We pass w - 10 so the right border leaves room for the scrollbar gutter
         MathWidget mathWidget = new MathWidget(reactor, w - 10, targetTextHeight);
 
-        // 6. Bind it all together
+
         scrollPane.addWidget(mathWidget);
 
         return scrollPane;
     }
 
-    // ── Inner draw widget ─────────────────────────────────────────────────────
     private static final class MathWidget extends WidgetGroup {
 
         private final FissionWorkableElectricMultiblockMachine reactor;
@@ -102,7 +91,6 @@ public class FissionMathPage implements IFancyUIProvider {
         private static final int C_ORANGE = 0xFF_FF8833;
         private static final int C_RED = 0xFF_FF3333;
         private static final int C_GREEN = 0xFF_33FF88;
-        private static final int C_BLUE = 0xFF_44AAFF;
         private static final int A_FUEL = 0xFF_FF7744;
         private static final int A_COOL = 0xFF_44AAFF;
 
@@ -128,7 +116,6 @@ public class FissionMathPage implements IFancyUIProvider {
             Font font = Minecraft.getInstance().font;
             var fcfg = PhoenixFissionConfigs.INSTANCE.fission;
 
-            // ── HEAT GAIN ────────────────────────────────────────────────────
             y = section(g, font, x, y, W, "HEAT GAIN / TICK", A_FUEL);
 
             y = formula(g, font, x, y, W,
@@ -137,7 +124,6 @@ public class FissionMathPage implements IFancyUIProvider {
             y = note(g, font, x, y, W, "Live: " + fmt1(reactor.lastHeatGainedPerTick) + " HU/t");
             y += 3;
 
-            // ── COOLING ──────────────────────────────────────────────────────
             y = section(g, font, x, y, W, "COOLING / TICK", A_COOL);
 
             double cond = fcfg.heatModel.activeCoolingConductivity;
@@ -147,7 +133,6 @@ public class FissionMathPage implements IFancyUIProvider {
             y = note(g, font, x, y, W, "Live: " + fmt1(reactor.lastHeatRemovedPerTick) + " HU/t removed");
             y += 3;
 
-            // ── HEAT MODEL ───────────────────────────────────────────────────
             y = section(g, font, x, y, W, "HEAT BOUNDS", C_CYAN);
 
             double maxSafe = reactor.getMaxSafeHeatHU();
@@ -161,7 +146,6 @@ public class FissionMathPage implements IFancyUIProvider {
             y = kv(g, font, x, y, W, "Current", hpStr + " of safe max", hpCol);
             y += 3;
 
-            // ── MELTDOWN GRACE ───────────────────────────────────────────────
             y = section(g, font, x, y, W, "MELTDOWN GRACE", C_RED);
 
             double base = fcfg.meltdown.baseGraceSeconds;
@@ -187,20 +171,17 @@ public class FissionMathPage implements IFancyUIProvider {
             }
             y += 3;
 
-            // ── EU OUTPUT (only if enabled) ───────────────────────────────────
             if (fcfg.enableDirectEUOutput) {
                 y = section(g, font, x, y, W, "EU OUTPUT", C_GOLD);
                 y = formula(g, font, x, y, W,
                         "EU/t = heatHU * euConversion * (1 + boost%)",
                         "fuel cost * (1 - discount%)");
 
-                // Fixed: Formatting utilizing GregTech's utility handler
                 String formattedEU = FormattingUtil.formatNumbers(reactor.lastGeneratedEUt);
                 y = note(g, font, x, y, W, "Live: " + formattedEU + " EU/t");
                 y += 3;
             }
 
-            // ── HEAT EXCHANGER MULTIPLIER ────────────────────────────────────
             y = section(g, font, x, y, W, "HEAT EXCHANGER", C_TEAL);
 
             y = formula(g, font, x, y, W,
@@ -209,15 +190,13 @@ public class FissionMathPage implements IFancyUIProvider {
             y = note(g, font, x, y, W, "len = number of gearbox casing layers");
             y += 3;
 
-            // ── PARALLELS ────────────────────────────────────────────────────
             y = section(g, font, x, y, W, "PARALLELS", C_GOLD);
             y = formula(g, font, x, y, W,
                     "parallels = base + sum(modParBonus)",
                     "heat/tick scales * parallels");
-            y = note(g, font, x, y, W, "Live: x" + reactor.lastParallels);
+            note(g, font, x, y, W, "Live: x" + reactor.lastParallels);
         }
 
-        // ── Layout helpers ────────────────────────────────────────────────
 
         private static int section(GuiGraphics g, Font font, int x, int y, int W,
                                    String title, int accent) {
@@ -233,10 +212,8 @@ public class FissionMathPage implements IFancyUIProvider {
             var splitter = font.getSplitter();
             for (String line : lines) {
                 List<FormattedText> wrappedLines = new java.util.ArrayList<>();
-                splitter.splitLines(Component.literal(line), W - 4, net.minecraft.network.chat.Style.EMPTY,
-                        (formattedText, bo) -> {
-                            wrappedLines.add(formattedText);
-                        });
+                splitter.splitLines(Component.literal(line), W - 4, Style.EMPTY,
+                        (formattedText, bo) -> wrappedLines.add(formattedText));
 
                 for (FormattedText subLine : wrappedLines) {
                     g.drawString(font, subLine.getString(), x + 2, y, C_WHITE, false);
@@ -250,10 +227,8 @@ public class FissionMathPage implements IFancyUIProvider {
                                 String text) {
             var splitter = font.getSplitter();
             List<FormattedText> wrappedLines = new java.util.ArrayList<>();
-            splitter.splitLines(Component.literal(text), W - 4, net.minecraft.network.chat.Style.EMPTY,
-                    (formattedText, bo) -> {
-                        wrappedLines.add(formattedText);
-                    });
+            splitter.splitLines(Component.literal(text), W - 4, Style.EMPTY,
+                    (formattedText, bo) -> wrappedLines.add(formattedText));
 
             for (FormattedText subLine : wrappedLines) {
                 g.drawString(font, subLine.getString(), x + 2, y, C_DIM, false);

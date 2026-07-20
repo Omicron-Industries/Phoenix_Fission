@@ -15,12 +15,6 @@ public interface PhoenixRecipeSchema {
 
     }
 
-    /**
-     * Adds shield health damage (positive number) or repair (negative number)
-     * to be applied after the recipe runs.
-     */
-    public
-
     RecipeSchema SCHEMA = new RecipeSchema(PhoenixRecipeJS.class, PhoenixRecipeJS::new,
             DURATION, DATA, CONDITIONS,
             ALL_INPUTS, ALL_TICK_INPUTS, ALL_OUTPUTS, ALL_TICK_OUTPUTS,

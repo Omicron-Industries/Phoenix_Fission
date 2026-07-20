@@ -20,13 +20,11 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
 
     private final HeatExchangerMachine machine;
 
-    // ── Palette (matches fission reactor theme) ───────────────────────────────
     private static final int BG_TOP = 0xFF04090F;
     private static final int BG_BOT = 0xFF010508;
     private static final int GRID_COL = 0x07_00E5CC;
     private static final int MIST_HUE = 0x0080B8D0;
 
-    private static final int C_CYAN = 0xFF_00E5CC;
     private static final int C_TEAL = 0xFF_00AAA0;
     private static final int C_DIM = 0xFF_3A5E6A;
     private static final int C_MID = 0xFF_6A9BAA;
@@ -38,10 +36,10 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
     private static final int C_BLUE = 0xFF_44AAFF;
     private static final int C_ICE = 0xFF_AADDFF;
 
-    // Cryo-boost accent colour
+
     private static final int C_CRYO = 0xFF_55DDFF;
 
-    private static final int COOLDOWN_MAX = 600; // ticks before machine cools down
+    private static final int COOLDOWN_MAX = 600;
 
     public HeatExchangerFancyUIWidget(IFancyUIProvider provider, int width, int height) {
         super(provider, width, height);
@@ -55,7 +53,6 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
         FissionReactorFancyUIWidget.applyTheme(sideTabsWidget);
     }
 
-    // ── Root draw ─────────────────────────────────────────────────────────────
     @Override
     @OnlyIn(Dist.CLIENT)
     public void drawInBackground(@Nonnull GuiGraphics g, int mouseX, int mouseY, float dt) {
@@ -85,44 +82,38 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
         int pw = page.getSize().width, ph = page.getSize().height;
 
         g.enableScissor(px - 2, py - 2, px + pw + 2, py + ph + 2);
-        drawHUD(g, px + 6, py + 5, pw - 12, ph - 8);
+        drawHUD(g, px + 6, py + 5, pw - 12);
         g.disableScissor();
     }
 
-    // ── Main HUD ──────────────────────────────────────────────────────────────
     @OnlyIn(Dist.CLIENT)
-    private void drawHUD(GuiGraphics g, int x, int y, int W, int H) {
+    private void drawHUD(GuiGraphics g, int x, int y, int W) {
         Font font = Minecraft.getInstance().font;
         boolean formed = machine.isFormed();
         boolean working = formed && machine.getRecipeLogic().isWorking();
         boolean burnt = formed && machine.getCooldownTicks() > 0;
         boolean helium = formed && machine.isHeliumActive();
 
-        // ── Header ──
         y = drawHeader(g, font, x, y, W, formed, working, burnt, helium);
         if (!formed) {
             g.drawString(font, "Structure not complete", x + 4, y + 6, C_DIM, false);
             return;
         }
 
-        // ── Core heat bar ──
+
         y = drawHeatBar(g, font, x, y, W, burnt);
 
-        // ── Cooldown bar (only when burnt out) ──
         if (burnt) {
             y = drawCooldownBar(g, font, x, y, W);
         }
 
-        // ── Exchange configuration ──
         y = drawExchangeStats(g, font, x, y, W, helium);
 
-        // ── Coolant status ──
-        drawCoolantStatus(g, font, x, y, W, working, helium);
+
+        drawCoolantStatus(g, font, x, y, working, helium);
     }
 
-    // ── Header ───────────────────────────────────────────────────────────────
-    // We don't draw the machine name here — the FancyMachineUIWidget already
-    // renders it as its own title. We just draw the status badge and dot.
+
     @OnlyIn(Dist.CLIENT)
     private int drawHeader(GuiGraphics g, Font font, int x, int y, int W,
                            boolean formed, boolean working, boolean burnt, boolean helium) {
@@ -154,7 +145,6 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
         }
         g.drawString(font, badge, bx + 4, by + 1, badgeColor, false);
 
-        // Status dot only — no title text
         int dotColor = !formed ? C_DIM : burnt ? pulsingColor(C_RED, 0xFF_FF8844, 0.012) : helium ?
                 pulsingColor(C_CRYO, C_ICE, 0.006) : working ? pulsingColor(C_GREEN, 0xFF_AAFFCC, 0.006) : C_GOLD;
         g.fill(x, y + 2, x + 5, y + 7, dotColor);
@@ -165,7 +155,6 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
         return y + 5;
     }
 
-    // ── Core heat bar (0–100) ────────────────────────────────────────────────
     @OnlyIn(Dist.CLIENT)
     private int drawHeatBar(GuiGraphics g, Font font, int x, int y, int W, boolean burnt) {
         int heat = machine.getHeat();
@@ -188,7 +177,6 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
             if (fillW > half)
                 DrawerHelper.drawGradientRect(g, x + half, y, fillW - half, barH, C_GOLD, C_RED, true);
         }
-        // Shimmer when hot
         if (pct > 0.5 && fillW > 0) {
             long t = System.currentTimeMillis();
             int sw = 14;
@@ -200,7 +188,6 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
                 DrawerHelper.drawGradientRect(g, mid, y, sx2 - mid, barH, 0x33_FFFFFF, 0x00_FFFFFF, true);
             }
         }
-        // Danger marker at 75%
         int dangerX = x + (int) (0.75 * W);
         g.fill(dangerX, y - 1, dangerX + 1, y + barH + 1, 0xAA_FFFFFF);
         y += barH + 2;
@@ -211,7 +198,6 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-    // ── Cooldown progress bar ────────────────────────────────────────────────
     @OnlyIn(Dist.CLIENT)
     private int drawCooldownBar(GuiGraphics g, Font font, int x, int y, int W) {
         int ticks = machine.getCooldownTicks();
@@ -238,7 +224,6 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-    // ── Exchange stats ───────────────────────────────────────────────────────
     @OnlyIn(Dist.CLIENT)
     private int drawExchangeStats(GuiGraphics g, Font font, int x, int y, int W, boolean helium) {
         int len = machine.getLength();
@@ -252,21 +237,19 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
         g.drawString(font, "EXCHANGE STATS", x, y, C_MID, false);
         y += 11;
 
-        // Columns
         y = statRow(g, font, x, y, W, "Columns", len + " layers",
                 len > 3 ? C_GREEN : len > 1 ? C_GOLD : C_WHITE);
 
-        // EU multiplier
+
         String euStr = String.format(java.util.Locale.ROOT, "x%.2f", euMulti) + (helium ? "  (cryo)" : "");
         y = statRow(g, font, x, y, W, "EU multiplier", euStr,
                 helium ? C_CRYO : euMulti > 2.0 ? C_GREEN : C_MID);
 
-        // Throughput (fluid per second)
+
         String throughputStr = helium ? heliumMb + " mB/s helium  +  " + waterMb + " mB/s water" :
                 waterMb + " mB/s water";
         y = statRow(g, font, x, y, W, "Throughput", throughputStr, C_BLUE);
 
-        // Max EU output from dynamos
         long maxOut = machine.getMaxHatchOutput();
         String outStr = maxOut > 0 ? GTValues.VNF[machine.getDynamoTier()] + "  (" + formatEU(maxOut) + ")" :
                 "No dynamo hatches";
@@ -276,9 +259,8 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-    // ── Coolant status line ───────────────────────────────────────────────────
     @OnlyIn(Dist.CLIENT)
-    private void drawCoolantStatus(GuiGraphics g, Font font, int x, int y, int W,
+    private void drawCoolantStatus(GuiGraphics g, Font font, int x, int y,
                                    boolean working, boolean helium) {
         if (!working) {
             g.fill(x, y + 2, x + 5, y + 7, C_DIM);
@@ -294,7 +276,6 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
         }
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
     @OnlyIn(Dist.CLIENT)
     private static int statRow(GuiGraphics g, Font font, int x, int y, int W,
                                String label, String value, int valueColor) {
@@ -335,7 +316,6 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
                 ((ag + (int) ((bg - ag) * f)) << 8) | (ab + (int) ((bb - ab) * f));
     }
 
-    // ── Atmosphere ────────────────────────────────────────────────────────────
     @OnlyIn(Dist.CLIENT)
     private void drawGrid(GuiGraphics g, int x, int y, int w, int h) {
         for (int gx = x + 18; gx < x + w; gx += 18) g.fill(gx, y, gx + 1, y + h, GRID_COL);
@@ -344,21 +324,20 @@ public class HeatExchangerFancyUIWidget extends FancyMachineUIWidget {
 
     @OnlyIn(Dist.CLIENT)
     private void drawScanlines(GuiGraphics g, int x, int y, int w, int h) {
-        DrawerHelper.drawGradientRect(g, x, y, w, h / 2, 0x10_000000, 0x04_000000, false);
-        DrawerHelper.drawGradientRect(g, x, y + h / 2, w, h / 2, 0x04_000000, 0x10_000000, false);
+        DrawerHelper.drawGradientRect(g, x, y, w, (float) h / 2, 0x10_000000, 0x04_000000, false);
+        DrawerHelper.drawGradientRect(g, x, y + (float) h / 2, w, (float) h / 2, 0x04_000000, 0x10_000000, false);
     }
 
     @OnlyIn(Dist.CLIENT)
     private void drawMist(GuiGraphics g, int x, int y, int w, int h) {
         long t = System.currentTimeMillis();
         int blobH = h / 3;
-        // When cryo-boost active, tint the mist blue
         int hue = machine.isHeliumActive() ? 0x0055AAFF : (MIST_HUE & 0xFFFFFF);
         for (int i = 0; i < 6; i++) {
             double phase = t * 0.00035 + i * (Math.PI / 3.0);
             int alpha = (int) ((Math.sin(phase) + 1.0) * 7);
             int col = (alpha << 24) | hue;
-            DrawerHelper.drawGradientRect(g, x, y + (i * h / 6), w, blobH, col, col & 0x00FFFFFF, false);
+            DrawerHelper.drawGradientRect(g, x, y + ((float) (i * h) / 6), w, blobH, col, col & 0x00FFFFFF, false);
         }
     }
 }

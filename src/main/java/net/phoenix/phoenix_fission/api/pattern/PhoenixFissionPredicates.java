@@ -36,7 +36,6 @@ public class PhoenixFissionPredicates {
         return new TraceabilityPredicate(blockWorldState -> {
             var blockState = blockWorldState.getBlockState();
 
-            // Check from screenshot: allow empty component if registry map is empty
             var emptyBlock = safeGet(PhoenixFissionBlocks.EMPTY_REACTOR_COMPONENT);
             if (PhoenixAPI.FISSION_COOLERS.isEmpty() && emptyBlock != null && blockState.is(emptyBlock)) {
                 return true;
@@ -69,7 +68,6 @@ public class PhoenixFissionPredicates {
         return new TraceabilityPredicate(blockWorldState -> {
             var blockState = blockWorldState.getBlockState();
 
-            // Allow empty component if registry map is empty
             var emptyBlock = safeGet(PhoenixFissionBlocks.EMPTY_REACTOR_COMPONENT);
             if (PhoenixAPI.FISSION_BLANKETS.isEmpty() && emptyBlock != null && blockState.is(emptyBlock)) {
                 return true;
@@ -102,7 +100,6 @@ public class PhoenixFissionPredicates {
         return new TraceabilityPredicate(blockWorldState -> {
             var blockState = blockWorldState.getBlockState();
 
-            // Allow empty component if registry map is empty
             var emptyBlock = safeGet(PhoenixFissionBlocks.EMPTY_REACTOR_COMPONENT);
             if (PhoenixAPI.FISSION_FUEL_RODS.isEmpty() && emptyBlock != null && blockState.is(emptyBlock)) {
                 return true;
@@ -135,7 +132,6 @@ public class PhoenixFissionPredicates {
         return new TraceabilityPredicate(blockWorldState -> {
             var blockState = blockWorldState.getBlockState();
 
-            // Allow empty component if registry map is empty
             var emptyBlock = safeGet(PhoenixFissionBlocks.EMPTY_REACTOR_COMPONENT);
             if (PhoenixAPI.FISSION_MODERATORS.isEmpty() && emptyBlock != null && blockState.is(emptyBlock)) {
                 return true;
@@ -168,7 +164,6 @@ public class PhoenixFissionPredicates {
         return new TraceabilityPredicate(blockWorldState -> {
             var blockState = blockWorldState.getBlockState();
 
-            // Allow empty component if registry map is empty
             var emptyBlock = safeGet(PhoenixFissionBlocks.EMPTY_REACTOR_COMPONENT);
             if (PhoenixAPI.MSR_LINERS.isEmpty() && emptyBlock != null && blockState.is(emptyBlock)) {
                 return true;

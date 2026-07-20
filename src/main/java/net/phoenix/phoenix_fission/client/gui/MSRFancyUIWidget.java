@@ -20,25 +20,17 @@ import javax.annotation.Nonnull;
 public class MSRFancyUIWidget extends FancyMachineUIWidget {
 
     private final MoltenSaltReactorMultiblockMachine msr;
-
-    // ── Palette ───────────────────────────────────────────────────────────────
     private static final int BG_TOP = 0xFF_040A0F;
     private static final int BG_BOT = 0xFF_020508;
-    private static final int GRID_COL = 0x07_FFC844; // amber grid
+    private static final int GRID_COL = 0x07_FFC844;
 
-    // Salt / structural
     private static final int C_SALT = 0xFF_FFC844;
     private static final int C_AMBER = 0xFF_CC8800;
     private static final int C_AMBER_D = 0xFF_664400;
-    // Xenon / chemistry
     private static final int C_XENON = 0xFF_BB44FF;
-    private static final int C_XDIM = 0xFF_660088;
-    // Shared structural
     private static final int C_CYAN = 0xFF_00E5CC;
-    private static final int C_TEAL = 0xFF_00AAA0;
     private static final int C_DIM = 0xFF_3A5E6A;
     private static final int C_MID = 0xFF_6A9BAA;
-    private static final int C_WHITE = 0xFF_DCF0F4;
     private static final int C_GREEN = 0xFF_33FF88;
     private static final int C_RED = 0xFF_FF3333;
     private static final int C_ORANGE = 0xFF_FF8833;
@@ -56,8 +48,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         FissionReactorFancyUIWidget.applyTheme(sideTabsWidget);
         FissionReactorFancyUIWidget.applySlotTheme(this);
     }
-
-    // ── Root draw ─────────────────────────────────────────────────────────────
 
     @Override
     @OnlyIn(Dist.CLIENT)
@@ -79,7 +69,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         DrawerHelper.drawBorder(g, x + 2, y + 2, w - 4, h - 4, 0x22_FFC844, 1);
     }
 
-    // ── Title bar override ────────────────────────────────────────────────────
 
     @OnlyIn(Dist.CLIENT)
     private void drawTitleBar(GuiGraphics g, int x, int y, int w) {
@@ -98,7 +87,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         g.fill(x, contentY - 1, x + w, contentY, 0x44_FFC844);
     }
 
-    // ── HUD ───────────────────────────────────────────────────────────────────
 
     @OnlyIn(Dist.CLIENT)
     private void drawHudIfHome(GuiGraphics g) {
@@ -114,13 +102,13 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
             FissionReactorFancyUIWidget.drawMeltdownScreen(
                     g, Minecraft.getInstance().font, px, py, pw, ph, msr);
         } else {
-            drawHUD(g, px + 6, py + 5, pw - 12, ph - 8);
+            drawHUD(g, px + 6, py + 5, pw - 12);
         }
         g.disableScissor();
     }
 
     @OnlyIn(Dist.CLIENT)
-    private void drawHUD(GuiGraphics g, int x, int y, int W, int H) {
+    private void drawHUD(GuiGraphics g, int x, int y, int W) {
         Font font = Minecraft.getInstance().font;
         boolean formed = msr.isFormed();
         boolean working = formed && msr.getRecipeLogic().isWorking();
@@ -135,10 +123,9 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         y = drawCoreHeat(g, font, x, y, W);
         y = drawXenonBar(g, font, x, y, W);
         y = drawSaltLoop(g, font, x, y, W);
-        drawChemistryStatus(g, font, x, y, W);
+        drawChemistryStatus(g, font, x, y);
     }
 
-    // ── Status header ─────────────────────────────────────────────────────────
 
     @OnlyIn(Dist.CLIENT)
     private int drawStatusHeader(GuiGraphics g, Font font, int x, int y, int W,
@@ -175,14 +162,13 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         return y + 5;
     }
 
-    // ── Core heat + thermal efficiency ───────────────────────────────────────
 
     @OnlyIn(Dist.CLIENT)
     private int drawCoreHeat(GuiGraphics g, Font font, int x, int y, int W) {
         double maxSafe = msr.getMaxSafeHeatHU();
         double heat = msr.getHeat();
         double heatPct = maxSafe > 0 ? heat / maxSafe : 0.0;
-        double eff = 0.5 + Math.pow(heatPct, 2.0) * 2.0; // 50% → 250%
+        double eff = 0.5 + Math.pow(heatPct, 2.0) * 2.0;
 
         String effStr = String.format(Locale.ROOT, "Eff: %.0f%%", eff * 100.0);
         int effColor = eff >= 2.0 ? C_GREEN : eff >= 1.0 ? C_SALT : C_AMBER;
@@ -191,7 +177,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         g.drawString(font, effStr, x + W - font.width(effStr), y, effColor, false);
         y += 10;
 
-        // Heat bar (amber → orange gradient)
         int barH = 7, fillW = (int) (heatPct * W);
         g.fill(x, y, x + W, y + barH, 0x22_FFFFFF);
         if (fillW > 0) {
@@ -202,7 +187,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
                 DrawerHelper.drawGradientRect(g, x + half, y, fillW - half, barH,
                         C_AMBER, C_RED, true);
         }
-        // Shimmer when hot
         if (heatPct > 0.4 && fillW > 0) {
             long t = System.currentTimeMillis();
             int sw = 14;
@@ -214,7 +198,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
                 DrawerHelper.drawGradientRect(g, mid, y, sx2 - mid, barH, 0x33_FFFFFF, 0x00_FFFFFF, true);
             }
         }
-        // Safe marker at 100% (this bar goes to maxSafe so the full bar IS safe)
         y += barH + 2;
 
         String heatStr = String.format(Locale.ROOT, "%.0f / %.0f HU", heat, maxSafe);
@@ -225,13 +208,12 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-    // ── Xenon poison bar ─────────────────────────────────────────────────────
 
     @OnlyIn(Dist.CLIENT)
     private int drawXenonBar(GuiGraphics g, Font font, int x, int y, int W) {
-        double xenon = msr.xenonPoisonLevel;        // 0.0 – 0.50
+        double xenon = msr.xenonPoisonLevel;
         double xenonPct = xenon * 100.0;
-        double barFrac = xenon / 0.50;               // fraction of bar to fill
+        double barFrac = xenon / 0.50;
         int fillW = (int) (barFrac * W);
 
         int xenonColor = xenon < 0.05 ? C_GREEN : xenon < 0.20 ? C_SALT : xenon < 0.35 ? C_ORANGE : C_XENON;
@@ -241,32 +223,26 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         g.drawString(font, xenonStr, x + W - font.width(xenonStr), y, xenonColor, false);
         y += 10;
 
-        // Three-segment colour gradient: green → amber → purple
         int barH = 6;
         g.fill(x, y, x + W, y + barH, 0x22_FFFFFF);
         if (fillW > 0) {
-            int seg1 = W / 10;      // 0-5% = green zone
-            int seg2 = W * 7 / 10;  // 5-40% = amber zone
-            // segment 1: green (clean zone)
+            int seg1 = W / 10;
+            int seg2 = W * 7 / 10;
             int f1 = Math.min(fillW, seg1);
             if (f1 > 0) DrawerHelper.drawGradientRect(g, x, y, f1, barH, C_GREEN, C_SALT, true);
-            // segment 2: amber to orange
             if (fillW > seg1) {
                 int f2 = Math.min(fillW - seg1, seg2);
                 DrawerHelper.drawGradientRect(g, x + seg1, y, f2, barH, C_SALT, C_ORANGE, true);
             }
-            // segment 3: orange to purple
             if (fillW > seg1 + seg2) {
                 int f3 = fillW - seg1 - seg2;
                 DrawerHelper.drawGradientRect(g, x + seg1 + seg2, y, f3, barH, C_ORANGE, C_XENON, true);
             }
         }
-        // 35% danger line
         int dangerX = x + (int) (0.70 * W);
         g.fill(dangerX, y - 1, dangerX + 1, y + barH + 1, 0x88_FFFFFF);
         y += barH + 2;
 
-        // Status pills
         boolean purgeOk = msr.lastXenonPurgeSucceeded;
         boolean cleanCore = xenon < 0.05 && msr.lastGeneratedEUt > 0;
 
@@ -281,7 +257,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-    // ── Salt loop info ────────────────────────────────────────────────────────
 
     @OnlyIn(Dist.CLIENT)
     private int drawSaltLoop(GuiGraphics g, Font font, int x, int y, int W) {
@@ -309,10 +284,9 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         return y + 4;
     }
 
-    // ── Chemistry bonuses ─────────────────────────────────────────────────────
 
     @OnlyIn(Dist.CLIENT)
-    private void drawChemistryStatus(GuiGraphics g, Font font, int x, int y, int W) {
+    private void drawChemistryStatus(GuiGraphics g, Font font, int x, int y) {
         g.drawString(font, "CHEMISTRY", x, y, C_MID, false);
         y += 11;
 
@@ -330,7 +304,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         }
     }
 
-    // ── Drawing helpers ───────────────────────────────────────────────────────
 
     private static int drawPill(GuiGraphics g, Font font, int x, int y, String label, int color) {
         int pw = font.width(label) + 8, ph = 10;
@@ -380,8 +353,6 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
         return 0x55_FFC844;
     }
 
-    // ── Atmosphere ────────────────────────────────────────────────────────────
-
     @OnlyIn(Dist.CLIENT)
     private void drawGrid(GuiGraphics g, int x, int y, int w, int h) {
         for (int gx = x + 18; gx < x + w; gx += 18) g.fill(gx, y, gx + 1, y + h, GRID_COL);
@@ -390,15 +361,14 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
 
     @OnlyIn(Dist.CLIENT)
     private void drawScanlines(GuiGraphics g, int x, int y, int w, int h) {
-        DrawerHelper.drawGradientRect(g, x, y, w, h / 2, 0x10_000000, 0x04_000000, false);
-        DrawerHelper.drawGradientRect(g, x, y + h / 2, w, h / 2, 0x04_000000, 0x10_000000, false);
+        DrawerHelper.drawGradientRect(g, x, y, w, (float) h / 2, 0x10_000000, 0x04_000000, false);
+        DrawerHelper.drawGradientRect(g, x, y + (float) h / 2, w, (float) h / 2, 0x04_000000, 0x10_000000, false);
     }
 
     @OnlyIn(Dist.CLIENT)
     private void drawMist(GuiGraphics g, int x, int y, int w, int h) {
         long t = System.currentTimeMillis();
         int blobH = h / 3;
-        // Running: amber salt mist. High xenon: shift purple.
         double xenon = msr.isFormed() ? msr.xenonPoisonLevel : 0.0;
         int hue = xenon > 0.30 ? lerpRGB(0x00CC8800, 0x00660088, Math.min(1.0, (xenon - 0.30) / 0.20)) & 0xFFFFFF :
                 0xCC8800;
@@ -406,7 +376,7 @@ public class MSRFancyUIWidget extends FancyMachineUIWidget {
             double phase = t * 0.00030 + i * (Math.PI / 3.0);
             int alpha = (int) ((Math.sin(phase) + 1.0) * 6);
             int col = (alpha << 24) | hue;
-            DrawerHelper.drawGradientRect(g, x, y + (i * h / 6), w, blobH, col, col & 0x00FFFFFF, false);
+            DrawerHelper.drawGradientRect(g, x, y + ((float) (i * h) / 6), w, blobH, col, col & 0x00FFFFFF, false);
         }
     }
 }

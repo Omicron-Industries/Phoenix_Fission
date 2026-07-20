@@ -5,6 +5,13 @@ import com.tterrag.registrate.providers.RegistrateLangProvider;
 public class PhoenixMachineLangHandler {
 
     public static void init(RegistrateLangProvider provider) {
+        // EMI Recipe Categories
+        provider.add("emi.category.phoenix_fission.fission_fuel_burn", "Fission Fuel Burn");
+        provider.add("emi.category.phoenix_fission.fission_coolant_cycle", "Fission Coolant Cycle");
+        provider.add("emi.category.phoenix_fission.fission_moderator", "Fission Moderator");
+        provider.add("emi.category.phoenix_fission.fission_blanket", "Breeder Blanket");
+        provider.add("emi.category.phoenix_fission.fission_msr_liner", "MSR Core Liner");
+
         // Main Structural Elements
         provider.add("block.phoenix_fission.fission_blanket.info_header", "Breeder Blanket Specifications:");
         provider.add("phoenix_fission.blanket.input", "Breeding Target Input");
@@ -13,20 +20,6 @@ public class PhoenixMachineLangHandler {
         provider.add("phoenix_fission.tooltip.amount", "Yield Batch Size");
         provider.add("phoenix_fission.tooltip.required_fuel_tier", "Required Driver Fuel");
 
-        // Tesla & Laser Tech
-        provider.add("emi_info.phoenix_fission.required_shield", "Required Shield: %s");
-        provider.add("emi_info.phoenix_fission.shield_heal", "Shield Health Restored: +%s");
-        provider.add("emi_info.phoenix_fission.shield_damage", "Shield Damage Applied: -%s");
-
-        provider.add("tooltip.phoenix_fission.tesla_hatch.laser_input",
-                "§bOptical Collimator§r: Concentrates energy into a coherent Tesla-Laser beam.");
-        provider.add("tooltip.phoenix_fission.tesla_hatch.laser_output",
-                "§bPhotonic Receptor§r: Decodes high-frequency laser flux back into EU.");
-        provider.add("tooltip.phoenix_fission.tesla_hatch.input",
-                "§bWireless Transmitter§r: Siphons energy into the Tesla Cloud.");
-        provider.add("tooltip.phoenix_fission.tesla_hatch.output",
-                "§bWireless Receiver§r: Broadcasts energy from the Tesla Cloud.");
-        provider.add("tooltip.phoenix_fission.tesla_hatch.lore", "§6Nevvonian Core Tech: Frequency Locked.");
 
         provider.add("phoenix_fission.coolant_usage_value",
                 "§dConsumption Rate: §5%d mB/t");
@@ -50,15 +43,6 @@ public class PhoenixMachineLangHandler {
         provider.add("gui.phoenix_fission.heat_exchanger.current_efficiency", "Thermal Conductivity: Tier %d");
         provider.add("gui.phoenix_fission.missing_spring", "Missing Heat Exchange Spring!");
 
-        // Source System
-        provider.add("gui.phoenix_fission.source_hatch.label.import", "Source Input Hatch");
-        provider.add("gui.phoenix_fission.source_hatch.label.export", "Source Output Hatch");
-        provider.add("gui.phoenix_fission.source_hatch.source", "Source Stored: %s");
-        provider.add("phoenix_fission.recipe.source_in", "Source Consumed: %s.");
-        provider.add("phoenix_fission.recipe.source_out", "Source Yield: %s.");
-        provider.add("tooltip.phoenix_fission.source_hatch.consumption", "§cMax Source Consumption:§d %s");
-        provider.add("tooltip.phoenix_fission.source_hatch.capacity", "§cMax Source Capacity:§d %s");
-        provider.add("recipe.capability.source.name", "Source");
 
         // Fission Reactor System
         provider.add("tooltip.phoenix.empty_component.0", "This is an empty component, provides no stats.");
@@ -69,12 +53,6 @@ public class PhoenixMachineLangHandler {
         provider.add("phoenix_fission.status.danger_timer", "§cCRITICAL: Meltdown in %s seconds!");
         provider.add("phoenix_fission.status.no_coolant", "§eWARNING: Coolant Supply Exhausted");
         provider.add("phoenix_fission.nuke_radius", "Blast area: %s");
-
-        // Material Mappings (Fixes the raw "phoenix_fission:u242_fuel_pellet" etc tooltips)
-        provider.add("phoenix_fission:u242_fuel_pellet", "U-242 Fuel Pellet");
-        provider.add("phoenix_fission:thorium_fuel_pellet", "Thorium Fuel Pellet");
-        provider.add("phoenix_fission:critical_steam", "Supercritical Steam");
-        provider.add("phoenix_fission:hot_sodium_potassium", "Hot Sodium-Potassium");
 
         // Breeding & Transmutation
         provider.add("phoenix_fission.blanket.potential_outputs", "Potential Transmutations:");
@@ -188,7 +166,7 @@ public class PhoenixMachineLangHandler {
         provider.add("phoenix.multiblock.pattern.info.multiple_liners",
                 "Liners provide fuel and flow, can mix and match..");
 
-        // Recipe Typeskk
+        // Recipe Typesk
         provider.add("gtceu.high_performance_breeder_reactor",
                 "High-Performance Breeder Reactor");
         provider.add("gtceu.heat_exchanging",
@@ -258,81 +236,6 @@ public class PhoenixMachineLangHandler {
         provider.add("multiblock.underyellowline", "Hold §e§lSHIFT§r to display structure details!");
         provider.add("multiblock.structureadvtooltip", "Structure:");
 
-        // Feature Flags (Checks)
-        provider.add("multiblock.pchaccess1", "\u00A0\u00A0\u00A0§9Parallel Control Hatch: [OK]");
-        provider.add("multiblock.pchaccess2",
-                "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock can use PCHs to increase it's efficiency.");
-        provider.add("multiblock.subtickaccess1", "\u00A0\u00A0\u00A0§3SubTick: [OK]");
-        provider.add("multiblock.subtickaccess2",
-                "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock performs subtick recipes!");
-        provider.add("multiblock.perfocaccess1", "\u00A0\u00A0\u00A0§dPerfect OCs: [OK]");
-        provider.add("multiblock.perfocaccess2",
-                "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock supports perfect overclocks (4/4).");
-        provider.add("multiblock.nooc1", "\u00A0\u00A0\u00A0§cOverclocks: X");
-        provider.add("multiblock.nooc2", "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock can not overclock.");
-
-        // Laser & Power
-        provider.add("multiblock.laseraccess1", "\u00A0\u00A0\u00A0§6Laser Target Access: [OK]");
-        provider.add("multiblock.laseraccess2",
-                "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock can be powered with Laser Target Hatches.");
-        provider.add("multiblock.needlaseraccess1", "\u00A0\u00A0\u00A0§6Laser Target Access: [OK]");
-        provider.add("multiblock.needlaseraccess2",
-                "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock MUST be powered with Laser Target Hatches.");
-        provider.add("multiblock.nopower1", "\u00A0\u00A0\u00A0§cEnergy Output: X");
-        provider.add("multiblock.nopower2",
-                "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock does NOT produce/use §3Energy§7.");
-        provider.add("multiblock.energyoutputaccess1", "\u00A0\u00A0\u00A0§3Energy Output: [OK]");
-        provider.add("multiblock.energyoutputaccess2",
-                "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock provides §3Energy§7 output!");
-
-        // Source
-        provider.add("multiblock.sourceoutputaccess1", "\u00A0\u00A0\u00A0§zSource Output: §3[OK]");
-        provider.add("multiblock.sourceoutputaccess2",
-                "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock provides §zSource§7 output!");
-        provider.add("multiblock.sourceinputaccess1", "\u00A0\u00A0\u00A0§zSource Input: §3[OK]");
-        provider.add("multiblock.sourceinputaccess2",
-                "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0§7This multiblock requires §zSource §7input!");
-
-        // Structure Components (Shift Tooltips)
-        provider.add("multiblock.tooltip.controller", "\u00A0\u00A0\u00A0Controller: %s");
-        provider.add("multiblock.tooltip.iteminput", "\u00A0\u00A0\u00A0Input Bus: %s");
-        provider.add("multiblock.tooltip.fluidinput", "\u00A0\u00A0\u00A0Input Hatch: %s");
-        provider.add("multiblock.tooltip.itemoutput", "\u00A0\u00A0\u00A0Output Bus: %s");
-        provider.add("multiblock.tooltip.fluidoutput", "\u00A0\u00A0\u00A0Output Hatch: %s");
-        provider.add("multiblock.tooltip.energy", "\u00A0\u00A0\u00A0Energy Input: %s");
-        provider.add("multiblock.tooltip.energyoutput", "\u00A0\u00A0\u00A0Energy Output: %s");
-        provider.add("multiblock.tooltip.maintenance", "\u00A0\u00A0\u00A0Maintenance Hatch: %s");
-        provider.add("multiblock.tooltip.muffler", "\u00A0\u00A0\u00A0Muffler Hatch: %s");
-        provider.add("multiblock.tooltip.pch", "\u00A0\u00A0\u00A0Parallel Control Hatch: %s");
-
-        // Custom/Special Tooltips
-        provider.add("gtultimate.custom.tooltip_one_energy_hatch", "§fAccepts §lEXACTLY §61 energy hatch.");
-        provider.add("gtultimate.custom.tooltip_dimensional_anchor",
-                "§9§oOpens stable rifts to other dimensions, determined by its placement.\\n§7These gateways allow for accelerated resource extraction unique to each realm.\\n§7Requires distinct recipes for Overworld, Nether, and End configurations.");
-
-        String anchorDesc = """
-                §9§oOpens stable rifts to other dimensions, determined by its placement.
-                §7These gateways allow for accelerated resource extraction unique to each realm.
-                §7Requires distinct recipes for Overworld, Nether, and End configurations.""";
-        String fabricatorDesc = "§d§oUtilizes raw aetherial energy to create complex constructs.\n§5Transmutes pure magical essence into tangible matter.";
-        String alchemicalImbuerDesc = """
-                §7The hub of your §zSource network§7, acting as a link for natural §zsoul§7.
-                §7Handles the §rextraction§7 of §zsource§r from §rcarbon§7 based sources as well as imbuing §zsource§r into §runique materials.
-                §7Source §rproduction and consumption§7 is decided by the current base §zsoul, §rflora§7, and §rharmonization§7 in your area.""";
-        String sourceReactorDesc = """
-                §7A §zSource§7 based reactor capable of converting §fmundane materials§7 for use in further §zSource§7 related processes.
-                Reactor ability is handled by the current §zsoul§7 of your area.\s
-                §zSource gem §7blocks can also be used near the reactor to provide further boost.\s
-                Reactor will §cNOT RUN§7 below a §zsoul§7 cap of 1.""";
-        String bioEngineDesc = """
-                §7An §zEngine§7 capable of converting §zSource§7 into power.
-                §7It's power flows throughout it's chassis §zdenoting it's strength.
-                §fEU provided §7is dependent on the base §zsoul§7 and §aflora §7power in your area.
-                §7Caps out at a §r5x boost.""";
-
-        String largeSteamSifterDesc = "§bSifts through the chaff to get to the good stuff. \n" +
-                "§7Good Vibrations.";
-
         // Molten Salt Reactor System Details
         provider.add("phoenix_fission.msr.thermal_efficiency", "Thermal Efficiency: %s");
         provider.add("phoenix_fission.msr.structural_tier", "MSR Core Structural Tier: %s");
@@ -351,9 +254,5 @@ public class PhoenixMachineLangHandler {
 
         provider.add("phoenix_fission.msr_liner.info_header", "--- Molten Salt Core Liner Specifications ---");
 
-        // Source Tank Tooltips
-        provider.add("phoenix_fission.machine.multiblock.source_tank.tooltip",
-                "Fill and drain through the controller or source hatches.");
-        provider.add("phoenix_fission.universal.tooltip.source_storage_capacity", "§zSource §9Capacity: §f%d mB");
     }
 }

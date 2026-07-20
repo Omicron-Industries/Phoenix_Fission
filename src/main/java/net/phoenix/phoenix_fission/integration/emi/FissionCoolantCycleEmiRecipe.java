@@ -2,7 +2,6 @@ package net.phoenix.phoenix_fission.integration.emi;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.phoenix.phoenix_fission.PhoenixFission;
 import net.phoenix.phoenix_fission.api.block.IFissionCoolerType;
@@ -74,19 +73,18 @@ public class FissionCoolantCycleEmiRecipe implements EmiRecipe {
         FissionEmiUtils.drawPanel(widgets, W, h);
 
         // Name header, color-coded by tier
-        String name = type.getName();
-        widgets.addText(Component.literal(name), W / 2 - font.width(name) / 2, 8,
-                FissionEmiUtils.tierColor(type.getTier()), false);
+        String name = FissionEmiUtils.formatName(type.getName());
+        FissionEmiUtils.text(widgets, name, W / 2 - font.width(name) / 2, 8, FissionEmiUtils.tierColor(type.getTier()));
 
         if (type.isPassive()) {
             String label = "Passive Cooler — no coolant needed";
-            widgets.addText(Component.literal(label), W / 2 - font.width(label) / 2, 22, 0xFF_88FF88, false);
+            FissionEmiUtils.text(widgets, label, W / 2 - font.width(label) / 2, 22, 0xFF_88FF88);
 
             String flat = String.format(Locale.ROOT, "%.0f HU/t (always active)", type.getFlatCoolingHUt());
-            widgets.addText(Component.literal(flat), W / 2 - font.width(flat) / 2, 34, 0xFF_55FFFF, false);
+            FissionEmiUtils.text(widgets, flat, W / 2 - font.width(flat) / 2, 34, 0xFF_55FFFF);
 
             String note = "Active even during coolant outage";
-            widgets.addText(Component.literal(note), W / 2 - font.width(note) / 2, 46, 0xFF_888888, false);
+            FissionEmiUtils.text(widgets, note, W / 2 - font.width(note) / 2, 46, 0xFF_FFFFFF);
         } else {
             EmiStack inFluid = FissionEmiUtils.resolveFluid(type.getInputCoolantFluidId(), type.getCoolantPerTick());
             String outFluidId = type.getOutputCoolantFluidId();
@@ -108,16 +106,16 @@ public class FissionCoolantCycleEmiRecipe implements EmiRecipe {
                 EmiStack outFluid = FissionEmiUtils.resolveFluid(outFluidId, type.getCoolantPerTick());
                 widgets.addSlot(outFluid, outX, slotY).recipeContext(this);
             } else {
-                widgets.addText(Component.literal("(same fluid)"), outX, slotY + 6, 0xFF_777777, false);
+                FissionEmiUtils.text(widgets, "(same fluid)", outX, slotY + 6, 0xFF_FFFFFF);
             }
 
             String thresh = type.getCoolerTemperature() + " K threshold";
             String mbt = type.getCoolantPerTick() + " mB/t";
-            widgets.addText(Component.literal(thresh), 8, 46, 0xFF_55FFFF, false);
-            widgets.addText(Component.literal(mbt), W - font.width(mbt) - 8, 46, 0xFF_AADDFF, false);
+            FissionEmiUtils.text(widgets, thresh, 8, 46, 0xFF_55FFFF);
+            FissionEmiUtils.text(widgets, mbt, W - font.width(mbt) - 8, 46, 0xFF_AADDFF);
 
             String cond = "Cools when reactor heat > threshold";
-            widgets.addText(Component.literal(cond), W / 2 - font.width(cond) / 2, 60, 0xFF_888888, false);
+            FissionEmiUtils.text(widgets, cond, W / 2 - font.width(cond) / 2, 60, 0xFF_FFFFFF);
         }
     }
 }

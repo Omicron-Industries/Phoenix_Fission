@@ -57,15 +57,13 @@ import net.phoenix.phoenix_fission.common.data.multiblock.fission.managers.Fissi
  */
 public class ZonedCoolingThermalManager extends FissionThermalManager {
 
-    // Zone boundary fractions of maxSafeHeat
-    private final double coldThreshold;  // e.g. 0.35
-    private final double hotThreshold;   // e.g. 0.80
 
-    // Passive cooling conductivity multipliers per zone (NOMINAL = 1.0 always)
+    private final double coldThreshold;
+    private final double hotThreshold;
+
     private final double coldPassiveMult;
     private final double hotPassiveMult;
 
-    // Active cooler efficiency multipliers per zone (NOMINAL = 1.0 always)
     private final double coldActiveMult;
     private final double hotActiveMult;
 
@@ -90,7 +88,7 @@ public class ZonedCoolingThermalManager extends FissionThermalManager {
         this.hotActiveMult = Math.max(0.0, hotActiveMult);
     }
 
-    // -------------------------------------------------------------------------
+
 
     @Override
     protected double computePassiveCoolingDelta(double heat, double ambientTemp, double conductivity) {
@@ -116,7 +114,7 @@ public class ZonedCoolingThermalManager extends FissionThermalManager {
                                                   double minGrace, double baseGrace, double severity) {
         if (heat <= maxSafeHeat) return (int) (baseGrace * 20.0);
 
-        // doublings = how many times heat has doubled past maxSafeHeat
+
         double overheatRatio = heat / Math.max(1.0, maxSafeHeat);
         double doublings = Math.log(overheatRatio) / Math.log(2.0);
 
@@ -124,7 +122,7 @@ public class ZonedCoolingThermalManager extends FissionThermalManager {
         return (int) Math.max(1, Math.floor(grace * 20.0));
     }
 
-    // -------------------------------------------------------------------------
+
 
     private double getPassiveZoneMultiplier(double heat) {
         return switch (getZone(heat)) {

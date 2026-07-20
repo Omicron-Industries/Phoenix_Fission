@@ -31,20 +31,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
-/**
- * Side-tab page showing reactor equilibrium curves as functions of temperature.
- *
- * Two internal graph tabs, toggled by clickable buttons at the top:
- * EQUIL — heat production (red) vs total cooling (blue); intersection = stable T
- * NET — net heat rate (production − cooling); zero-crossing = stable T
- *
- * Components are resolved directly from the machine's @DescSynced persistedXxxIDs
- * lists (same source the main HUD uses). componentManager.getActiveFuelRods() etc.
- * are always empty on the client because resolvePersistedComponents() calls
- * onStructureInvalid() which clears the ID lists before reading them.
- *
- * All curves assume reactivity = 1.0 (fully-ramped, all fuel threads running).
- */
+
 public class FissionGraphsPage implements IFancyUIProvider {
 
     private final FissionWorkableElectricMultiblockMachine reactor;
@@ -77,33 +64,27 @@ public class FissionGraphsPage implements IFancyUIProvider {
         return new GraphWidget(reactor, w, h);
     }
 
-    // =========================================================================
-    // Widget
-    // =========================================================================
     static final class GraphWidget extends WidgetGroup {
 
         private final FissionWorkableElectricMultiblockMachine reactor;
 
-        // 0 = Equilibrium (production vs cooling), 1 = Net Rate
+
         private int activeGraph = 0;
 
-        // Hit-test rects for the two tab buttons [x, y, w, h]
         private final int[] tabRect0 = new int[4];
         private final int[] tabRect1 = new int[4];
 
-        // ── Palette ───────────────────────────────────────────────────────────
         private static final int BG = 0xEE_010810;
         private static final int C_DIM = 0xFF_3A5E6A;
-        private static final int C_MID = 0xFF_6A9BAA;
         private static final int C_WHITE = 0xFF_DCF0F4;
         private static final int C_TEAL = 0xFF_00AAA0;
         private static final int C_CYAN = 0xFF_00E5CC;
         private static final int C_GREEN = 0xFF_33FF88;
 
-        private static final int C_HEAT = 0xFF_FF5533; // production curve
-        private static final int C_COOL = 0xFF_44AAFF; // cooling curve
-        private static final int C_POS = 0xFF_FF6644; // net > 0 (warming)
-        private static final int C_NEG = 0xFF_44AAFF; // net < 0 (cooling)
+        private static final int C_HEAT = 0xFF_FF5533;
+        private static final int C_COOL = 0xFF_44AAFF;
+        private static final int C_POS = 0xFF_FF6644;
+        private static final int C_NEG = 0xFF_44AAFF;
         private static final int C_RED = 0xFF_FF3333;
 
         GraphWidget(FissionWorkableElectricMultiblockMachine reactor, int w, int h) {
@@ -111,7 +92,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
             this.reactor = reactor;
         }
 
-        // ── Mouse ─────────────────────────────────────────────────────────────
 
         @Override
         @OnlyIn(Dist.CLIENT)
@@ -133,7 +113,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
             return r[2] > 0 && mx >= r[0] && mx < r[0] + r[2] && my >= r[1] && my < r[1] + r[3];
         }
 
-        // ── Draw ──────────────────────────────────────────────────────────────
 
         @Override
         @OnlyIn(Dist.CLIENT)
@@ -143,11 +122,11 @@ public class FissionGraphsPage implements IFancyUIProvider {
             g.fill(x0, y0, x0 + w, y0 + h, BG);
             DrawerHelper.drawBorder(g, x0, y0, w, h, 0x33_00E5CC, 1);
             super.drawInBackground(g, mouseX, mouseY, dt);
-            drawContent(g, x0 + 4, y0 + 4, w - 8, h - 8, mouseX, mouseY);
+            drawContent(g, x0 + 4, y0 + 4, w - 8, mouseX, mouseY);
         }
 
         @OnlyIn(Dist.CLIENT)
-        private void drawContent(GuiGraphics g, int x, int y, int W, int H,
+        private void drawContent(GuiGraphics g, int x, int y, int W,
                                  int mouseX, int mouseY) {
             Font font = Minecraft.getInstance().font;
 
@@ -156,7 +135,7 @@ public class FissionGraphsPage implements IFancyUIProvider {
                 return;
             }
 
-            // ── Resolve components from persisted ID lists (same as main HUD) ─
+
             List<IFissionFuelRodType> rods = resolveTypes(reactor.getPersistedFuelRodIDs(),
                     PhoenixAPI.FISSION_FUEL_RODS.keySet(), IFissionFuelRodType::getName);
             List<IFissionModeratorType> mods = resolveTypes(reactor.getPersistedModeratorIDs(),
@@ -167,10 +146,8 @@ public class FissionGraphsPage implements IFancyUIProvider {
             var hm = PhoenixFissionConfigs.INSTANCE.fission.heatModel;
             double modBonus = 1.0 + (computeModBonus(mods) / 100.0);
 
-            // ── Graph tabs ────────────────────────────────────────────────────
             y = drawGraphTabs(g, font, x, y, W, mouseX, mouseY);
 
-            // ── Graph ─────────────────────────────────────────────────────────
             int plotH = 62;
             if (activeGraph == 0) {
                 y = drawEquilibriumGraph(g, font, x, y, W, plotH, rods, coolers, modBonus, hm);
@@ -178,7 +155,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
                 y = drawNetRateGraph(g, font, x, y, W, plotH, rods, coolers, modBonus, hm);
             }
 
-            // ── Annotations ───────────────────────────────────────────────────
             g.fill(x, y, x + W, y + 1, 0x33_00E5CC);
             y += 5;
 
@@ -189,12 +165,11 @@ public class FissionGraphsPage implements IFancyUIProvider {
                         "No fuel rods installed.", x, y, C_DIM, false);
             } else {
                 double stableT = findStableTemperature(rods, coolers, modBonus,
-                        reactor.getMaxHeatClampHU(), 600);
+                        reactor.getMaxHeatClampHU());
                 drawAnnotations(g, font, x, y, W, stableT, reactor.getMaxSafeHeatHU(), reactor.getMaxHeatClampHU());
             }
         }
 
-        // ── Tab button bar ────────────────────────────────────────────────────
 
         @OnlyIn(Dist.CLIENT)
         private int drawGraphTabs(GuiGraphics g, Font font, int x, int y, int W,
@@ -228,11 +203,10 @@ public class FissionGraphsPage implements IFancyUIProvider {
             return y + btnH + 5;
         }
 
-        // ── Equilibrium graph (production vs cooling) ─────────────────────────
 
         @OnlyIn(Dist.CLIENT)
         private int drawEquilibriumGraph(GuiGraphics g, Font font,
-                                         int x, int y, int W, int plotH,
+                                         int x, int y, int SAMPLES, int plotH,
                                          List<IFissionFuelRodType> rods, List<IFissionCoolerType> coolers,
                                          double modBonus, PhoenixFissionConfigs.HeatModelConfigs hm) {
             g.fill(x, y + 3, x + 8, y + 5, C_HEAT);
@@ -242,11 +216,9 @@ public class FissionGraphsPage implements IFancyUIProvider {
             g.drawString(font, "cooling", lx2 + 10, y, C_COOL, false);
             y += 10;
 
-            int SAMPLES = W;
             double maxSafeHU = reactor.getMaxSafeHeatHU();
             double maxClampHU = reactor.getMaxHeatClampHU();
-            double stableT = findStableTemperature(rods, coolers, modBonus, maxClampHU, 600);
-            // Zoom to show stable point at ~33% of x-axis; if none, show full range to meltdown.
+            double stableT = findStableTemperature(rods, coolers, modBonus, maxClampHU);
             double xMax = (stableT > 0) ? Math.min(maxClampHU, stableT * 3.0) :
                     (stableT == 0.0) ? Math.min(maxClampHU, maxSafeHU * 0.5) : maxClampHU;
 
@@ -261,27 +233,26 @@ public class FissionGraphsPage implements IFancyUIProvider {
             }
             yMax *= 1.1;
 
-            drawPlot(g, x, y, W, plotH);
-            drawCurve(g, x, y, W, plotH, prodY, yMax, SAMPLES, C_HEAT);
-            drawCurve(g, x, y, W, plotH, coolY, yMax, SAMPLES, C_COOL);
+            drawPlot(g, x, y, SAMPLES, plotH);
+            drawCurve(g, x, y, SAMPLES, plotH, prodY, yMax, SAMPLES, C_HEAT);
+            drawCurve(g, x, y, SAMPLES, plotH, coolY, yMax, SAMPLES, C_COOL);
 
             if (stableT > 0 && stableT <= xMax) {
                 double sFrac = stableT / xMax;
-                int sX = x + (int) (sFrac * W);
+                int sX = x + (int) (sFrac * SAMPLES);
                 double sNorm = Math.min(1.0, computeHeatProduction(stableT, rods, modBonus, hm) / yMax);
                 int sY = y + plotH - 2 - (int) (sNorm * (plotH - 4));
                 g.fill(sX - 2, sY - 2, sX + 3, sY + 3, 0xFF_FFFFFF);
                 g.fill(sX - 1, sY - 1, sX + 2, sY + 2, C_GREEN);
             }
 
-            return drawXAxisLabels(g, font, x, y, W, plotH, xMax, maxSafeHU);
+            return drawXAxisLabels(g, font, x, y, SAMPLES, plotH, xMax, maxSafeHU);
         }
 
-        // ── Net rate graph (production − cooling) ─────────────────────────────
 
         @OnlyIn(Dist.CLIENT)
         private int drawNetRateGraph(GuiGraphics g, Font font,
-                                     int x, int y, int W, int plotH,
+                                     int x, int y, int SAMPLES, int plotH,
                                      List<IFissionFuelRodType> rods, List<IFissionCoolerType> coolers,
                                      double modBonus, PhoenixFissionConfigs.HeatModelConfigs hm) {
             g.fill(x, y + 3, x + 8, y + 5, C_POS);
@@ -291,10 +262,9 @@ public class FissionGraphsPage implements IFancyUIProvider {
             g.drawString(font, "cooling", lx2 + 10, y, C_NEG, false);
             y += 10;
 
-            int SAMPLES = W;
             double maxSafeHU = reactor.getMaxSafeHeatHU();
             double maxClampHU = reactor.getMaxHeatClampHU();
-            double stableT = findStableTemperature(rods, coolers, modBonus, maxClampHU, 600);
+            double stableT = findStableTemperature(rods, coolers, modBonus, maxClampHU);
             double xMax = (stableT > 0) ? Math.min(maxClampHU, stableT * 3.0) :
                     (stableT == 0.0) ? Math.min(maxClampHU, maxSafeHU * 0.5) : maxClampHU;
 
@@ -305,12 +275,11 @@ public class FissionGraphsPage implements IFancyUIProvider {
                 netY[i] = computeHeatProduction(T, rods, modBonus, hm) - computeCooling(T, coolers, hm);
                 peakAbs = Math.max(peakAbs, Math.abs(netY[i]));
             }
-            // Single symmetric scale — eliminates discontinuity at the zero crossing.
             double scale = (plotH / 2.0 - 2) / (peakAbs * 1.1);
             int zeroY = y + plotH / 2;
 
-            drawPlot(g, x, y, W, plotH);
-            g.fill(x, zeroY, x + W, zeroY + 1, 0x55_FFFFFF); // zero line
+            drawPlot(g, x, y, SAMPLES, plotH);
+            g.fill(x, zeroY, x + SAMPLES, zeroY + 1, 0x55_FFFFFF);
 
             for (int i = 1; i < SAMPLES; i++) {
                 double n0 = netY[i - 1], n1 = netY[i];
@@ -323,15 +292,13 @@ public class FissionGraphsPage implements IFancyUIProvider {
             }
 
             if (stableT > 0 && stableT <= xMax) {
-                int sX = x + (int) (stableT / xMax * W);
+                int sX = x + (int) (stableT / xMax * SAMPLES);
                 g.fill(sX - 2, zeroY - 2, sX + 3, zeroY + 3, 0xFF_FFFFFF);
                 g.fill(sX - 1, zeroY - 1, sX + 2, zeroY + 2, C_GREEN);
             }
 
-            return drawXAxisLabels(g, font, x, y, W, plotH, xMax, maxSafeHU);
+            return drawXAxisLabels(g, font, x, y, SAMPLES, plotH, xMax, maxSafeHU);
         }
-
-        // ── Annotations ───────────────────────────────────────────────────────
 
         @OnlyIn(Dist.CLIENT)
         private void drawAnnotations(GuiGraphics g, Font font, int x, int y, int W,
@@ -376,7 +343,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
             g.drawString(font, "Assumes: reactivity=1.0, coolant present", x, y, C_DIM, false);
         }
 
-        // ── Plot helpers ──────────────────────────────────────────────────────
 
         @OnlyIn(Dist.CLIENT)
         private static void drawPlot(GuiGraphics g, int x, int y, int W, int H) {
@@ -388,14 +354,7 @@ public class FissionGraphsPage implements IFancyUIProvider {
             }
         }
 
-        @OnlyIn(Dist.CLIENT)
-        private static void drawSafeMarker(GuiGraphics g, int x, int y, int W, int H, double frac) {
-            if (frac <= 0 || frac >= 1.0) return;
-            int sx = x + (int) (frac * W);
-            for (int dy = 0; dy < H; dy += 4) {
-                g.fill(sx, y + dy, sx + 1, y + dy + 2, 0xCC_FF8833);
-            }
-        }
+
 
         @OnlyIn(Dist.CLIENT)
         private int drawXAxisLabels(GuiGraphics g, Font font, int x, int y, int W, int plotH,
@@ -444,13 +403,11 @@ public class FissionGraphsPage implements IFancyUIProvider {
             }
         }
 
-        // ── Physics ───────────────────────────────────────────────────────────
 
         private double computeHeatProduction(double T,
                                              List<IFissionFuelRodType> rods, double modBonus,
                                              PhoenixFissionConfigs.HeatModelConfigs hm) {
-            // MSR: heat comes from liner salt flow, not fuel rods. Production is
-            // temperature-independent (no thermal scalar) — flat line on the graph.
+
             if (reactor instanceof MoltenSaltReactorMultiblockMachine msr) {
                 if (msr.linerFlowRate <= 0 || msr.linerHeatPerMb <= 0) return 0.0;
                 int flow = Math.max(1, msr.structuralLinerCount) * msr.linerFlowRate;
@@ -490,17 +447,16 @@ public class FissionGraphsPage implements IFancyUIProvider {
         }
 
         private double findStableTemperature(List<IFissionFuelRodType> rods,
-                                             List<IFissionCoolerType> coolers, double modBonus, double maxT,
-                                             int steps) {
+                                             List<IFissionCoolerType> coolers, double modBonus, double maxT) {
             var hm = PhoenixFissionConfigs.INSTANCE.fission.heatModel;
             double prevNet = computeHeatProduction(0, rods, modBonus, hm) - computeCooling(0, coolers, hm);
-            // Cooling already wins at T=0 — reactor equilibrates at minimum heat.
+
             if (prevNet <= 0) return 0.0;
-            for (int i = 1; i <= steps; i++) {
-                double T = maxT * i / steps;
+            for (int i = 1; i <= 600; i++) {
+                double T = maxT * i / 600;
                 double net = computeHeatProduction(T, rods, modBonus, hm) - computeCooling(T, coolers, hm);
                 if (prevNet > 0 && net <= 0) {
-                    double step = maxT / steps;
+                    double step = maxT / 600;
                     return (T - step) + step * (prevNet / (prevNet - net));
                 }
                 prevNet = net;
@@ -508,7 +464,6 @@ public class FissionGraphsPage implements IFancyUIProvider {
             return -1.0;
         }
 
-        // ── Helpers ───────────────────────────────────────────────────────────
 
         private static int computeModBonus(List<IFissionModeratorType> mods) {
             int raw = mods.stream().mapToInt(IFissionModeratorType::getEUBoost).sum();
@@ -528,11 +483,7 @@ public class FissionGraphsPage implements IFancyUIProvider {
             return result;
         }
 
-        private static String formatHU(double v) {
-            if (v >= 1_000_000) return String.format("%.2fM HU", v / 1_000_000.0);
-            if (v >= 1_000) return String.format("%.1fk HU", v / 1_000.0);
-            return String.format("%.0f HU", v);
-        }
+
 
         private static String formatK(double v) {
             if (v >= 1_000_000) return String.format("%.2fM K", v / 1_000_000.0);

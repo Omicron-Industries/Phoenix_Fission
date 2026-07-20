@@ -2,7 +2,6 @@ package net.phoenix.phoenix_fission.integration.emi;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.phoenix.phoenix_fission.PhoenixAPI;
@@ -74,21 +73,21 @@ public class FissionModeratorEmiRecipe implements EmiRecipe {
                 EmiStack.EMPTY;
         widgets.addSlot(stack, 8, 8);
 
-        String name = type.getName();
-        widgets.addText(Component.literal(name), 30, 8, FissionEmiUtils.tierColor(type.getTier()), false);
-        widgets.addText(Component.literal("Tier " + type.getTier()), 30, 18, 0xFF_AAAAAA, false);
+        String name = FissionEmiUtils.formatName(type.getName());
+        FissionEmiUtils.text(widgets, name, 30, 8, FissionEmiUtils.tierColor(type.getTier()));
+        FissionEmiUtils.text(widgets, "Tier " + type.getTier(), 30, 18, 0xFF_FFFFFF);
 
         String eu = "+" + type.getEUBoost() + "% EU output";
         String fuel = "-" + type.getFuelDiscount() + "% fuel usage";
-        widgets.addText(Component.literal(eu), 8, 40, 0xFF_FFDD55, false);
-        widgets.addText(Component.literal(fuel), 8, 51, 0xFF_88FF88, false);
+        FissionEmiUtils.text(widgets, eu, 8, 40, 0xFF_FFDD55);
+        FissionEmiUtils.text(widgets, fuel, 8, 51, 0xFF_88FF88);
 
         String heat = String.format(Locale.ROOT, "x%.1f heat multiplier", type.getHeatMultiplier());
         String par = "+" + type.getParallelBonus() + " parallel";
-        widgets.addText(Component.literal(heat), W - font.width(heat) - 8, 40, 0xFF_FF9944, false);
-        widgets.addText(Component.literal(par), W - font.width(par) - 8, 51, 0xFF_AADDFF, false);
+        FissionEmiUtils.text(widgets, heat, W - font.width(heat) - 8, 40, 0xFF_FF9944);
+        FissionEmiUtils.text(widgets, par, W - font.width(par) - 8, 51, 0xFF_AADDFF);
 
         String note = "Passive reactor bonus while installed";
-        widgets.addText(Component.literal(note), W / 2 - font.width(note) / 2, 64, 0xFF_888888, false);
+        FissionEmiUtils.text(widgets, note, W / 2 - font.width(note) / 2, 64, 0xFF_FFFFFF);
     }
 }

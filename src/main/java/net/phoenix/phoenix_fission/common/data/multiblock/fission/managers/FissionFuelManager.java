@@ -4,6 +4,7 @@ import com.gregtechceu.gtceu.api.capability.recipe.IO;
 import com.gregtechceu.gtceu.api.recipe.modifier.ModifierFunction;
 import com.gregtechceu.gtceu.utils.FormattingUtil;
 
+import com.gregtechceu.gtceu.utils.GTUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -38,12 +39,6 @@ public class FissionFuelManager {
         int totalRods = machine.getComponentManager().getActiveFuelRods().size();
         machine.lastParallels = Math.max(1, totalRods);
     }
-
-    // -------------------------------------------------------------------------
-    // Math hooks — override these in a subclass to customize reactor physics.
-    // All parameters are provided so overrides don't need to reach into machine
-    // state themselves, keeping custom implementations self-contained.
-    // -------------------------------------------------------------------------
 
     /**
      * Scaling factor applied to heat/fuel based on the number of fuel rods present.
@@ -140,8 +135,7 @@ public class FissionFuelManager {
                                         double maxSafeHeat, double euPerHeatUnit, double powerStart,
                                         double curveExponent) {
         double baseEU = activity * euPerHeatUnit;
-        // Normalize heat relative to ambient so the 1x floor sits at ambient temp,
-        // not at absolute zero — cold reactors near ambient get minimum EU.
+
         double range = Math.max(1.0, maxSafeHeat - minHeat);
         double fraction = Math.max(0.0, Math.min(1.5, (currentHeat - minHeat) / range));
         double start = Math.max(0.0, Math.min(0.99, powerStart));
@@ -150,7 +144,6 @@ public class FissionFuelManager {
         return baseEU * bonus;
     }
 
-    // -------------------------------------------------------------------------
 
     public double calculateTickHeat(int ignoredMachineParallels) {
         var comp = machine.getComponentManager();
@@ -181,7 +174,6 @@ public class FissionFuelManager {
     public void consumeFuelTick(int ignoredMachineParallels) {
         var comp = machine.getComponentManager();
         if (comp.getActiveFuelRods().isEmpty() || machine.getReactivityFactor() <= 0.0) return;
-        var hm = PhoenixFissionConfigs.INSTANCE.fission.heatModel;
 
         int totalRods = comp.getActiveFuelRods().size();
         double rodInteractionFactor = computeRodInteractionFactor(totalRods);
@@ -223,7 +215,7 @@ public class FissionFuelManager {
             if (!itemOut.isEmpty() && !"none".equalsIgnoreCase(itemOut) && !itemOut.equalsIgnoreCase(itemIn)) {
                 ResourceLocation outRl = ResourceLocation.tryParse(itemOut);
                 if (outRl != null && ForgeRegistries.ITEMS.containsKey(outRl)) {
-                    machine.executeItemIO(new ItemStack(ForgeRegistries.ITEMS.getValue(outRl), directConsume), IO.OUT);
+                    machine.executeItemIO(new ItemStack(Objects.requireNonNull(ForgeRegistries.ITEMS.getValue(outRl)), directConsume), IO.OUT);
                 }
             }
         }
@@ -236,7 +228,7 @@ public class FissionFuelManager {
             verifiedTypes.add(rod.getFuelKey());
             ResourceLocation rl = ResourceLocation.tryParse(rod.getFuelKey());
             if (rl == null || !ForgeRegistries.ITEMS.containsKey(rl) ||
-                    !machine.executeItemIO(new ItemStack(ForgeRegistries.ITEMS.getValue(rl), 1), IO.IN, true))
+                    !machine.executeItemIO(new ItemStack(Objects.requireNonNull(ForgeRegistries.ITEMS.getValue(rl)), 1), IO.IN, true))
                 return false;
         }
         return true;
@@ -245,7 +237,7 @@ public class FissionFuelManager {
     private boolean processItemConsumption(String id, int count) {
         ResourceLocation rl = ResourceLocation.tryParse(id);
         if (rl == null || !ForgeRegistries.ITEMS.containsKey(rl)) return false;
-        return machine.executeItemIO(new ItemStack(ForgeRegistries.ITEMS.getValue(rl), count), IO.IN, false);
+        return machine.executeItemIO(new ItemStack(Objects.requireNonNull(ForgeRegistries.ITEMS.getValue(rl)), count), IO.IN, false);
     }
 
     public void processPowerGeneration(boolean running) {
@@ -268,9 +260,8 @@ public class FissionFuelManager {
 
         if (outputEU > 0) {
             machine.lastGeneratedEUt = outputEU;
-            if (machine.getEnergyContainer() != null) {
-                machine.getEnergyContainer().addEnergy(outputEU);
-            }
+            machine.getEnergyContainer();
+            machine.getEnergyContainer().addEnergy(outputEU);
         }
     }
 
@@ -301,8 +292,11 @@ public class FissionFuelManager {
     }
 
     public void addDisplayText(List<Component> textList) {
+        long currentEUt = machine.lastGeneratedEUt;
+        int tier = GTUtil.getTierByVoltage(currentEUt);
+        String tierName = com.gregtechceu.gtceu.api.GTValues.VNF[tier];
         textList.add(Component.translatable("gtceu.multiblock.max_energy_per_tick",
-                FormattingUtil.formatNumbers(machine.lastGeneratedEUt)));
+                FormattingUtil.formatNumbers(currentEUt), tierName));
         textList.add(Component.translatable("phoenix_fission.parallels", machine.lastParallels));
         textList.add(Component.translatable("block.phoenix_fission.fission_moderator.boost",
                 getModeratorEUBoostClamped() + "%"));

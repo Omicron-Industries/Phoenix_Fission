@@ -59,8 +59,8 @@ public class NukeBlock extends Block {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable BlockGetter level,
-                                List<Component> tooltip, TooltipFlag flag) {
+    public void appendHoverText(@NotNull ItemStack stack, @Nullable BlockGetter level,
+                                List<Component> tooltip, @NotNull TooltipFlag flag) {
         tooltip.add(Component.literal("Large scale nuclear explosive.").withStyle(ChatFormatting.DARK_GREEN));
         tooltip.add(Component.literal("Handle with caution!").withStyle(ChatFormatting.RED));
         tooltip.add(Component.translatable("phoenix_fission.nuke_radius",

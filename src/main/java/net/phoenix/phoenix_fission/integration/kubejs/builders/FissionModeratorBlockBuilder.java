@@ -68,15 +68,14 @@ public class FissionModeratorBlockBuilder extends BlockBuilder {
         public int getTintColor() {
             if (tintColor != -1) return tintColor;
             return switch (getTier()) {
-                case 1 -> 0xFFB07CFF; // Graphite / Tier 1 Purple
-                case 2 -> 0xFFE7FF7D; // Beryllium / Tier 2 Yellow
-                case 3 -> 0xFF7DFFB0; // Heavy Water / Tier 3 Green
-                case 4 -> 0xFFFF7D7D; // Niobium-SiC / Tier 4 Red
+                case 1 -> 0xFFB07CFF;
+                case 2 -> 0xFFE7FF7D;
+                case 3 -> 0xFF7DFFB0;
+                case 4 -> 0xFFFF7D7D;
                 default -> 0xFFFFFFFF;
             };
         }
 
-        // Restored @Override now that IFissionModeratorType officially implements StringRepresentable
         @Override
         public @NotNull String getSerializedName() {
             return getName();

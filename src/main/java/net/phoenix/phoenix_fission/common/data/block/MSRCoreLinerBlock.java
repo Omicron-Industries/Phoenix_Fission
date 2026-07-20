@@ -9,7 +9,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.BlockGetter;
-import net.phoenix.phoenix_fission.PhoenixFission;
 import net.phoenix.phoenix_fission.api.block.IMSRCoreLinerType;
 
 import lombok.Getter;
@@ -65,7 +64,7 @@ public class MSRCoreLinerBlock extends ActiveBlock {
     }
 
     private String cleanFluidName(String fluidId) {
-        if (fluidId == null || fluidId.isEmpty()) return "None";
+        if (fluidId.isEmpty()) return "None";
         String path = fluidId.contains(":") ? fluidId.split(":")[1] : fluidId;
         return java.util.Arrays.stream(path.split("_"))
                 .map(word -> word.substring(0, 1).toUpperCase() + word.substring(1))
@@ -97,12 +96,11 @@ public class MSRCoreLinerBlock extends ActiveBlock {
                                  Supplier<ResourceLocation> textureSupplier) {
             this.name = name;
             this.tier = tier;
-            this.flowRateSupplier = flowRateSupplier != null ? flowRateSupplier : () -> 0;
-            this.heatSupplier = heatSupplier != null ? heatSupplier : () -> 0.0;
-            this.inputFluidSupplier = inputFluidSupplier != null ? inputFluidSupplier : () -> "minecraft:empty";
-            this.outputFluidSupplier = outputFluidSupplier != null ? outputFluidSupplier : () -> "minecraft:empty";
-            this.textureSupplier = textureSupplier != null ? textureSupplier :
-                    () -> PhoenixFission.id("block/fission/msr/liners/" + name);
+            this.flowRateSupplier = flowRateSupplier;
+            this.heatSupplier = heatSupplier;
+            this.inputFluidSupplier = inputFluidSupplier;
+            this.outputFluidSupplier = outputFluidSupplier;
+            this.textureSupplier = textureSupplier;
         }
 
         @Override
