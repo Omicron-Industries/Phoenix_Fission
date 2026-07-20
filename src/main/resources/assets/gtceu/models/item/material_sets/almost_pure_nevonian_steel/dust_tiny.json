@@ -1,6 +1,0 @@
-{
-  "parent": "item/handheld",
-  "textures": {
-    "layer0": "phoenix_fission:item/material_sets/almost_pure_nevonian_steel/dust_tiny"
-  }
-}
