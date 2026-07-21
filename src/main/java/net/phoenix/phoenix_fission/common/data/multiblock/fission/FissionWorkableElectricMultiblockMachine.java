@@ -49,7 +49,7 @@ import java.util.*;
 
 @MethodsReturnNonnullByDefault
 public class FissionWorkableElectricMultiblockMachine extends WorkableElectricMultiblockMachine
-        implements IExplosionMachine {
+                                                      implements IExplosionMachine {
 
     protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
             FissionWorkableElectricMultiblockMachine.class,
@@ -253,7 +253,8 @@ public class FissionWorkableElectricMultiblockMachine extends WorkableElectricMu
 
     protected boolean shouldRunReactor() {
         if (!isFormed() || !getRecipeLogic().isWorkingEnabled() ||
-                componentManager.getActiveFuelRods().isEmpty() || isScramActive()) return false;
+                componentManager.getActiveFuelRods().isEmpty() || isScramActive())
+            return false;
 
         if (PhoenixFissionConfigs.INSTANCE.fission.coolingRequiresCoolant &&
                 !componentManager.getActiveCoolers().isEmpty()) {

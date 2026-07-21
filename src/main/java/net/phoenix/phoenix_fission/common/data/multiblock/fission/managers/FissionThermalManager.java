@@ -269,14 +269,15 @@ public class FissionThermalManager {
                 }
             } else if (outAmount > 0 && !outId.isEmpty() && !"none".equalsIgnoreCase(outId) &&
                     !outId.equalsIgnoreCase(inId)) {
-                ResourceLocation outRl = ResourceLocation.tryParse(outId);
-                if (outRl != null && ForgeRegistries.FLUIDS.containsKey(outRl)) {
-                    machine.executeFluidIO(
-                            new FluidStack(Objects.requireNonNull(ForgeRegistries.FLUIDS.getValue(outRl)), outAmount),
-                            IO.OUT,
-                            false);
-                }
-            }
+                        ResourceLocation outRl = ResourceLocation.tryParse(outId);
+                        if (outRl != null && ForgeRegistries.FLUIDS.containsKey(outRl)) {
+                            machine.executeFluidIO(
+                                    new FluidStack(Objects.requireNonNull(ForgeRegistries.FLUIDS.getValue(outRl)),
+                                            outAmount),
+                                    IO.OUT,
+                                    false);
+                        }
+                    }
         }
         return true;
     }

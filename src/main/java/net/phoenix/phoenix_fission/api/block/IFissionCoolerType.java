@@ -35,7 +35,6 @@ public interface IFissionCoolerType extends StringRepresentable {
         return getCoolantUsagePerTick();
     }
 
-
     default int getOutputCoolantPerTick() {
         return getCoolantPerTick();
     }

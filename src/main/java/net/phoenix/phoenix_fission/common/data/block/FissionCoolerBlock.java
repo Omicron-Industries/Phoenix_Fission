@@ -74,13 +74,13 @@ public class FissionCoolerBlock extends ActiveBlock {
                     !outId.equalsIgnoreCase(inId)) {
                 tooltip.add(
                         Component.translatable("phoenix_fission.coolant_output_value",
-                                        coolerType.getOutputCoolantPerTick())
+                                coolerType.getOutputCoolantPerTick())
                                 .withStyle(ChatFormatting.LIGHT_PURPLE));
             }
 
             tooltip.add(Component.translatable("phoenix_fission.cooling_power",
-                            Component.literal(String.valueOf(coolerType.getCoolerTemperature()))
-                                    .withStyle(ChatFormatting.BLUE))
+                    Component.literal(String.valueOf(coolerType.getCoolerTemperature()))
+                            .withStyle(ChatFormatting.BLUE))
                     .append(Component.literal(" K threshold").withStyle(ChatFormatting.GRAY)));
         }
     }

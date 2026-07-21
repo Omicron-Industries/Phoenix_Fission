@@ -60,16 +60,13 @@ public class PhoenixFissionBlocks {
     public static BlockEntry<Block> FISSILE_REACTION_SAFE_CASING = null;
     public static BlockEntry<Block> FISSILE_SAFE_GEARBOX_CASING = null;
 
-
-
     public static BlockEntry<Block> EMPTY_REACTOR_COMPONENT = PHOENIX_REGISTRATE
             .block("empty_reactor_component", Block::new)
             .initialProperties(() -> Blocks.IRON_BLOCK)
             .blockstate((ctx, prov) -> {
                 var model = prov.models().cubeAll(
                         ctx.getName(),
-                        PhoenixFission.id("block/fission/cooler_base")
-                );
+                        PhoenixFission.id("block/fission/cooler_base"));
                 prov.simpleBlock(ctx.getEntry(), model);
             })
             .lang("Empty Reactor Component")
@@ -79,12 +76,12 @@ public class PhoenixFissionBlocks {
             .register();
 
     public static void init() {
-            FISSILE_HEAT_SAFE_CASING = registerSimpleBlock("§bFissile Heat Safe Casing", "fissile_heat_safe_casing",
-                    "fissile_heat_safe_casing", BlockItem::new);
-            FISSILE_REACTION_SAFE_CASING = registerSimpleBlock("§bFissile Reaction Safe Casing",
-                    "fissile_reaction_safe_casing", "fissile_reaction_safe_casing", BlockItem::new);
-            FISSILE_SAFE_GEARBOX_CASING = registerSimpleBlock("§bFissile Safe Gearbox", "fissile_safe_gearbox_casing",
-                    "fissile_safe_gearbox", BlockItem::new);
+        FISSILE_HEAT_SAFE_CASING = registerSimpleBlock("§bFissile Heat Safe Casing", "fissile_heat_safe_casing",
+                "fissile_heat_safe_casing", BlockItem::new);
+        FISSILE_REACTION_SAFE_CASING = registerSimpleBlock("§bFissile Reaction Safe Casing",
+                "fissile_reaction_safe_casing", "fissile_reaction_safe_casing", BlockItem::new);
+        FISSILE_SAFE_GEARBOX_CASING = registerSimpleBlock("§bFissile Safe Gearbox", "fissile_safe_gearbox_casing",
+                "fissile_safe_gearbox", BlockItem::new);
     }
 
     private static @NotNull BlockEntry<Block> registerSimpleBlock(String name, String id, String texture,
