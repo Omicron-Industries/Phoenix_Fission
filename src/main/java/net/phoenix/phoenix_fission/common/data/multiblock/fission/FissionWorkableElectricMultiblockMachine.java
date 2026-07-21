@@ -49,7 +49,7 @@ import java.util.*;
 
 @MethodsReturnNonnullByDefault
 public class FissionWorkableElectricMultiblockMachine extends WorkableElectricMultiblockMachine
-                                                      implements IExplosionMachine {
+        implements IExplosionMachine {
 
     protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
             FissionWorkableElectricMultiblockMachine.class,
@@ -137,6 +137,8 @@ public class FissionWorkableElectricMultiblockMachine extends WorkableElectricMu
     @Persisted
     @DescSynced
     public int multiBlockCount = 0;
+    @Persisted
+    private boolean ambientHeatInitialized = false;
 
     protected final ConditionalSubscriptionHandler reactorTickHandler;
     public final Map<String, Double> fuelRemainderPerType = new HashMap<>();
@@ -183,6 +185,11 @@ public class FissionWorkableElectricMultiblockMachine extends WorkableElectricMu
         return PhoenixFissionConfigs.INSTANCE.fission.heatModel.maxHeatClampTempK * getHeatCapacity();
     }
 
+    /** Current core temperature in Kelvin — what players should actually see, not raw HU. */
+    public double getHeatKelvin() {
+        return heat / getHeatCapacity();
+    }
+
     @Override
     public void onLoad() {
         super.onLoad();
@@ -198,6 +205,12 @@ public class FissionWorkableElectricMultiblockMachine extends WorkableElectricMu
         componentManager.onStructureFormed();
         thermalManager.onStructureFormed();
         fuelManager.onStructureFormed();
+
+        if (!ambientHeatInitialized) {
+            heat = PhoenixFissionConfigs.INSTANCE.fission.heatModel.ambientTemperatureHU;
+            ambientHeatInitialized = true;
+        }
+
         reactorTickHandler.updateSubscription();
         markDirty();
     }
@@ -239,7 +252,8 @@ public class FissionWorkableElectricMultiblockMachine extends WorkableElectricMu
     }
 
     protected boolean shouldRunReactor() {
-        if (!isFormed() || componentManager.getActiveFuelRods().isEmpty() || isScramActive()) return false;
+        if (!isFormed() || !getRecipeLogic().isWorkingEnabled() ||
+                componentManager.getActiveFuelRods().isEmpty() || isScramActive()) return false;
 
         if (PhoenixFissionConfigs.INSTANCE.fission.coolingRequiresCoolant &&
                 !componentManager.getActiveCoolers().isEmpty()) {

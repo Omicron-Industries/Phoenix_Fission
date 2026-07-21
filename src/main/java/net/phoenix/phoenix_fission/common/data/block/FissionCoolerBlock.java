@@ -70,9 +70,17 @@ public class FissionCoolerBlock extends ActiveBlock {
                     Component.translatable("phoenix_fission.coolant_usage_value", coolerType.getCoolantUsagePerTick())
                             .withStyle(ChatFormatting.LIGHT_PURPLE));
 
+            if (coolerType.getOutputCoolantPerTick() != coolerType.getCoolantUsagePerTick() &&
+                    !outId.equalsIgnoreCase(inId)) {
+                tooltip.add(
+                        Component.translatable("phoenix_fission.coolant_output_value",
+                                        coolerType.getOutputCoolantPerTick())
+                                .withStyle(ChatFormatting.LIGHT_PURPLE));
+            }
+
             tooltip.add(Component.translatable("phoenix_fission.cooling_power",
-                    Component.literal(String.valueOf(coolerType.getCoolerTemperature()))
-                            .withStyle(ChatFormatting.BLUE))
+                            Component.literal(String.valueOf(coolerType.getCoolerTemperature()))
+                                    .withStyle(ChatFormatting.BLUE))
                     .append(Component.literal(" K threshold").withStyle(ChatFormatting.GRAY)));
         }
     }
@@ -105,13 +113,26 @@ public class FissionCoolerBlock extends ActiveBlock {
 
         private final Supplier<Integer> tempSupplier;
         private final Supplier<Integer> usageSupplier;
+        private final Supplier<Integer> outputAmountSupplier;
         private final Supplier<String> inputSupplier;
         private final Supplier<String> outputSupplier;
         private final Supplier<Double> flatSupplier;
 
+        /** Output volume matches input volume 1:1 — use the other constructor for a custom ratio. */
         public BindableCoolerType(String name, int tier, int tintColor,
                                   Supplier<Integer> tempSupplier,
                                   Supplier<Integer> usageSupplier,
+                                  Supplier<String> inputSupplier,
+                                  Supplier<String> outputSupplier,
+                                  Supplier<Double> flatSupplier) {
+            this(name, tier, tintColor, tempSupplier, usageSupplier, usageSupplier,
+                    inputSupplier, outputSupplier, flatSupplier);
+        }
+
+        public BindableCoolerType(String name, int tier, int tintColor,
+                                  Supplier<Integer> tempSupplier,
+                                  Supplier<Integer> usageSupplier,
+                                  Supplier<Integer> outputAmountSupplier,
                                   Supplier<String> inputSupplier,
                                   Supplier<String> outputSupplier,
                                   Supplier<Double> flatSupplier) {
@@ -120,6 +141,7 @@ public class FissionCoolerBlock extends ActiveBlock {
             this.tintColor = tintColor;
             this.tempSupplier = tempSupplier;
             this.usageSupplier = usageSupplier;
+            this.outputAmountSupplier = outputAmountSupplier;
             this.inputSupplier = inputSupplier;
             this.outputSupplier = outputSupplier;
             this.flatSupplier = flatSupplier;
@@ -133,6 +155,11 @@ public class FissionCoolerBlock extends ActiveBlock {
         @Override
         public int getCoolantPerTick() {
             return usageSupplier.get();
+        }
+
+        @Override
+        public int getOutputCoolantPerTick() {
+            return outputAmountSupplier.get();
         }
 
         @Override

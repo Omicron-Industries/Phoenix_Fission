@@ -346,9 +346,12 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
 
     @OnlyIn(Dist.CLIENT)
     private int drawHeatSection(GuiGraphics g, Font font, int x, int y, int W) {
-        double maxHeat = reactor.getMaxSafeHeatHU();
+        double meltdownHeat = reactor.getMaxSafeHeatHU();
         double heat = reactor.getHeat();
-        double pct = Math.min(1.0, heat / maxHeat);
+
+        double displayScale = meltdownHeat * 1.15;
+        double pct = Math.min(1.0, heat / displayScale);
+        double pctOfMeltdown = heat / meltdownHeat;
         double netDelta = reactor.lastHeatGainedPerTick - reactor.lastHeatRemovedPerTick;
 
         String deltaStr;
@@ -387,16 +390,16 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
             }
         }
 
-        int safeX = x + (int) (0.85 * W);
-        g.fill(safeX, y - 1, safeX + 1, y + barH + 1, 0xAA_FFFFFF);
+        int meltdownX = x + (int) ((meltdownHeat / displayScale) * W);
+        g.fill(meltdownX, y - 1, meltdownX + 1, y + barH + 1, 0xAA_FFFFFF);
         y += barH + 2;
 
-        g.drawString(font, "safe", safeX - font.width("safe") / 2, y, 0x55_FFFFFF, false);
+        g.drawString(font, "meltdown", meltdownX - font.width("meltdown") / 2, y, 0x55_FFFFFF, false);
         y += 10;
 
-        String pctStr = String.format("%.1f%%", pct * 100);
-        String absStr = String.format("%.0f HU", Math.min(heat, 9_999_999));
-        int pctColor = pct > 0.85 ? C_RED : pct > 0.5 ? C_ORANGE : C_GREEN;
+        String pctStr = String.format("%.1f%%", pctOfMeltdown * 100);
+        String absStr = String.format("%.0f K", reactor.getHeatKelvin());
+        int pctColor = pctOfMeltdown > 0.85 ? C_RED : pctOfMeltdown > 0.5 ? C_ORANGE : C_GREEN;
         g.drawString(font, pctStr, x, y, pctColor, false);
         g.drawString(font, absStr, x + W - font.width(absStr), y, pctColor, false);
 
@@ -1125,6 +1128,8 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         double pct = Math.min(1.0, heat / maxHeat);
         int pctColor = pct > 0.85 ? C_RED : pct > 0.5 ? C_ORANGE : C_GREEN;
 
+        y = drawStatRow(g, font, x, y, W, "Core temperature",
+                String.format("%.0f K", reactor.getHeatKelvin()), pctColor);
         y = drawStatRow(g, font, x, y, W, "Current heat",
                 String.format("%.0f / %.0f HU", Math.min(heat, 9_999_999), maxHeat), pctColor);
         y = drawStatRow(g, font, x, y, W, "Heat percentage",
@@ -1359,7 +1364,7 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         cy += 6;
 
         String heatLabel = "CORE HEAT";
-        String heatVal = String.format(java.util.Locale.ROOT, "%.0f%% of safe", heatPct * 100);
+        String heatVal = String.format(java.util.Locale.ROOT, "%.0f%% of threshold", heatPct * 100);
         int heatValCol = heatPct > 1.5 ? lerpRGB(0xFF_FF2222, 0xFF_FF9966, (Math.sin(t * 0.010) + 1.0) * 0.5) :
                 heatPct > 1.0 ? 0xFF_FF6633 : 0xFF_FFAA44;
         g.drawString(font, heatLabel, bx, cy, 0xFF_886655, false);
@@ -1383,7 +1388,7 @@ public class FissionReactorFancyUIWidget extends FancyMachineUIWidget {
         int safeTick = bx + (int) ((1.0 / heatBarScale) * barW);
         g.fill(safeTick, cy - 1, safeTick + 1, cy + hbarH + 1, 0xCC_FFFFFF);
         cy += hbarH + 2;
-        g.drawString(font, "safe", safeTick - font.width("safe") / 2, cy, 0x55_FFFFFF, false);
+        g.drawString(font, "threshold", safeTick - font.width("threshold") / 2, cy, 0x55_FFFFFF, false);
         cy += font.lineHeight + 4;
         g.fill(bx, cy, bx + barW, cy + 1, 0x33_FF2222);
         cy += 5;

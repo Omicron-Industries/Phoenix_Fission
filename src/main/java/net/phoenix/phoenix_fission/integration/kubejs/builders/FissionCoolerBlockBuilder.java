@@ -24,6 +24,8 @@ public class FissionCoolerBlockBuilder extends BlockBuilder {
     @Setter
     public transient int coolantUsagePerTick = 10;
     @Setter
+    public transient int outputCoolantAmountPerTick = -1;
+    @Setter
     public transient double flatCoolingHUt = 0.0;
     @Setter
     public transient boolean isPassive = false;
@@ -64,6 +66,11 @@ public class FissionCoolerBlockBuilder extends BlockBuilder {
         @Override
         public int getCoolantPerTick() {
             return getCoolantUsagePerTick();
+        }
+
+        @Override
+        public int getOutputCoolantPerTick() {
+            return outputCoolantAmountPerTick >= 0 ? outputCoolantAmountPerTick : getCoolantUsagePerTick();
         }
 
         @Override

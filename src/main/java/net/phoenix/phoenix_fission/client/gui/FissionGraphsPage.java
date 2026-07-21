@@ -212,8 +212,7 @@ public class FissionGraphsPage implements IFancyUIProvider {
             double maxSafeHU = reactor.getMaxSafeHeatHU();
             double maxClampHU = reactor.getMaxHeatClampHU();
             double stableT = findStableTemperature(rods, coolers, modBonus, maxClampHU);
-            double xMax = (stableT > 0) ? Math.min(maxClampHU, stableT * 3.0) :
-                    (stableT == 0.0) ? Math.min(maxClampHU, maxSafeHU * 0.5) : maxClampHU;
+            double xMax = maxClampHU * 1.15;
 
             double[] prodY = new double[SAMPLES];
             double[] coolY = new double[SAMPLES];
@@ -239,7 +238,7 @@ public class FissionGraphsPage implements IFancyUIProvider {
                 g.fill(sX - 1, sY - 1, sX + 2, sY + 2, C_GREEN);
             }
 
-            return drawXAxisLabels(g, font, x, y, SAMPLES, plotH, xMax, maxSafeHU);
+            return drawXAxisLabels(g, font, x, y, SAMPLES, plotH, xMax, maxSafeHU, maxClampHU);
         }
 
         @OnlyIn(Dist.CLIENT)
@@ -257,8 +256,7 @@ public class FissionGraphsPage implements IFancyUIProvider {
             double maxSafeHU = reactor.getMaxSafeHeatHU();
             double maxClampHU = reactor.getMaxHeatClampHU();
             double stableT = findStableTemperature(rods, coolers, modBonus, maxClampHU);
-            double xMax = (stableT > 0) ? Math.min(maxClampHU, stableT * 3.0) :
-                    (stableT == 0.0) ? Math.min(maxClampHU, maxSafeHU * 0.5) : maxClampHU;
+            double xMax = maxClampHU * 1.15;
 
             double[] netY = new double[SAMPLES];
             double peakAbs = 1.0;
@@ -289,7 +287,7 @@ public class FissionGraphsPage implements IFancyUIProvider {
                 g.fill(sX - 1, zeroY - 1, sX + 2, zeroY + 2, C_GREEN);
             }
 
-            return drawXAxisLabels(g, font, x, y, SAMPLES, plotH, xMax, maxSafeHU);
+            return drawXAxisLabels(g, font, x, y, SAMPLES, plotH, xMax, maxSafeHU, maxClampHU);
         }
 
         @OnlyIn(Dist.CLIENT)
@@ -311,7 +309,7 @@ public class FissionGraphsPage implements IFancyUIProvider {
                 y += 13;
             } else if (stableT >= maxSafe) {
                 g.fill(x, y + 2, x + 5, y + 7, C_RED);
-                g.drawString(font, "  STABLE ABOVE CRITICAL THRESHOLD", x, y, C_RED, false);
+                g.drawString(font, "  STABLE ABOVE MELTDOWN THRESHOLD", x, y, C_RED, false);
                 y += 10;
                 g.drawString(font, "  Equilibrium: " + formatK(stableT / heatCap), x, y, 0xFF_FF8833, false);
                 y += 10;
@@ -327,7 +325,7 @@ public class FissionGraphsPage implements IFancyUIProvider {
             }
 
             g.fill(x, y + 2, x + 5, y + 7, 0xCC_FF8833);
-            g.drawString(font, "  Critical:  " + formatK(maxSafe / heatCap), x, y, 0xFF_FF8833, false);
+            g.drawString(font, "  Threshold:  " + formatK(maxSafe / heatCap), x, y, 0xFF_FF8833, false);
             y += 10;
             g.fill(x, y + 2, x + 5, y + 7, C_RED);
             g.drawString(font, "  Meltdown: " + formatK(maxClamp / heatCap), x, y, 0xCC_FF3333, false);
@@ -347,17 +345,25 @@ public class FissionGraphsPage implements IFancyUIProvider {
 
         @OnlyIn(Dist.CLIENT)
         private int drawXAxisLabels(GuiGraphics g, Font font, int x, int y, int W, int plotH,
-                                    double xMax, double maxSafe) {
+                                    double xMax, double maxSafe, double maxClamp) {
             int labelY = y + plotH + 2;
             double heatCap = reactor.getHeatCapacity();
             g.drawString(font, "0", x, labelY, C_DIM, false);
             String xMaxStr = formatK(xMax / heatCap);
             g.drawString(font, xMaxStr, x + W - font.width(xMaxStr), labelY, C_DIM, false);
-            double safeFrac = maxSafe / xMax;
-            if (safeFrac > 0.08 && safeFrac < 0.92) {
-                String sl = "safe";
-                int sx = x + (int) (safeFrac * W);
+
+            double criticalFrac = maxSafe / xMax;
+            if (criticalFrac > 0.08 && criticalFrac < 0.92) {
+                String sl = "threshold";
+                int sx = x + (int) (criticalFrac * W);
                 g.drawString(font, sl, sx - font.width(sl) / 2, labelY, 0xCC_FF8833, false);
+            }
+
+            double meltdownFrac = maxClamp / xMax;
+            if (meltdownFrac > 0.08 && meltdownFrac < 0.92) {
+                String ml = "meltdown";
+                int mx = x + (int) (meltdownFrac * W);
+                g.drawString(font, ml, mx - font.width(ml) / 2, labelY, 0xCC_FF3333, false);
             }
             return labelY + font.lineHeight + 3;
         }
@@ -417,14 +423,19 @@ public class FissionGraphsPage implements IFancyUIProvider {
                                       List<IFissionCoolerType> coolers,
                                       PhoenixFissionConfigs.HeatModelConfigs hm) {
             double cooling = 0.0;
-            double amb = (T - hm.ambientTemperatureHU) * hm.passiveCoolingConductivity;
+            OptionalDouble minCoolerTemp = coolers.stream()
+                    .mapToDouble(IFissionCoolerType::getCoolerTemperature).min();
+            double floor = minCoolerTemp.isPresent() ?
+                    Math.max(hm.ambientTemperatureHU, minCoolerTemp.getAsDouble()) : hm.ambientTemperatureHU;
+
+            double amb = (T - floor) * hm.passiveCoolingConductivity;
             if (amb > 0) cooling += amb;
             Map<IFissionCoolerType, Long> groups = coolers.stream()
                     .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
             for (var e : groups.entrySet()) {
                 IFissionCoolerType c = e.getKey();
                 if (c.isPassive()) {
-                    cooling += c.getFlatCoolingHUt() * e.getValue();
+                    if (T > floor) cooling += c.getFlatCoolingHUt() * e.getValue();
                 } else {
                     double delta = (T - c.getCoolerTemperature()) * e.getValue() * hm.activeCoolingConductivity;
                     if (delta > 0) cooling += delta;

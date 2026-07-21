@@ -135,13 +135,13 @@ public class FissionMathPage implements IFancyUIProvider {
 
             double maxSafe = reactor.getMaxSafeHeatHU();
             double heatRate = fcfg.heatModel.passiveCoolingConductivity;
-            y = kv(g, font, x, y, W, "Safe threshold", fmt0(maxSafe) + " HU");
+            y = kv(g, font, x, y, W, "Meltdown Threshold", fmt0(maxSafe) + " HU");
             y = kv(g, font, x, y, W, "Passive Conductivity", fmt2(heatRate), C_CYAN);
 
             double heatPct = reactor.getHeat() / Math.max(1, maxSafe);
             String hpStr = String.format(Locale.ROOT, "%.1f%%", heatPct * 100);
             int hpCol = heatPct > 0.85 ? C_RED : heatPct > 0.5 ? C_ORANGE : C_GREEN;
-            y = kv(g, font, x, y, W, "Current", hpStr + " of safe max", hpCol);
+            y = kv(g, font, x, y, W, "Current", hpStr + " of threshold", hpCol);
             y += 3;
 
             y = section(g, font, x, y, W, "MELTDOWN GRACE", C_RED);

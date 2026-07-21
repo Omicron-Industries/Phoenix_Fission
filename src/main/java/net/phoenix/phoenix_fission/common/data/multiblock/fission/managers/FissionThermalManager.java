@@ -106,6 +106,20 @@ public class FissionThermalManager {
 
     private boolean overcooledThisTick = false;
 
+    /**
+     * The lowest heat the reactor can ever be pulled down to this tick.
+     * Passive/ambient cooling should never push heat below whatever active
+     * coolers are actually installed — a cooler can only cool the reactor
+     * down to its own operating temperature, never past it. Falls back to
+     * ambient when no coolers are present.
+     */
+    protected double computeCoolingFloorHU(Collection<IFissionCoolerType> activeCoolers, double ambientTemperatureHU) {
+        OptionalDouble minCoolerTemp = activeCoolers.stream()
+                .mapToDouble(IFissionCoolerType::getCoolerTemperature).min();
+        return minCoolerTemp.isPresent() ? Math.max(ambientTemperatureHU, minCoolerTemp.getAsDouble()) :
+                ambientTemperatureHU;
+    }
+
     public void tickThermalLogic(boolean running) {
         machine.lastHeatGainedPerTick = 0.0;
         machine.lastHeatRemovedPerTick = 0.0;
@@ -130,23 +144,25 @@ public class FissionThermalManager {
             machine.getFuelManager().consumeFuelTick(machine.lastParallels);
         }
 
-        double passiveDelta = computePassiveCoolingDelta(machine.getHeat(), hm.ambientTemperatureHU,
+        double coolingFloorHU = computeCoolingFloorHU(comp.getActiveCoolers(), hm.ambientTemperatureHU);
+
+        double passiveDelta = computePassiveCoolingDelta(machine.getHeat(), coolingFloorHU,
                 hm.passiveCoolingConductivity);
         machine.setHeat(machine.getHeat() + passiveDelta);
 
         double activeCoolingRemoved = 0.0;
 
-        if (!comp.getActiveCoolers().isEmpty() && machine.getHeat() > hm.minHeat) {
+        if (!comp.getActiveCoolers().isEmpty() && machine.getHeat() > coolingFloorHU) {
             for (IFissionCoolerType cooler : comp.getActiveCoolers()) {
                 if (!cooler.isPassive()) continue;
-                double applied = Math.min(cooler.getFlatCoolingHUt(), machine.getHeat() - hm.minHeat);
+                double applied = Math.min(cooler.getFlatCoolingHUt(), machine.getHeat() - coolingFloorHU);
                 machine.setHeat(machine.getHeat() - applied);
                 activeCoolingRemoved += applied;
             }
         }
 
         overcooledThisTick = running && !comp.getActiveFuelRods().isEmpty() &&
-                machine.getHeat() <= hm.ambientTemperatureHU;
+                machine.getHeat() <= coolingFloorHU;
         machine.isOverCooled = overcooledThisTick;
 
         machine.lastHasCoolant = true;
@@ -198,49 +214,65 @@ public class FissionThermalManager {
             IFissionCoolerType primary = comp.getPrimaryCoolerType();
             if (primary == null) return true;
             return handleFluidConversion(primary.getInputCoolantFluidId(), primary.getOutputCoolantFluidId(),
-                    primary.getCoolantPerTick(), execute);
+                    primary.getCoolantPerTick(), primary.getOutputCoolantPerTick(), execute);
         }
 
-        Map<String, Integer> requirements = new HashMap<>();
-        Map<String, String> outputs = new HashMap<>();
+        record ConversionGroup(String inId, String outId) {}
+
+        Map<String, Integer> totalPerInput = new HashMap<>();
+        Map<ConversionGroup, Integer> groupInput = new HashMap<>();
+        Map<ConversionGroup, Integer> groupOutput = new HashMap<>();
+
         for (IFissionCoolerType c : comp.getActiveCoolers()) {
             if (c.getCoolantPerTick() <= 0 || c.getInputCoolantFluidId().isEmpty() ||
                     "none".equalsIgnoreCase(c.getInputCoolantFluidId()))
                 continue;
-            requirements.merge(c.getInputCoolantFluidId(), c.getCoolantPerTick(), Integer::sum);
-            outputs.put(c.getInputCoolantFluidId(), c.getOutputCoolantFluidId());
+            totalPerInput.merge(c.getInputCoolantFluidId(), c.getCoolantPerTick(), Integer::sum);
+            ConversionGroup key = new ConversionGroup(c.getInputCoolantFluidId(), c.getOutputCoolantFluidId());
+            groupInput.merge(key, c.getCoolantPerTick(), Integer::sum);
+            groupOutput.merge(key, c.getOutputCoolantPerTick(), Integer::sum);
         }
 
-        for (var entry : requirements.entrySet()) {
-            if (!handleFluidConversion(entry.getKey(), outputs.get(entry.getKey()), entry.getValue(), execute))
+        if (!execute) {
+            for (var entry : totalPerInput.entrySet()) {
+                if (!handleFluidConversion(entry.getKey(), "", entry.getValue(), 0, false)) return false;
+            }
+            return true;
+        }
+
+        for (var entry : groupInput.entrySet()) {
+            ConversionGroup key = entry.getKey();
+            if (!handleFluidConversion(key.inId(), key.outId(), entry.getValue(),
+                    groupOutput.getOrDefault(key, entry.getValue()), true))
                 return false;
         }
         return true;
     }
 
-    private boolean handleFluidConversion(String inId, String outId, int amount, boolean execute) {
-        if (amount <= 0 || inId.isEmpty() || "none".equalsIgnoreCase(inId)) return true;
+    private boolean handleFluidConversion(String inId, String outId, int inAmount, int outAmount, boolean execute) {
+        if (inAmount <= 0 || inId.isEmpty() || "none".equalsIgnoreCase(inId)) return true;
         ResourceLocation inRl = ResourceLocation.tryParse(inId);
         if (inRl == null || !ForgeRegistries.FLUIDS.containsKey(inRl)) return false;
 
-        FluidStack inStack = new FluidStack(Objects.requireNonNull(ForgeRegistries.FLUIDS.getValue(inRl)), amount);
+        FluidStack inStack = new FluidStack(Objects.requireNonNull(ForgeRegistries.FLUIDS.getValue(inRl)), inAmount);
         if (!machine.executeFluidIO(inStack, IO.IN, !execute)) return false;
 
         if (execute) {
             if (overcooledThisTick) {
 
-                int refund = (int) Math.floor(amount * 0.9);
+                int refund = (int) Math.floor(inAmount * 0.9);
                 if (refund > 0) {
                     machine.executeFluidIO(
                             new FluidStack(Objects.requireNonNull(ForgeRegistries.FLUIDS.getValue(inRl)), refund),
                             IO.OUT,
                             false);
                 }
-            } else if (!outId.isEmpty() && !"none".equalsIgnoreCase(outId) && !outId.equalsIgnoreCase(inId)) {
+            } else if (outAmount > 0 && !outId.isEmpty() && !"none".equalsIgnoreCase(outId) &&
+                    !outId.equalsIgnoreCase(inId)) {
                 ResourceLocation outRl = ResourceLocation.tryParse(outId);
                 if (outRl != null && ForgeRegistries.FLUIDS.containsKey(outRl)) {
                     machine.executeFluidIO(
-                            new FluidStack(Objects.requireNonNull(ForgeRegistries.FLUIDS.getValue(outRl)), amount),
+                            new FluidStack(Objects.requireNonNull(ForgeRegistries.FLUIDS.getValue(outRl)), outAmount),
                             IO.OUT,
                             false);
                 }
